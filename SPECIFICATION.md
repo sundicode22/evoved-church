@@ -31,288 +31,142 @@ Based on the approved design language:
 
 ---
 
-## 2. Structural & Multi-Branch Organizational Management (Organigram)
+## 2. Authentication Architecture: Better Auth vs Auth.js
 
-### 2.1 Multi-Campus / Multi-Branch Model
-Modern churches operate across multiple physical and digital locations:
-1. **Global Headquarters / Central Campus**: Core governance, unified accounting consolidated ledger, master bylaws, global roles.
-2. **Regional Campuses**: Dedicated campus pastors, local service times, localized budgets, local small group networks.
-3. **Church Plants / Satellite Hubs**: Seed initiatives with restricted autonomy, monitored by central leadership.
-4. **Online / Digital Campus**: Virtual community, international members, digital connection cards.
+### 2.1 Decision: Better Auth (Selected)
+After technical evaluation between **Better Auth** and **Auth.js (NextAuth v5)**, **Better Auth** is explicitly chosen for Evolve ChMS:
 
-### 2.2 Interactive Visual Organigram
-The Organigram module provides an interactive tree/chart visualizing the church's structural hierarchy:
-- **Leadership Hierarchy**:
-  - `Senior Pastor / Bishop / Board of Elders`
-  - `Executive Pastors` (Spiritual Oversight, Operations, Finance)
-  - `Campus Pastors & Ministry Directors` (Worship, Children/Youth, Pastoral Care, Outreach)
-  - `Department Heads / Coordinators` (Production, Hospitality, Security, Sound)
-  - `Small Group / Life Group Network Leaders` (Zone Leaders -> Cell Leaders)
-  - `Volunteers & Ministry Servants`
-- **Interactive Capabilities**:
-  - **Drag-and-Drop Reorganization**: Reassign department heads or reporting relationships with automated permission recalculation.
-  - **Branch-Filtered Views**: Toggle between global church view or isolated campus view.
-  - **Capacity & Span of Care**: Visual indicator of how many members or volunteers each leader is currently shepherding.
-  - **Export & Print**: High-resolution vector export (PDF/SVG) for board meetings and governance filings.
+| Architectural Requirement | Better Auth | Auth.js (NextAuth v5) |
+| :--- | :--- | :--- |
+| **Multi-Tenant Organizations** | **Native plugin (`organization`)** supporting multi-campus tenancy, organization switching, and campus-scoped roles. | Requires custom schema hacks, manual session overrides, and complex database joins. |
+| **Drizzle ORM Integration** | **First-class `@better-auth/drizzle-adapter`** with zero-friction typed schema inference. | Adapter exists but requires manual typing extensions and is prone to breaking changes in v5. |
+| **Two-Factor & Security** | **Native `twoFactor` (TOTP / SMS)** and `bearer` token support for mobile and kiosk check-ins. | Manual implementation required for WebAuthn/TOTP. |
+| **API Engine Compatibility** | Works seamlessly across Next.js App Router and **ElysiaJS standard Web `Request`/`Response`**. | Tight coupling to Next.js middleware, difficult to run cleanly inside Elysia routes. |
 
 ---
 
-## 3. First-Time Visitors & Lead Management (Kanban CRM)
+## 3. Dynamic Nomenclature & Custom Taxonomy Engine
 
-### 3.1 The Spiritual Visitor Journey
-In church growth, first-time visitors are the vital "leads". Transforming a guest into an active disciple requires a structured, multi-touch pipeline:
+### 3.1 The Ecclesiastical Nomenclature Challenge
+Churches across different denominations and traditions use fundamentally different terminology:
+- A Baptist or Evangelical church uses: *Members*, *Campuses*, *Pastors*, *Small Groups*, *Tithes & Offerings*.
+- An Anglican or Catholic church uses: *Parishioners*, *Parishes*, *Priests/Vicars*, *Home Fellowships*, *Stewardship*.
+- A Non-Denominational or Apostolic church uses: *Covenant Partners*, *Assemblies*, *Ministers/Elders*, *Connect Cells*, *First Fruits*.
+
+### 3.2 Dynamic Data-Driven Taxonomy
+Evolve ChMS implements `tenant_nomenclatures` and `custom_field_definitions`:
+- **UI Label Substitution**: All client components, table headers, and navigation labels query the tenant's active nomenclature profile.
+- **Dynamic Custom Fields**: Church admins can define arbitrary metadata per entity (e.g. `spiritual_gifts`, `t_shirt_size`, `licensed_minister_number`, `confidential_pastoral_notes`) with field types: `text`, `number`, `date`, `boolean`, `select`, `multi_select`.
+
+---
+
+## 4. Explicit People Lifecycle: From First-Time Visitor to Ordained Minister
+
+### 4.1 Strict Person Type Separation
+A critical flaw in legacy systems is treating all people identically. Evolve ChMS enforces explicit lifecycle stages via `personTypeEnum`:
+```mermaid
+stateDiagram-v2
+    [*] --> Visitor: QR Scan / First-Timer Check-in
+    Visitor --> Prospect: 2nd/3rd Service / Follow-up Active
+    Prospect --> RegularAttender: Consistent Attendance
+    RegularAttender --> CovenantMember: Membership Class & Covenant Signed
+    CovenantMember --> Volunteer: Ministry Serving Roster
+    Volunteer --> Leader: Small Group / Department Lead
+    Leader --> StaffMinister: Ordained Pastoral Staff
+    CovenantMember --> InactiveAlumni: Relocated / Transferred
 ```
-[1. First Visit / QR Card] 
-       ↓
-[2. Welcome Contact (SMS/Call within 24h)]
-       ↓
-[3. Pastoral Coffee / Discovery Meeting]
-       ↓
-[4. Foundations / Growth Track Class]
-       ↓
-[5. Small Group / Life Group Integration]
-       ↓
-[6. Water Baptism & Ministry Partner]
+
+### 4.2 Comprehensive Active Member Records
+When a person is an active member or leader, Evolve ChMS tracks:
+- **Recorded Ecclesiastical Titles**: `Reverend`, `Pastor`, `Elder`, `Deacon`, `Dr.`, `Overseer`.
+- **Ministry Roles & Rosters**: Direct association with serving teams (Worship, AV, Ushers, Children's Ministry).
+- **Sacraments & Milestones**: Salvation date, Water Baptism date & officiant, Confirmation date.
+- **Ordination & Credentials**: Licensing board, ordination date, credential certificate numbers.
+- **Child Protection & Background Checks**: Status (`cleared`, `pending`, `expired`), clearance dates, and automated renewal alerts.
+
+---
+
+## 5. QR Code Scanning, Self-Service Kiosks & Attendance Check-In
+
+### 5.1 Dynamic Digital Connection Card
+- Every campus generates a unique QR code. Visitors scan with their smartphones to open a friction-free mobile connection card (`/welcome/[campus-slug]`).
+- Instant intake triggers the automated **Resend Welcome Drip Sequence**.
+
+### 5.2 Sunday Attendance & Child Check-In Badges
+- **Fast Family Check-in**: Parents check in children on self-service iPads/kiosks.
+- **Security Pickup Codes**: Generates a cryptographically random, ambiguous-free 4-character code (e.g. `7K2X`) printed on the child's label and parent's claim receipt.
+- **Medical & Allergy Warnings**: High-visibility allergy alerts printed on child tags.
+- **Label Printer Support**: ESC/POS and network thermal printer integration (Zebra, Brother, Dymo).
+
+---
+
+## 6. Communication Engine: Resend Integration & Automated Drip Sequences
+
+### 6.1 Transactional & Drip Engine via Resend
+Evolve ChMS integrates **Resend** for high-deliverability email workflows:
+1. **Drip 1 (+2 Hours)**: Warm welcome email from the Senior Pastor.
+2. **Drip 2 (+24 Hours)**: Assigned Shepherd text/email with coffee invitation.
+3. **Drip 3 (+5 Days)**: Service preview and kids ministry guide for the upcoming Sunday.
+4. **Expense Requisition Alerts**: Sent to department directors and pastors for financial sign-off.
+5. **Annual 501(c)(3) Statements**: IRS-compliant PDF statements with donor giving totals.
+
+---
+
+## 7. Dynamic Non-Profit Fund Accounting & Multi-Tier Expense Control
+
+### 7.1 Strict Double-Entry & Restricted Funds
+- Standard Chart of Accounts (1000 Assets, 2000 Liabilities, 3000 Net Assets, 4000 Tithes/Revenues, 5000 Ministry Expenses).
+- Real-time restricted fund balances (Building Campaign, World Missions, Youth Scholarships, Benevolence).
+
+### 7.2 Dynamic Multi-Tier Expense Approvals
+Churches can configure approval thresholds per campus:
+- **Tier 1 (Under $500)**: Approved by Department Head.
+- **Tier 2 ($500.01 – $2,500)**: Approved by Campus Pastor.
+- **Tier 3 ($2,500.01 – $10,000)**: Approved by Executive Pastor / Finance Director.
+- **Tier 4 (Over $10,000)**: Approved by Senior Pastor & Board of Trustees.
+
+---
+
+## 8. Feature-Based Codebase Architecture
+
+```
+src/
+├── app/                        # Next.js 16 App Router pages & layouts
+│   ├── api/[[...slugs]]/       # ElysiaJS mount handler
+│   ├── dashboard/              # Dashboard pages
+│   │   ├── pipeline/           # Kanban pipeline page
+│   │   └── page.tsx            # Main overview
+│   ├── layout.tsx
+│   └── globals.css
+├── features/                   # Domain-driven feature modules
+│   ├── auth/                   # Better Auth configuration & RBAC plugins
+│   ├── visitors/               # Lead Kanban, detail slide-over, drip schedules
+│   ├── members/                # Explicit people lifecycle, credentials, sacraments
+│   ├── attendance/             # QR scanning, kiosk mode, child check-in badges
+│   ├── organigram/             # Dynamic drag-and-drop structural tree
+│   ├── accounting/             # Fund accounting, multi-tier expense controls, ledger
+│   ├── communications/         # Resend email templates & drip trigger engine
+│   ├── documents/              # Cloudinary media vault & role-gated folder vault
+│   └── settings/               # Dynamic nomenclature & custom taxonomy engine
+├── lib/
+│   ├── db/                     # Drizzle ORM schema, migrations, connection pool
+│   ├── eden.ts                 # Elysia Eden Treaty typed client
+│   ├── query-provider.tsx      # TanStack Query v5 provider
+│   └── utils.ts
+├── store/                      # Zustand client stores (branches, kanban, UI)
+└── components/                 # Shared UI components (Shadcn UI sidebar-07, tables)
 ```
 
-### 3.2 Kanban Pipeline Features (Screen Reference Replicated)
-- **Dynamic Columns**:
-  - `NEW GUESTS (LEADS)`: Automatically populated when a guest fills a digital QR card or check-in kiosk.
-  - `WELCOME CONTACTED`: Assigned shepherd has initiated SMS/WhatsApp or phone call.
-  - `PASTORAL APPOINTMENT`: Scheduled face-to-face or virtual pastoral discovery session.
-  - `FOUNDATIONS CLASS`: Enrolled in new believer/church membership classes.
-  - `CELL GROUP PLACED`: Actively attending a localized small group.
-  - `PARTNER COMMITTED`: Completed membership vows, baptized, active giver.
-- **Card Metadata**:
-  - Visitor Name & Photo/Initials.
-  - Family / Household size (e.g. `Jane Doe + 2 kids`).
-  - First visit date & time badge (`1d ago`, `3h ago`).
-  - Assigned Shepherd / Minister avatar.
-  - Tags: `[HOT LEAD]`, `[SALVATION DECISION]`, `[NEEDS PRAYER]`, `[YOUTH]`.
-  - Pledged Giving / First offering value if recorded.
-- **Detail Slide-Over Drawer**:
-  - Top pipeline progress stepper with active stage highlighting and dwell-time indicator (`Been this stage for 3 days`).
-  - **Automated Drip Sequences**: Trigger scheduled SMS/Email templates (+2 hours: "Thank you for joining us!", +2 days: "Pastor's welcome video", +5 days: "Join us for coffee this Sunday").
-  - **Tabbed Interface**:
-    - **Activity**: Chronological timeline of visits, calls, SMS deliveries, and stage shifts.
-    - **Appointments**: Calendar scheduling for pastoral visits and coffees.
-    - **Giving / Contributions**: First-time donation records and pledge commitments.
-    - **Notes**: Confidential pastoral care notes with privacy locks.
-    - **Tasks**: Checklists assigned to church hospitality teams.
-
 ---
 
-## 4. Full-Blown Non-Profit Church Fund Accounting
+## 9. Granular Agile Sprint Roadmap
 
-### 4.1 Strict Double-Entry & Fund Accounting Foundation
-Churches and non-profit organizations must adhere to fund accounting standards (FASB ASC 958 in the US and equivalent international non-profit GAAP). Funds cannot simply be treated as standard bank accounts; they require restricted vs. unrestricted categorization:
-1. **Unrestricted Funds**:
-   - `General Operating Fund`: Tithes, general offerings, facility maintenance, staff salaries, utilities.
-2. **Temporarily Restricted Funds**:
-   - `Building & Capital Campaign Fund`: Donor-designated for sanctuary expansion or property purchase.
-   - `Missions Fund`: Designated for overseas missionaries and regional church plants.
-   - `Youth Camp Scholarship Fund`: Designated for youth ministry events.
-   - `Benevolence / Alms Fund`: Designated for vulnerable community members and emergency food aid.
-3. **Permanently Restricted Funds**:
-   - `Endowment Fund`: Principal is preserved; only interest earnings may be distributed.
-
-### 4.2 Standard Church Chart of Accounts (COA)
-- **1000–1999 ASSETS**:
-  - 1010 Operating Checking Account (Chase / Bank of America)
-  - 1020 Building Fund Savings Account
-  - 1030 Petty Cash
-  - 1050 Undeposited Funds (Cash & Checks from Sunday services)
-  - 1500 Land & Buildings
-  - 1600 Sanctuary Equipment & Instruments (Capital Assets)
-  - 1700 Accumulated Depreciation
-- **2000–2999 LIABILITIES**:
-  - 2010 Accounts Payable (Vendor bills)
-  - 2030 Payroll Liabilities (Taxes withheld)
-  - 2500 Sanctuary Mortgage / Bank Loan Payable
-- **3000–3999 NET ASSETS / EQUITY**:
-  - 3010 General Net Assets (Unrestricted)
-  - 3020 Temporarily Restricted Net Assets
-  - 3030 Permanently Restricted Net Assets
-- **4000–4999 REVENUES & GIVING**:
-  - 4010 Tithes (General)
-  - 4020 Sunday Morning Offerings
-  - 4030 Building Pledges
-  - 4040 Missions Giving
-  - 4050 Benevolence Contributions
-  - 4060 Bookshop & Cafe Sales
-- **5000–5999 MINISTRY & OPERATIONAL EXPENSES**:
-  - 5010 Pastoral & Staff Compensation
-  - 5020 Facilities Rent & Utilities
-  - 5030 Worship & AV Production Equipment
-  - 5040 Children & Youth Curriculum
-  - 5050 Missions Disbursements
-  - 5060 Benevolence Payouts
-  - 5070 Software Subscriptions & Web Services
-
-### 4.3 Contribution & Giving Management
-- **Omni-Channel Giving**:
-  - Stripe / Card / Apple Pay / Google Pay.
-  - ACH Direct Bank Transfers (low fee for large tithes).
-  - Sunday Cash/Check physical envelope entry with batch reconciliation.
-- **Pledge Campaigns**:
-  - Set financial targets for building expansions or vision projects.
-  - Track "Pledged vs. Realized" in real-time with donor milestone reminders.
-- **End-of-Year Tax Receipts (501(c)(3) Compliant)**:
-  - Automated batch generation of IRS-compliant annual charitable donation statements.
-  - Member self-service portal to download tax receipts anytime.
-
-### 4.4 Accounts Payable, Invoices & Expense Approvals
-- **Purchase Orders & Requisitions**: Ministry leaders submit purchase requests with attached invoices/quotes.
-- **Two-Tier Pastoral Approval Workflow**:
-  - Under \$500: Department Head sign-off.
-  - \$500 – \$5,000: Campus Pastor / Finance Director sign-off.
-  - Over \$5,000: Senior Pastor & Board of Elders approval.
-- **Vendor Management**: Keep track of audio suppliers, contractors, utility providers, and 1099 tax contractors.
-
-### 4.5 Financial Statements & Analytics
-- **Statement of Financial Position** (Balance Sheet with Net Assets breakdown).
-- **Statement of Activities** (Income & Expense statement filtered by fund).
-- **Cash Flow Statement**.
-- **Fund Transfer Audit Log** (strict tracing of funds moved between operating and restricted funds).
-
----
-
-## 5. Member Directory, Households & Small Groups
-
-### 5.1 Member Profiles & Life Stages
-- **Comprehensive Profiles**: Demographics, occupation, spiritual gifts, baptized status, salvation date, pastoral notes.
-- **Household / Family Unit Modeling**:
-  - Primary Contact (Head of Household).
-  - Spouse & Dependents.
-  - Shared family giving records or individualized giving.
-  - Emergency contacts and authorized pickup adults for Children's Church.
-
-### 5.2 Small Groups / Life Groups (Cell Ministry)
-- **Group Profiles**: Name, leader, co-leader, host home address, meeting day/time, max capacity.
-- **Interactive Map**: Geocoded visual map for visitors to find nearby small groups.
-- **Attendance Logging**: Weekly mobile attendance report submitted by cell leaders (Number of attendees, first-time visitors, prayer requests, offering collected).
-- **Curriculum & Study Guides**: Distribute weekly sermon discussion questions directly to group leaders.
-
----
-
-## 6. Kanban Project & Service Management
-
-### 6.1 Sunday Service Planning
-- **Run of Service (Order of Service)**:
-  - Minute-by-minute cue sheet (Pre-service countdown, Worship set [songs, keys, BPM, sheet music links], Welcome & Announcements, Tithe & Offering, Sermon, Altar Call, Post-service).
-- **Volunteer Scheduling & Roster**:
-  - Teams: Sound & Audio, Lighting, Camera/Broadcast, Ushers, Greeters, Kids Check-in, Parking.
-  - Automated SMS/Email RSVP confirmation ("Accept" / "Decline" with substitute request).
-
-### 6.2 Church Facility & Event Project Boards
-- Drag-and-drop Kanban boards for church conferences, outreach initiatives, summer camps, and building maintenance.
-- Task assignments, checklists, due dates, file attachments, and milestone dependencies.
-
----
-
-## 7. Cloudinary Media Vault & Document Directory
-
-### 7.1 Architecture & Asset Types
-- **Sermon Media**: Full HD video recordings, podcast audio (MP3), presentation slides (PPT/PDF).
-- **Member & Staff Avatars**: Auto-cropped, optimized face thumbnails delivered via Cloudinary URL transformations.
-- **Church Documents Vault**:
-  - Legal & Governance: Church Constitution, 501(c)(3) determination letters, Board meeting minutes.
-  - Financials: Monthly financial statements, audit reports, vendor contracts.
-  - Ministry Packs: Volunteer handbooks, child protection policies, training manuals.
-- **Receipts & Invoices**: Scanned financial backup documentation tied to ledger transactions.
-
-### 7.2 Role-Gated Access Control
-- Folders with inheritance permissions:
-  - `Public Resources` (Open to congregation).
-  - `Volunteer Resources` (Active church volunteers).
-  - `Pastoral & Leadership` (Staff and pastors).
-  - `Confidential Board & Finance` (Elders and Finance Committee only).
-
----
-
-## 8. Dynamic Role-Based Access Control (RBAC) & Multi-Campus Security
-
-### 8.1 Granular Roles Matrix
-
-| Role | Campus Scope | Member Directory | Giving & Accounting | Visitor Pipeline | Sermons & Media | Organigram |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Super Admin / Senior Pastor** | Global (All) | Full Read/Write | Full Read/Write/Approve | Full Management | Full Management | Edit / Reorganize |
-| **Executive Pastor** | Global (All) | Full Read/Write | View Reports / Approve | Full Management | Full Management | View / Suggest |
-| **Campus Pastor** | Assigned Campus | Campus Read/Write | View Local Budget / Requisition | Full Local Pipeline | Manage Local Media | View Local Tree |
-| **Finance Director** | Global or Campus | View (No Pastoral Notes)| Full Accounting / Ledger / Tax | View Giving Only | Restricted | View Only |
-| **Ministry Director** | Assigned Dept | Dept Read/Write | Submit Requisitions | Manage Dept Leads | Manage Dept Media | View Dept Tree |
-| **Small Group Leader** | Assigned Group | Group Members Only | None | View Group Visitors | View Training Files | View Group Node |
-| **Volunteer** | Team Assigned | Team Roster Only | None | Assigned Follow-up Tasks| View Volunteer Guides| View Only |
-| **Church Member** | Self & Family | View Public Directory | View Own Giving & Tax PDF | View Public Events | View Sermons & Files | View Public Org |
-
----
-
-## 9. Technical Architecture & Implementation Blueprint
-
-### 9.1 Stack Overview
-- **Runtime**: Bun / Node.js
-- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS v4, Lucide/Hugeicons, Shadcn UI base components (`sidebar-07` layout).
-- **Client State**: Zustand (`src/store/`) for lightweight, decoupled client state.
-- **Server Cache & Sync**: TanStack Query v5 (`@tanstack/react-query`) with optimistic mutation rollbacks.
-- **API Engine**: ElysiaJS inside Next.js (`src/app/api/[[...slugs]]/route.ts`) + Eden Treaty for zero-overhead, end-to-end typed RPC.
-- **Database & ORM**: PostgreSQL + Drizzle ORM (`drizzle-kit` for type-safe schema migrations).
-- **Storage**: Cloudinary API with signed client-side upload presets.
-
----
-
-## 10. Agile Sprint Roadmap (Sprint 0 through Sprint 6)
-
-### Sprint 0: Foundation & Core Infrastructure (Week 1–2)
-- **Epic**: Repository scaffolding, Database schema definition, ElysiaJS API route layer, Zustand stores, TanStack Query provider, and Shadcn `sidebar-07` navigation layout.
-- **Deliverables**:
-  - Drizzle PostgreSQL schema covering Campuses, Users, Roles, Members, Accounts, Transactions, Visitors, and Documents.
-  - Next.js 16 + ElysiaJS route handler with Eden Treaty typed client.
-  - Shadcn `sidebar-07` component fully customized with church switcher and modular navigation.
-  - UI Theme and tokens matching reference screenshots.
-
-### Sprint 1: Multi-Branch & Visual Organigram (Week 3–4)
-- **Epic**: Multi-Campus configuration and interactive drag-and-drop church organizational tree.
-- **Deliverables**:
-  - Campus switcher with multi-tenant scoping in Zustand.
-  - Interactive Organigram tree with drag-and-drop reporting lines and role updates.
-  - Span-of-care metrics and PDF/SVG export.
-
-### Sprint 2: Visitor CRM & Leads Kanban Pipeline (Week 5–6)
-- **Epic**: Guest onboarding, visual Kanban pipeline, follow-up automations, and detail slide-over.
-- **Deliverables**:
-  - Kanban board matching reference screenshots (columns with totals, card metrics, time elapsed).
-  - Detail slide-over drawer with stage stepper, activity timeline, appointments, and notes.
-  - Automated communication sequences (SMS/Email triggers).
-  - Public mobile-responsive QR connection card for new visitors.
-
-### Sprint 3: Member Directory & Small Groups (Week 7–8)
-- **Epic**: Household relationship graph, member profiles, and cell group network management.
-- **Deliverables**:
-  - Member directory with advanced filtering (baptism, age, campus, ministry).
-  - Household linking with emergency contact management.
-  - Small group directory, meeting attendance logger, and interactive map.
-
-### Sprint 4: Non-Profit Church Fund Accounting (Week 9–10)
-- **Epic**: Double-entry ledger, Chart of Accounts, tithe/offering contribution tracking, and restricted fund management.
-- **Deliverables**:
-  - Chart of Accounts management with fund allocation (General, Missions, Building).
-  - Tithe & Offering batch entry with check/cash deposit reconciliation.
-  - Online giving portal (Stripe integration) and recurring schedules.
-  - Automated 501(c)(3) tax receipt generation.
-  - Requisition & 2-tier expense approval workflow.
-  - Statement of Financial Position and Statement of Activities reports.
-
-### Sprint 5: Project Management & Sunday Service Planner (Week 11–12)
-- **Epic**: Service run-sheet builder, volunteer scheduling, and church project boards.
-- **Deliverables**:
-  - Service order cue sheet with song chords, song keys, and timing.
-  - Volunteer scheduling with automated SMS/Email RSVP.
-  - General church project Kanban boards for events and facilities.
-
-### Sprint 6: Cloudinary Media Vault, RBAC Hardening & Launch (Week 13–14)
-- **Epic**: Role-based document directory, Cloudinary media vault, security audits, and production hardening.
-- **Deliverables**:
-  - Cloudinary signed upload widget and media browser.
-  - Role-gated document library with download controls.
-  - Granular RBAC permission enforcement across all API endpoints.
-  - End-to-end automated tests and production deployment guidelines.
+| Sprint | Timeline | Focus Area | Deliverables |
+| :--- | :--- | :--- | :--- |
+| **Sprint 0** | Weeks 1–2 | **Foundation & Design System** | Drizzle schema, ElysiaJS API route layer, Better Auth setup, Resend integration, Zustand stores, Shadcn `sidebar-07` navigation. *(Completed)* |
+| **Sprint 1** | Weeks 3–4 | **Multi-Branch & Organigram** | Campus switcher, dynamic reporting lines, drag-and-drop tree editing, span-of-care counters. |
+| **Sprint 2** | Weeks 5–6 | **Visitor CRM & QR Attendance** | Kanban board matching screenshot reference, digital QR connection card, child check-in badge printing, Resend welcome drip automations. |
+| **Sprint 3** | Weeks 7–8 | **Explicit People Management** | Person lifecycle categorization (Visitor -> Member -> Pastor), background check expiration alerts, ordination & sacrament records. |
+| **Sprint 4** | Weeks 9–10 | **Church Fund Accounting & Expense Control** | Non-profit Chart of Accounts, multi-tier expense approval rules, Sunday offering batch entry, 501(c)(3) tax statements. |
+| **Sprint 5** | Weeks 11–12 | **Sunday Service & Project Planning** | Run of Service order builder, volunteer scheduling with SMS/Email RSVP, event Kanban boards. |
+| **Sprint 6** | Weeks 13–14 | **Cloudinary Media Vault & Production Launch** | Role-gated folder structure, signed media upload presets, security audits, and deployment hardening. |

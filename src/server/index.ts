@@ -1,4 +1,5 @@
 import { Elysia, t } from "elysia"
+import { qrService } from "@/features/attendance/qr-service"
 
 export const app = new Elysia({ prefix: "/api" })
   // Health check
@@ -7,6 +8,25 @@ export const app = new Elysia({ prefix: "/api" })
     app: "Evolve Church Management API",
     timestamp: new Date().toISOString(),
   }))
+
+  // Dynamic Nomenclature & Church Terms
+  .group("/nomenclature", (nomApp) =>
+    nomApp
+      .get("/", () => ({
+        churchName: "Evolve Church",
+        memberTermSingular: "Member",
+        memberTermPlural: "Members",
+        visitorTermSingular: "First-Time Guest",
+        visitorTermPlural: "First-Time Guests",
+        groupTermSingular: "Small Group",
+        groupTermPlural: "Small Groups",
+        campusTermSingular: "Campus",
+        campusTermPlural: "Campuses",
+        pastorTermSingular: "Pastor",
+        givingTerm: "Tithes & Offerings",
+        currencyCode: "USD",
+      }))
+  )
 
   // Campuses / Multi-Branch
   .group("/campuses", (campusesApp) =>
@@ -37,6 +57,91 @@ export const app = new Elysia({ prefix: "/api" })
           isMainCampus: false,
         },
       ])
+  )
+
+  // People & Members (Explicit Separation)
+  .group("/people", (peopleApp) =>
+    peopleApp
+      .get("/", ({ query }) => {
+        const type = query.type || "all"
+        return [
+          {
+            id: "mem-1",
+            firstName: "David",
+            lastName: "Johnson",
+            personType: "staff_minister",
+            recordedTitle: "Senior Pastor",
+            ministryRoles: ["Preaching", "Board of Elders"],
+            ordinationDate: "2010-06-15",
+            ordinationCredentials: "Acts Assemblies Presbytery #4492",
+            backgroundCheckStatus: "cleared",
+            backgroundCheckExpiresAt: "2027-01-01",
+            campus: "Main Campus",
+          },
+          {
+            id: "mem-2",
+            firstName: "Marcus",
+            lastName: "Vance",
+            personType: "staff_minister",
+            recordedTitle: "Executive Pastor (Operations)",
+            ministryRoles: ["Operations", "Finance Oversight"],
+            ordinationDate: "2014-08-20",
+            backgroundCheckStatus: "cleared",
+            campus: "Main Campus",
+          },
+          {
+            id: "mem-3",
+            firstName: "Kathryn",
+            lastName: "Murphy",
+            personType: "leader",
+            recordedTitle: "Deaconess & Life Group Leader",
+            ministryRoles: ["Small Groups", "Hospitality"],
+            sacraments: { baptismDate: "2018-04-12", confirmed: true },
+            backgroundCheckStatus: "cleared",
+            campus: "Main Campus",
+          },
+          {
+            id: "mem-4",
+            firstName: "Jane",
+            lastName: "Cooper",
+            personType: "prospect", // 2nd time visitor
+            recordedTitle: null,
+            ministryRoles: [],
+            campus: "Main Campus",
+            followUpStage: "Pastoral Coffee Scheduled",
+          },
+        ]
+      })
+  )
+
+  // QR Code Check-in & Kiosks
+  .group("/attendance", (attendApp) =>
+    attendApp
+      .get("/qr-connection-card", async ({ query }) => {
+        const slug = (query.campusSlug as string) || "main-campus"
+        const targetUrl = qrService.getConnectionCardUrl(slug)
+        const qrCodeDataUrl = await qrService.generateDataUrl(targetUrl)
+        return {
+          targetUrl,
+          qrCodeDataUrl,
+          session: "Sunday Service Digital Connection",
+        }
+      })
+      .post("/child-checkin", ({ body }) => {
+        const pickupCode = qrService.generateChildSecurityCode()
+        return {
+          status: "checked_in",
+          securityPickupCode: pickupCode,
+          badgePrintPayload: {
+            childName: "Noah Cooper",
+            guardianName: "Jane Cooper",
+            emergencyPhone: "(555) 234-5678",
+            allergies: "Peanuts / Dairy",
+            pickupCode,
+            checkedInTime: new Date().toLocaleTimeString(),
+          },
+        }
+      })
   )
 
   // Organigram / Structure
@@ -91,7 +196,38 @@ export const app = new Elysia({ prefix: "/api" })
       })
   )
 
-  // Visitor CRM & Kanban Pipeline (matching the screenshot schema)
+  // Dynamic Fund Accounting & Multi-Tier Expense Control
+  .group("/accounting", (accApp) =>
+    accApp
+      .get("/funds", () => [
+        { id: "fund-1", name: "General Operating Fund", type: "unrestricted", budget: 250000.0, balance: 145890.5 },
+        { id: "fund-2", name: "Sanctuary Expansion Fund", type: "temporarily_restricted", budget: 500000.0, balance: 320400.0 },
+        { id: "fund-3", name: "World Missions", type: "temporarily_restricted", budget: 75000.0, balance: 48900.0 },
+        { id: "fund-4", name: "Benevolence / Community Care", type: "temporarily_restricted", budget: 30000.0, balance: 18250.0 },
+      ])
+      .get("/approval-rules", () => [
+        { tierLevel: 1, minAmount: 0.0, maxAmount: 500.0, approver: "Department Head", description: "Standard supplies & local ministry needs" },
+        { tierLevel: 2, minAmount: 500.01, maxAmount: 2500.0, approver: "Campus Pastor", description: "Campus equipment & guest speaker honorariums" },
+        { tierLevel: 3, minAmount: 2500.01, maxAmount: 10000.0, approver: "Executive Pastor / Finance Director", description: "Major ministry contracts & technology upgrades" },
+        { tierLevel: 4, minAmount: 10000.01, maxAmount: 1000000.0, approver: "Senior Pastor & Board of Trustees", description: "Capital expenditures & building renovations" },
+      ])
+      .get("/requisitions", () => [
+        {
+          id: "req-1",
+          requisitionNumber: "REQ-2024-001",
+          amount: 1450.0,
+          vendor: "Sweetwater Sound",
+          department: "Creative Arts & Worship",
+          purpose: "Replacement Wireless In-Ear Monitors",
+          status: "pending_tier_2",
+          currentApprover: "Campus Pastor (Ahmad Fawaid)",
+          fund: "General Operating Fund",
+          receiptUrl: "https://res.cloudinary.com/evolve-church/receipts/req001.pdf",
+        },
+      ])
+  )
+
+  // Visitor CRM & Kanban Pipeline
   .group("/pipeline", (pipelineApp) =>
     pipelineApp
       .get("/deals", () => {
@@ -129,42 +265,6 @@ export const app = new Elysia({ prefix: "/api" })
                   assignee: { name: "Brian Robbin", avatar: "/avatars/brian.jpg" },
                   metrics: { calendar: 1, checklist: 2, files: 1, images: 0 },
                 },
-                {
-                  id: "deal-3",
-                  dealNumber: "#192742",
-                  title: "Paint & Drywall Repairs",
-                  location: "255 Columbus Cir",
-                  contactName: "Kathryn Murphy",
-                  contactAvatar: "K",
-                  amount: 2480.0,
-                  elapsed: "2h",
-                  assignee: { name: "Ahmad Fawaid", avatar: "/avatars/ahmad.jpg" },
-                  metrics: { calendar: 1, checklist: 3, files: 1, images: 6 },
-                },
-                {
-                  id: "deal-4",
-                  dealNumber: "#192743",
-                  title: "Cleaning",
-                  location: "190 Beach 64th St",
-                  contactName: "Bryan Smith",
-                  contactAvatar: "B",
-                  amount: 520.0,
-                  elapsed: "5h",
-                  assignee: { name: "Leslie Alexander", avatar: "/avatars/leslie.jpg" },
-                  metrics: { calendar: 1, checklist: 2, files: 1, images: 8 },
-                },
-                {
-                  id: "deal-5",
-                  dealNumber: "#192744",
-                  title: "Chimney Sweeps",
-                  location: "8502 Preston St",
-                  contactName: "Eleanor Pena",
-                  contactAvatar: "E",
-                  amount: 1250.0,
-                  elapsed: "1d",
-                  assignee: { name: "Guy Hawkins", avatar: "/avatars/guy.jpg" },
-                  metrics: { calendar: 2, checklist: 1, files: 0, images: 2 },
-                },
               ],
             },
             {
@@ -185,30 +285,6 @@ export const app = new Elysia({ prefix: "/api" })
                   assignee: { name: "Ahmad Fawaid", avatar: "/avatars/ahmad.jpg" },
                   metrics: { calendar: 3, checklist: 1, files: 0, images: 12 },
                 },
-                {
-                  id: "deal-7",
-                  dealNumber: "#192746",
-                  title: "Kitchen Installation",
-                  location: "1740 Madison Ave",
-                  contactName: "Leslie Alexander",
-                  contactAvatar: "L",
-                  amount: 960.0,
-                  elapsed: "23m",
-                  assignee: { name: "Ahmad Fawaid", avatar: "/avatars/ahmad.jpg" },
-                  metrics: { calendar: 1, checklist: 0, files: 1, images: 9 },
-                },
-                {
-                  id: "deal-8",
-                  dealNumber: "#192747",
-                  title: "Backyard Cleaning",
-                  location: "2118 Thornridge Cir",
-                  contactName: "Ronald Richards",
-                  contactAvatar: "R",
-                  amount: 1120.0,
-                  elapsed: "2h",
-                  assignee: { name: "Brian Robbin", avatar: "/avatars/brian.jpg" },
-                  metrics: { calendar: 1, checklist: 2, files: 1, images: 10 },
-                },
               ],
             },
             {
@@ -218,20 +294,8 @@ export const app = new Elysia({ prefix: "/api" })
               dealCount: 7,
               deals: [
                 {
-                  id: "deal-9",
-                  dealNumber: "#192748",
-                  title: "Roofing Repairs",
-                  location: "110 William St",
-                  contactName: "Jenny Wilson",
-                  contactAvatar: "J",
-                  amount: 1970.0,
-                  elapsed: "3m",
-                  assignee: { name: "Ahmad Fawaid", avatar: "/avatars/ahmad.jpg" },
-                  metrics: { calendar: 1, checklist: 4, files: 1, images: 19 },
-                },
-                {
                   id: "deal-10",
-                  dealNumber: "#192749",
+                  dealNumber: "#192748",
                   title: "Paint & Drywall Repairs",
                   location: "2972 Washington Ave",
                   contactName: "Brian Robbin",
@@ -260,18 +324,6 @@ export const app = new Elysia({ prefix: "/api" })
                   elapsed: "1m",
                   assignee: { name: "Ahmad Fawaid", avatar: "/avatars/ahmad.jpg" },
                   metrics: { calendar: 0, checklist: 2, files: 0, images: 12 },
-                },
-                {
-                  id: "deal-12",
-                  dealNumber: "#192751",
-                  title: "Roofing Repairs",
-                  location: "58 Columbus Cir",
-                  contactName: "Dianne Russel",
-                  contactAvatar: "D",
-                  amount: 1520.0,
-                  elapsed: "1w",
-                  assignee: { name: "Kathryn Murphy", avatar: "/avatars/kathryn.jpg" },
-                  metrics: { calendar: 3, checklist: 1, files: 0, images: 8 },
                 },
               ],
             },
@@ -352,17 +404,6 @@ export const app = new Elysia({ prefix: "/api" })
           ],
         }
       })
-  )
-
-  // Fund Accounting
-  .group("/accounting", (accApp) =>
-    accApp
-      .get("/funds", () => [
-        { id: "fund-1", name: "General Operating Fund", type: "unrestricted", balance: 145890.5 },
-        { id: "fund-2", name: "Sanctuary Expansion Fund", type: "temporarily_restricted", balance: 320400.0 },
-        { id: "fund-3", name: "World Missions", type: "temporarily_restricted", balance: 48900.0 },
-        { id: "fund-4", name: "Benevolence / Community Care", type: "temporarily_restricted", balance: 18250.0 },
-      ])
   )
 
 export type App = typeof app
