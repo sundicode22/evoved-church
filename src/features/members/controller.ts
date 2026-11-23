@@ -5,15 +5,33 @@ import { formatErrorResponse } from "@/lib/errors"
 
 export const memberController = new Elysia({ prefix: "/people" })
   /**
-   * GET /api/people - Retrieves people filtered by lifecycle type
+   * GET /api/people - Retrieves paginated people filtered by lifecycle type and campus
    */
-  .get("/", async ({ query, set }) => {
+  .get("/", async ({ query, headers, set }) => {
     try {
-      const data = await memberService.getMembers({
-        personType: query.personType as string | undefined,
-        campusId: query.campusId as string | undefined,
-      })
-      return { success: true, data }
+      const page = Number(query.page || 1)
+      const pageSize = Number(query.pageSize || 10)
+      const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
+      const personType = query.personType as string | undefined
+
+      const records = await memberService.getMembers({ personType, campusId })
+      const total = records.length
+      const totalPages = Math.ceil(total / pageSize) || 1
+      const offset = (page - 1) * pageSize
+      const paginatedData = records.slice(offset, offset + pageSize)
+
+      return {
+        success: true,
+        data: paginatedData,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      }
     } catch (error) {
       const { status, body } = formatErrorResponse(error)
       set.status = status

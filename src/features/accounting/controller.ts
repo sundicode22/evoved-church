@@ -7,9 +7,10 @@ export const accountingController = new Elysia({ prefix: "/accounting" })
   /**
    * GET /api/accounting/funds - Lists all church funds with budget, encumbrance, and balances
    */
-  .get("/funds", async ({ query, set }) => {
+  .get("/funds", async ({ query, headers, set }) => {
     try {
-      const funds = await accountingService.getFunds(query.campusId)
+      const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
+      const funds = await accountingService.getFunds(campusId)
       return { success: true, data: funds }
     } catch (error) {
       const { status, body } = formatErrorResponse(error)
@@ -19,12 +20,32 @@ export const accountingController = new Elysia({ prefix: "/accounting" })
   })
 
   /**
-   * GET /api/accounting/requisitions - Lists all requisitions & approvals
+   * GET /api/accounting/requisitions - Lists paginated requisitions & approvals
    */
-  .get("/requisitions", async ({ query, set }) => {
+  .get("/requisitions", async ({ query, headers, set }) => {
     try {
-      const requisitions = await accountingService.getRequisitions(query.campusId)
-      return { success: true, data: requisitions }
+      const page = Number(query.page || 1)
+      const pageSize = Number(query.pageSize || 10)
+      const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
+
+      const allReqs = await accountingService.getRequisitions(campusId)
+      const total = allReqs.length
+      const totalPages = Math.ceil(total / pageSize) || 1
+      const offset = (page - 1) * pageSize
+      const paginatedData = allReqs.slice(offset, offset + pageSize)
+
+      return {
+        success: true,
+        data: paginatedData,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      }
     } catch (error) {
       const { status, body } = formatErrorResponse(error)
       set.status = status
@@ -35,10 +56,11 @@ export const accountingController = new Elysia({ prefix: "/accounting" })
   /**
    * POST /api/accounting/requisitions - Creates a new expense requisition with budget check
    */
-  .post("/requisitions", async ({ body, set }) => {
+  .post("/requisitions", async ({ body, headers, set }) => {
     try {
       const parsed = createRequisitionSchema.parse(body)
-      const created = await accountingService.createRequisition(parsed)
+      const campusId = parsed.campusId || (headers["x-campus-id"] as string)
+      const created = await accountingService.createRequisition({ ...parsed, campusId })
       set.status = 201
       return { success: true, data: created }
     } catch (error) {

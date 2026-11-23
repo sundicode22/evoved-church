@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { apiClient, ApiResponse } from "@/lib/axios"
 import { SundayCheckinInput, ChildKioskCheckinInput } from "../schemas"
 import { VISITOR_KEYS } from "@/features/visitors/hooks/use-visitor-leads"
 
@@ -11,25 +12,26 @@ export const ATTENDANCE_KEYS = {
 }
 
 /**
- * Isolated hook to generate connection card QR code
+ * Isolated hook to generate connection card QR code via Axios
  */
 export function useAttendanceQRCode(campusSlug?: string) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.qrCode(campusSlug),
     queryFn: async () => {
-      const res = await fetch(`/api/attendance/qr-code?campusSlug=${campusSlug || "main-campus"}`)
-      if (!res.ok) {
-        throw new Error("Failed to generate QR code.")
-      }
-      const json = await res.json()
-      return json.data || json
+      const response = await apiClient.get<ApiResponse<{ targetUrl: string; qrDataUrl: string }>>(
+        "/attendance/qr-code",
+        {
+          params: { campusSlug: campusSlug || "main-campus" },
+        }
+      )
+      return response.data.data || response.data
     },
     staleTime: 5 * 60 * 1000,
   })
 }
 
 /**
- * Isolated mutation hook for Sunday service check-in
+ * Isolated mutation hook for Sunday service check-in via Axios
  * Automatically invalidates visitor pipeline cache when a first-timer checks in!
  */
 export function useSundayCheckin() {
@@ -37,16 +39,8 @@ export function useSundayCheckin() {
 
   return useMutation({
     mutationFn: async (input: SundayCheckinInput) => {
-      const res = await fetch("/api/attendance/checkin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error?.message || "Check-in failed.")
-      }
-      return res.json()
+      const response = await apiClient.post<ApiResponse<any>>("/attendance/checkin", input)
+      return response.data
     },
     onError: (err: Error) => {
       toast.error(err.message)
@@ -54,11 +48,28 @@ export function useSundayCheckin() {
     onSuccess: (data, variables) => {
       if (variables.isFirstTimer) {
         toast.success(`Welcome to Grace City Church, ${variables.fullName}! Added to Welcome Pipeline.`)
-        // Invalidate visitor pipeline so the new card appears immediately
         queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.all })
       } else {
         toast.success(`Welcome back, ${variables.fullName}! Checked in successfully.`)
       }
+    },
+  })
+}
+
+/**
+ * Isolated mutation hook for Child Check-in with security pickup code via Axios
+ */
+export function useChildCheckin() {
+  return useMutation({
+    mutationFn: async (input: ChildKioskCheckinInput) => {
+      const response = await apiClient.post<ApiResponse<any>>("/attendance/child-checkin", input)
+      return response.data
+    },
+    onError: (err: Error) => {
+      toast.error(err.message)
+    },
+    onSuccess: (data: any) => {
+      toast.success(`Child checked in! Security Pickup Code: ${data?.data?.securityPickupCode || "7K2X"}`)
     },
   })
 }

@@ -2,73 +2,63 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { apiClient, ApiResponse, PaginationParams } from "@/lib/axios"
 import { CreateRequisitionInput, ApproveRequisitionInput } from "../schemas"
 
 export const ACCOUNTING_KEYS = {
   all: ["accounting"] as const,
   funds: (campusId?: string) => [...ACCOUNTING_KEYS.all, "funds", campusId || "all"] as const,
-  requisitions: (campusId?: string) => [...ACCOUNTING_KEYS.all, "requisitions", campusId || "all"] as const,
+  requisitions: (params?: PaginationParams) =>
+    [...ACCOUNTING_KEYS.all, "requisitions", params?.page || 1, params?.pageSize || 10, params?.campusId || "all"] as const,
 }
 
 /**
- * Isolated hook to fetch church funds with budget encumbrance
+ * Isolated hook to fetch church funds with budget encumbrance via Axios
  */
 export function useFunds(campusId?: string) {
   return useQuery({
     queryKey: ACCOUNTING_KEYS.funds(campusId),
     queryFn: async () => {
-      const res = await fetch(`/api/accounting/funds${campusId ? `?campusId=${campusId}` : ""}`)
-      if (!res.ok) {
-        throw new Error("Failed to load church funds.")
-      }
-      const json = await res.json()
-      return json.data || json
+      const response = await apiClient.get<ApiResponse<any[]>>("/accounting/funds", {
+        params: { campusId },
+      })
+      return response.data.data || response.data
     },
     staleTime: 60 * 1000,
   })
 }
 
 /**
- * Isolated hook to fetch expense requisitions
+ * Isolated hook to fetch paginated expense requisitions via Axios
  */
-export function useRequisitions(campusId?: string) {
+export function useRequisitions(params: PaginationParams = { page: 1, pageSize: 10 }) {
   return useQuery({
-    queryKey: ACCOUNTING_KEYS.requisitions(campusId),
+    queryKey: ACCOUNTING_KEYS.requisitions(params),
     queryFn: async () => {
-      const res = await fetch(`/api/accounting/requisitions${campusId ? `?campusId=${campusId}` : ""}`)
-      if (!res.ok) {
-        throw new Error("Failed to load expense requisitions.")
-      }
-      const json = await res.json()
-      return json.data || json
+      const response = await apiClient.get<ApiResponse<any[]>>("/accounting/requisitions", {
+        params,
+      })
+      return response.data
     },
     staleTime: 30 * 1000,
   })
 }
 
 /**
- * Isolated mutation hook to submit a new expense requisition with automatic budget check
+ * Isolated mutation hook to submit a new expense requisition with automatic budget check via Axios
  */
 export function useCreateRequisition() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (input: CreateRequisitionInput) => {
-      const res = await fetch("/api/accounting/requisitions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error?.message || "Failed to submit expense requisition.")
-      }
-      return res.json()
+      const response = await apiClient.post<ApiResponse<any>>("/accounting/requisitions", input)
+      return response.data
     },
     onError: (err: Error) => {
       toast.error(err.message)
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Expense requisition submitted successfully!")
       queryClient.invalidateQueries({ queryKey: ACCOUNTING_KEYS.all })
     },
@@ -76,23 +66,15 @@ export function useCreateRequisition() {
 }
 
 /**
- * Isolated mutation hook to approve or reject a requisition
+ * Isolated mutation hook to approve or reject a requisition via Axios
  */
 export function useApproveRequisition() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ id, input }: { id: string; input: ApproveRequisitionInput }) => {
-      const res = await fetch(`/api/accounting/requisitions/${id}/approve`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error?.message || "Approval action failed.")
-      }
-      return res.json()
+      const response = await apiClient.patch<ApiResponse<any>>(`/accounting/requisitions/${id}/approve`, input)
+      return response.data
     },
     onError: (err: Error) => {
       toast.error(err.message)
