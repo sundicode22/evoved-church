@@ -101,6 +101,21 @@ export const tenantNomenclatures = pgTable("tenant_nomenclatures", {
 })
 
 // ==========================================
+// DYNAMIC USER CATEGORIES / ROLES
+// ==========================================
+// Churches dynamically create categories of people with custom badges, permissions & pastoral notes
+export const userCategories = pgTable("user_categories", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(), // "Covenant Partner", "Elder", "Youth", "VIP Guest", "Deacon"
+  slug: varchar("slug", { length: 100 }).notNull(),
+  badgeColor: varchar("badge_color", { length: 50 }).default("emerald").notNull(), // Tailwind color badge
+  description: text("description"),
+  permissions: jsonb("permissions").$type<string[]>().default([]),
+  isSystem: boolean("is_system").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+// ==========================================
 // DYNAMIC CUSTOM FIELDS ENGINE
 // ==========================================
 // Allows arbitrary user-defined metadata per entity (Members, Visitors, Groups, Transactions)
@@ -350,11 +365,24 @@ export const accountingFunds = pgTable("accounting_funds", {
   code: varchar("code", { length: 50 }).notNull().unique(),
   type: fundTypeEnum("type").default("unrestricted").notNull(),
   budgetAmount: decimal("budget_amount", { precision: 14, scale: 2 }).default("0.00").notNull(),
-  balance: decimal("balance", { precision: 14, scale: 2 }).default("0.00").notNull(),
+  encumberedAmount: decimal("encumbered_amount", { precision: 14, scale: 2 }).default("0.00").notNull(), // Locked for approved requisitions
+  expendedAmount: decimal("expended_amount", { precision: 14, scale: 2 }).default("0.00").notNull(), // Actually paid out
+  balance: decimal("balance", { precision: 14, scale: 2 }).default("0.00").notNull(), // Liquid cash balance
   description: text("description"),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const fundTransfers = pgTable("fund_transfers", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id).notNull(),
+  fromFundId: uuid("from_fund_id").references(() => accountingFunds.id).notNull(),
+  toFundId: uuid("to_fund_id").references(() => accountingFunds.id).notNull(),
+  amount: decimal("amount", { precision: 14, scale: 2 }).notNull(),
+  transferReason: text("transfer_reason").notNull(),
+  authorizedByUserId: text("authorized_by_user_id").references(() => users.id).notNull(),
+  transferDate: timestamp("transfer_date").defaultNow().notNull(),
 })
 
 export const chartOfAccounts = pgTable("chart_of_accounts", {
