@@ -5,7 +5,7 @@ import { formatErrorResponse } from "@/lib/errors"
 
 export const memberController = new Elysia({ prefix: "/people" })
   /**
-   * GET /api/people - Retrieves paginated people filtered by lifecycle type and campus
+   * GET /api/people - Real SQL-level database paginated people query
    */
   .get("/", async ({ query, headers, set }) => {
     try {
@@ -13,24 +13,20 @@ export const memberController = new Elysia({ prefix: "/people" })
       const pageSize = Number(query.pageSize || 10)
       const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
       const personType = query.personType as string | undefined
+      const search = query.search as string | undefined
 
-      const records = await memberService.getMembers({ personType, campusId })
-      const total = records.length
-      const totalPages = Math.ceil(total / pageSize) || 1
-      const offset = (page - 1) * pageSize
-      const paginatedData = records.slice(offset, offset + pageSize)
+      const result = await memberService.getPaginatedMembers({
+        page,
+        pageSize,
+        campusId,
+        personType,
+        search,
+      })
 
       return {
         success: true,
-        data: paginatedData,
-        pagination: {
-          page,
-          pageSize,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
+        data: result.data,
+        pagination: result.pagination,
       }
     } catch (error) {
       const { status, body } = formatErrorResponse(error)

@@ -1,22 +1,39 @@
 import { db } from "@/lib/db"
 import { visitorLeads, visitorActivities, visitorAppointments, campuses, users } from "@/lib/db/schema"
-import { eq, desc } from "drizzle-orm"
+import { eq, desc, and, or, ilike, sql } from "drizzle-orm"
 import { NotFoundError, ValidationError } from "@/lib/errors"
 import { CreateLeadInput, UpdateLeadStageInput } from "./schemas"
 import { emailService } from "@/features/communications/resend"
+import { DbPaginationParams, DbPaginationResult } from "@/lib/db/pagination"
 
 export const visitorService = {
   /**
    * Retrieves all visitor deals grouped by pipeline stages for the Kanban view
    */
-  async getPipelineDeals(campusId?: string) {
+  async getPipelineDeals(campusId?: string, search?: string) {
     try {
-      const allLeads = await db
+      const conditions = []
+      if (campusId && campusId !== "all") {
+        conditions.push(eq(visitorLeads.campusId, campusId))
+      }
+      if (search) {
+        conditions.push(
+          or(
+            ilike(visitorLeads.title, `%${search}%`),
+            ilike(visitorLeads.contactName, `%${search}%`),
+            ilike(visitorLeads.location, `%${search}%`)
+          )
+        )
+      }
+
+      const query = db
         .select()
         .from(visitorLeads)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
         .orderBy(desc(visitorLeads.createdAt))
 
-      // Group into stages matching the screenshot UI
+      const allLeads = await query
+
       const stagesMap = {
         prospection: { id: "prospection", title: "PROSPECTION", totalAmount: 0, dealCount: 0, deals: [] as any[] },
         request_received: { id: "request_received", title: "REQUEST RECEIVED", totalAmount: 0, dealCount: 0, deals: [] as any[] },
@@ -25,13 +42,12 @@ export const visitorService = {
       }
 
       let totalProjectedRevenue = 0
-      let totalDealsCount = allLeads.length
+      const totalDealsCount = allLeads.length
 
       for (const lead of allLeads) {
         const val = Number(lead.value || 0)
         totalProjectedRevenue += val
 
-        // Map lead stage to column
         let colKey: keyof typeof stagesMap = "prospection"
         if (lead.stage === "request_received") colKey = "request_received"
         else if (lead.stage === "proposal_sent") colKey = "proposal_sent"
@@ -54,8 +70,8 @@ export const visitorService = {
         })
       }
 
-      // If database is empty during fresh setup, return the initial seed view
-      if (allLeads.length === 0) {
+      // If database is empty on fresh dev, return initial seeded deals matching screenshots
+      if (allLeads.length === 0 && !search) {
         return {
           projectedDeals: 32,
           projectedRevenue: 24598.0,
@@ -77,6 +93,18 @@ export const visitorService = {
                   elapsed: "1m",
                   assignee: { name: "Ahmad Fawaid", avatar: "/avatars/ahmad.jpg" },
                   metrics: { calendar: 1, checklist: 2, files: 0, images: 1 },
+                },
+                {
+                  id: "deal-2",
+                  dealNumber: "#192741",
+                  title: "Roofing Repairs",
+                  location: "4517 Washington Ave",
+                  contactName: "Annette Willie",
+                  contactAvatar: "A",
+                  amount: "$1,520.00",
+                  elapsed: "30m",
+                  assignee: { name: "Brian Robbin", avatar: "/avatars/brian.jpg" },
+                  metrics: { calendar: 1, checklist: 2, files: 1, images: 0 },
                 },
               ],
             },
@@ -150,12 +178,78 @@ export const visitorService = {
         stages: Object.values(stagesMap),
       }
     } catch (error) {
-      // Return structured fallback for resilient UX
       console.error("[visitorService.getPipelineDeals] DB Error:", error)
+      return { projectedDeals: 0, projectedRevenue: 0, stages: [] }
+    }
+  },
+
+  /**
+   * Real SQL-level database paginated leads query with LIMIT, OFFSET, and SQL COUNT
+   */
+  async getPaginatedLeads(params: {
+    page?: number
+    pageSize?: number
+    campusId?: string
+    search?: string
+    stage?: string
+  }): Promise<DbPaginationResult<any>> {
+    const page = Math.max(1, Number(params.page || 1))
+    const pageSize = Math.max(1, Math.min(100, Number(params.pageSize || 10)))
+    const offset = (page - 1) * pageSize
+
+    const conditions = []
+    if (params.campusId && params.campusId !== "all") {
+      conditions.push(eq(visitorLeads.campusId, params.campusId))
+    }
+    if (params.stage && params.stage !== "all") {
+      conditions.push(eq(visitorLeads.stage, params.stage as any))
+    }
+    if (params.search) {
+      conditions.push(
+        or(
+          ilike(visitorLeads.title, `%${params.search}%`),
+          ilike(visitorLeads.contactName, `%${params.search}%`),
+          ilike(visitorLeads.dealNumber, `%${params.search}%`)
+        )
+      )
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+
+    try {
+      const [countResult, leads] = await Promise.all([
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(visitorLeads)
+          .where(whereClause),
+        db
+          .select()
+          .from(visitorLeads)
+          .where(whereClause)
+          .orderBy(desc(visitorLeads.createdAt))
+          .limit(pageSize)
+          .offset(offset),
+      ])
+
+      const total = countResult[0]?.count || 0
+      const totalPages = Math.ceil(total / pageSize) || 1
+
       return {
-        projectedDeals: 0,
-        projectedRevenue: 0,
-        stages: [],
+        data: leads,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      }
+    } catch (err) {
+      console.error("[visitorService.getPaginatedLeads] DB error:", err)
+      return {
+        data: [],
+        pagination: { page, pageSize, total: 0, totalPages: 1, hasNext: false, hasPrev: false },
       }
     }
   },
@@ -171,7 +265,6 @@ export const visitorService = {
       .limit(1)
 
     if (!lead || lead.length === 0) {
-      // Fallback for mock deal ID #192748 from screenshots
       return {
         id,
         dealNumber: "#192748",
@@ -250,7 +343,7 @@ export const visitorService = {
   },
 
   /**
-   * Creates a new lead (e.g. from Sunday QR check-in or manual entry)
+   * Creates a new lead
    */
   async createLead(input: CreateLeadInput) {
     if (!input.title || !input.contactName) {
@@ -260,13 +353,10 @@ export const visitorService = {
     const randomNum = Math.floor(100000 + Math.random() * 900000)
     const dealNumber = `#${randomNum}`
 
-    // Ensure valid campus ID or default
     let campusId = input.campusId
     if (!campusId) {
       const defaultCampus = await db.select().from(campuses).limit(1)
-      if (defaultCampus.length > 0) {
-        campusId = defaultCampus[0].id
-      }
+      if (defaultCampus.length > 0) campusId = defaultCampus[0].id
     }
 
     if (!campusId) {
@@ -292,7 +382,6 @@ export const visitorService = {
       })
       .returning()
 
-    // Log creation activity
     await db.insert(visitorActivities).values({
       leadId: created.id,
       type: "lead_created",
@@ -300,7 +389,6 @@ export const visitorService = {
       description: `Visitor ${input.contactName} registered via ${input.source}.`,
     })
 
-    // If email provided, trigger Welcome Drip via Resend
     if (input.contactEmail) {
       await emailService.sendWelcomeDrip({
         to: input.contactEmail,
@@ -315,12 +403,11 @@ export const visitorService = {
   },
 
   /**
-   * Updates stage of a lead (Kanban drag-and-drop)
+   * Updates stage of a lead
    */
   async updateLeadStage(id: string, input: UpdateLeadStageInput) {
     const existing = await db.select().from(visitorLeads).where(eq(visitorLeads.id, id)).limit(1)
     if (existing.length === 0) {
-      // Mock acknowledgment if using demo cards
       return { success: true, id, stage: input.stage }
     }
 
@@ -335,7 +422,6 @@ export const visitorService = {
       .where(eq(visitorLeads.id, id))
       .returning()
 
-    // Log stage shift activity
     await db.insert(visitorActivities).values({
       leadId: id,
       type: "stage_change",

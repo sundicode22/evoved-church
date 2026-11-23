@@ -10,7 +10,8 @@ export const visitorController = new Elysia({ prefix: "/pipeline" })
   .get("/deals", async ({ query, headers, set }) => {
     try {
       const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
-      const data = await visitorService.getPipelineDeals(campusId)
+      const search = (query.search as string) || undefined
+      const data = await visitorService.getPipelineDeals(campusId, search)
       return { success: true, data }
     } catch (error) {
       const { status, body } = formatErrorResponse(error)
@@ -20,43 +21,28 @@ export const visitorController = new Elysia({ prefix: "/pipeline" })
   })
 
   /**
-   * GET /api/pipeline/deals/list - Returns paginated list of leads with branch scoping
+   * GET /api/pipeline/deals/list - Real database SQL pagination
    */
   .get("/deals/list", async ({ query, headers, set }) => {
     try {
       const page = Number(query.page || 1)
       const pageSize = Number(query.pageSize || 10)
       const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
-      const search = (query.search as string) || ""
+      const search = (query.search as string) || undefined
+      const stage = (query.stage as string) || undefined
 
-      // Fetch deals
-      const pipelineData = await visitorService.getPipelineDeals(campusId)
-      const allDeals = pipelineData.stages.flatMap((s: any) => s.deals)
-
-      const filtered = search
-        ? allDeals.filter(
-            (d: any) =>
-              d.title.toLowerCase().includes(search.toLowerCase()) ||
-              d.contactName.toLowerCase().includes(search.toLowerCase())
-          )
-        : allDeals
-
-      const total = filtered.length
-      const totalPages = Math.ceil(total / pageSize) || 1
-      const offset = (page - 1) * pageSize
-      const paginatedData = filtered.slice(offset, offset + pageSize)
+      const result = await visitorService.getPaginatedLeads({
+        page,
+        pageSize,
+        campusId,
+        search,
+        stage,
+      })
 
       return {
         success: true,
-        data: paginatedData,
-        pagination: {
-          page,
-          pageSize,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
+        data: result.data,
+        pagination: result.pagination,
       }
     } catch (error) {
       const { status, body } = formatErrorResponse(error)

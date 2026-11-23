@@ -5,13 +5,16 @@ import {
   expenseRequisitions,
   expenseApprovals,
   expenseApprovalRules,
+  journalEntries,
+  journalLines,
   campuses,
   users,
 } from "@/lib/db/schema"
-import { eq, desc } from "drizzle-orm"
+import { eq, desc, and, ilike, sql } from "drizzle-orm"
 import { NotFoundError, ValidationError, BudgetExceededError } from "@/lib/errors"
 import { CreateRequisitionInput, ApproveRequisitionInput, FundTransferInput } from "./schemas"
 import { emailService } from "@/features/communications/resend"
+import { DbPaginationResult } from "@/lib/db/pagination"
 
 export const accountingService = {
   /**
@@ -19,7 +22,15 @@ export const accountingService = {
    */
   async getFunds(campusId?: string) {
     try {
-      const funds = await db.select().from(accountingFunds).where(eq(accountingFunds.isActive, true))
+      const conditions = [eq(accountingFunds.isActive, true)]
+      if (campusId && campusId !== "all") {
+        conditions.push(eq(accountingFunds.campusId, campusId))
+      }
+
+      const funds = await db
+        .select()
+        .from(accountingFunds)
+        .where(and(...conditions))
 
       if (funds.length === 0) {
         return [
@@ -89,32 +100,118 @@ export const accountingService = {
   },
 
   /**
-   * Retrieves pending expense requisitions
+   * Real SQL-level database paginated requisitions query with LIMIT, OFFSET, and SQL COUNT
    */
-  async getRequisitions(campusId?: string) {
+  async getPaginatedRequisitions(params: {
+    page?: number
+    pageSize?: number
+    campusId?: string
+    status?: string
+    search?: string
+  }): Promise<DbPaginationResult<any>> {
+    const page = Math.max(1, Number(params.page || 1))
+    const pageSize = Math.max(1, Math.min(100, Number(params.pageSize || 10)))
+    const offset = (page - 1) * pageSize
+
+    const conditions = []
+    if (params.campusId && params.campusId !== "all") {
+      conditions.push(eq(expenseRequisitions.campusId, params.campusId))
+    }
+    if (params.status && params.status !== "all") {
+      conditions.push(eq(expenseRequisitions.status, params.status as any))
+    }
+    if (params.search) {
+      conditions.push(
+        ilike(expenseRequisitions.vendorName, `%${params.search}%`)
+      )
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+
     try {
-      const reqs = await db.select().from(expenseRequisitions).orderBy(desc(expenseRequisitions.createdAt))
-      if (reqs.length === 0) {
+      const [countResult, records] = await Promise.all([
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(expenseRequisitions)
+          .where(whereClause),
+        db
+          .select()
+          .from(expenseRequisitions)
+          .where(whereClause)
+          .orderBy(desc(expenseRequisitions.createdAt))
+          .limit(pageSize)
+          .offset(offset),
+      ])
+
+      const total = countResult[0]?.count || 0
+      const totalPages = Math.ceil(total / pageSize) || 1
+
+      // Fallback demo row if empty in local dev
+      if (records.length === 0 && !params.search) {
+        return {
+          data: [
+            {
+              id: "req-1",
+              requisitionNumber: "REQ-2024-001",
+              amount: 1450.0,
+              vendorName: "Sweetwater Sound",
+              department: "Creative Arts & Worship",
+              description: "Replacement Wireless In-Ear Monitors for Praise Team",
+              status: "pending_tier_2",
+              currentTierLevel: 2,
+              currentApprover: "Campus Pastor (Ahmad Fawaid)",
+              fundName: "General Operating Fund",
+              receiptUrl: "https://res.cloudinary.com/evolve-church/receipts/req001.pdf",
+              createdAt: new Date().toISOString(),
+            },
+          ],
+          pagination: { page: 1, pageSize: 10, total: 1, totalPages: 1, hasNext: false, hasPrev: false },
+        }
+      }
+
+      return {
+        data: records,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      }
+    } catch (err) {
+      console.error("[accountingService.getPaginatedRequisitions] DB error:", err)
+      return {
+        data: [],
+        pagination: { page, pageSize, total: 0, totalPages: 1, hasNext: false, hasPrev: false },
+      }
+    }
+  },
+
+  /**
+   * Retrieves Chart of Accounts (1000 Assets, 2000 Liabilities, 3000 Net Assets, 4000 Revenues, 5000 Expenses)
+   */
+  async getChartOfAccounts(campusId?: string) {
+    try {
+      const accounts = await db.select().from(chartOfAccounts).where(eq(chartOfAccounts.isActive, true))
+      if (accounts.length === 0) {
         return [
-          {
-            id: "req-1",
-            requisitionNumber: "REQ-2024-001",
-            amount: 1450.0,
-            vendorName: "Sweetwater Sound",
-            department: "Creative Arts & Worship",
-            description: "Replacement Wireless In-Ear Monitors for Praise Team",
-            status: "pending_tier_2",
-            currentTierLevel: 2,
-            currentApprover: "Campus Pastor (Ahmad Fawaid)",
-            fundName: "General Operating Fund",
-            receiptUrl: "https://res.cloudinary.com/evolve-church/receipts/req001.pdf",
-            createdAt: new Date().toISOString(),
-          },
+          { accountNumber: "1010", accountName: "Operating Checking Account", category: "asset", balance: 145890.5 },
+          { accountNumber: "1020", accountName: "Building Fund Savings", category: "asset", balance: 320400.0 },
+          { accountNumber: "2010", accountName: "Accounts Payable (Vendors)", category: "liability", balance: 14200.0 },
+          { accountNumber: "3010", accountName: "Unrestricted Net Assets", category: "net_assets", balance: 145890.5 },
+          { accountNumber: "3020", accountName: "Restricted Net Assets", category: "net_assets", balance: 387550.0 },
+          { accountNumber: "4010", accountName: "General Tithes & Offerings", category: "revenue", balance: 295400.0 },
+          { accountNumber: "4020", accountName: "Building Pledges Received", category: "revenue", balance: 145000.0 },
+          { accountNumber: "5010", accountName: "Pastoral & Staff Payroll", category: "expense", balance: 98000.0 },
+          { accountNumber: "5020", accountName: "Sanctuary Facility Lease", category: "expense", balance: 42000.0 },
+          { accountNumber: "5030", accountName: "Worship & Production Gear", category: "expense", balance: 16450.0 },
         ]
       }
-      return reqs
+      return accounts
     } catch (err) {
-      console.error("[accountingService.getRequisitions] DB error:", err)
+      console.error("[accountingService.getChartOfAccounts] DB error:", err)
       return []
     }
   },
@@ -123,7 +220,6 @@ export const accountingService = {
    * Submits an expense requisition and checks budget constraints
    */
   async createRequisition(input: CreateRequisitionInput, requestedByUserId = "user-1") {
-    // 1. Fetch fund and verify unencumbered funds
     const fundRecords = await db.select().from(accountingFunds).where(eq(accountingFunds.id, input.fundId)).limit(1)
 
     if (fundRecords.length > 0) {
@@ -136,7 +232,6 @@ export const accountingService = {
         throw new BudgetExceededError(fund.name, input.amount, unencumbered)
       }
 
-      // Lock/encumber the funds
       await db
         .update(accountingFunds)
         .set({
@@ -146,11 +241,6 @@ export const accountingService = {
         .where(eq(accountingFunds.id, input.fundId))
     }
 
-    // 2. Determine initial approval tier based on amount:
-    // Tier 1: <= $500 (Dept Head)
-    // Tier 2: $500.01 - $2,500 (Campus Pastor)
-    // Tier 3: $2,500.01 - $10,000 (Exec Pastor / Finance Director)
-    // Tier 4: > $10,000 (Senior Pastor & Board)
     let initialTier = 1
     let initialStatus: "pending_tier_1" | "pending_tier_2" | "pending_tier_3" = "pending_tier_1"
 
@@ -168,7 +258,6 @@ export const accountingService = {
     const randomReq = Math.floor(1000 + Math.random() * 9000)
     const requisitionNumber = `REQ-2024-${randomReq}`
 
-    // Ensure valid campus ID or default
     let campusId = input.campusId
     if (!campusId) {
       const defaultCampus = await db.select().from(campuses).limit(1)
@@ -192,7 +281,6 @@ export const accountingService = {
       })
       .returning()
 
-    // 3. Trigger email alert via Resend to the responsible approver
     await emailService.sendExpenseApprovalAlert({
       to: "pastor@evolvechms.org",
       approverName: "Campus Pastor",
@@ -217,7 +305,6 @@ export const accountingService = {
 
     const req = existing[0]
 
-    // Log the approval decision
     await db.insert(expenseApprovals).values({
       requisitionId: id,
       approverUserId,
@@ -227,7 +314,6 @@ export const accountingService = {
     })
 
     if (input.decision === "rejected") {
-      // Release encumbered funds back to fund balance
       const fund = await db.select().from(accountingFunds).where(eq(accountingFunds.id, req.fundId)).limit(1)
       if (fund.length > 0) {
         const encumbered = Math.max(0, Number(fund[0].encumberedAmount || 0) - Number(req.amount))
@@ -245,7 +331,6 @@ export const accountingService = {
       return updated
     }
 
-    // If approved, check if additional tier sign-off is required or if it reaches final approval
     let nextStatus = "approved"
     if (req.currentTierLevel === 1 && Number(req.amount) > 500) {
       nextStatus = "pending_tier_2"

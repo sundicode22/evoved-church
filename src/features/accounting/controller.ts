@@ -20,31 +20,43 @@ export const accountingController = new Elysia({ prefix: "/accounting" })
   })
 
   /**
-   * GET /api/accounting/requisitions - Lists paginated requisitions & approvals
+   * GET /api/accounting/chart-of-accounts - Lists standard double-entry Chart of Accounts
+   */
+  .get("/chart-of-accounts", async ({ query, headers, set }) => {
+    try {
+      const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
+      const coa = await accountingService.getChartOfAccounts(campusId)
+      return { success: true, data: coa }
+    } catch (error) {
+      const { status, body } = formatErrorResponse(error)
+      set.status = status
+      return body
+    }
+  })
+
+  /**
+   * GET /api/accounting/requisitions - Real SQL-level paginated requisitions & approvals
    */
   .get("/requisitions", async ({ query, headers, set }) => {
     try {
       const page = Number(query.page || 1)
       const pageSize = Number(query.pageSize || 10)
       const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
+      const status = (query.status as string) || undefined
+      const search = (query.search as string) || undefined
 
-      const allReqs = await accountingService.getRequisitions(campusId)
-      const total = allReqs.length
-      const totalPages = Math.ceil(total / pageSize) || 1
-      const offset = (page - 1) * pageSize
-      const paginatedData = allReqs.slice(offset, offset + pageSize)
+      const result = await accountingService.getPaginatedRequisitions({
+        page,
+        pageSize,
+        campusId,
+        status,
+        search,
+      })
 
       return {
         success: true,
-        data: paginatedData,
-        pagination: {
-          page,
-          pageSize,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
+        data: result.data,
+        pagination: result.pagination,
       }
     } catch (error) {
       const { status, body } = formatErrorResponse(error)
