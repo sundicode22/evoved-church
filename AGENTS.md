@@ -23,12 +23,17 @@
 - **Navigation Layout**: Shadcn UI `sidebar-07` collapsible hierarchical navigation with church/branch switcher in the header and user profile in footer.
 
 ### 2.2 Backend & API Architecture
+- **Driver & ORM**: PostgreSQL via **`postgres.js`** driver + **Drizzle ORM** (`src/lib/db/index.ts`).
+- **Layered Clean Architecture**:
+  - **Controllers** (`src/features/*/controller.ts`): Request validation with Zod, status codes, delegations.
+  - **Services** (`src/features/*/service.ts`): Pure domain logic, Drizzle ORM queries, transactional consistency.
+  - **Schemas** (`src/features/*/schemas.ts`): Zod schemas for all validated inputs and inferred TypeScript types.
+  - **Hooks** (`src/features/*/hooks/`): TanStack Query v5 custom hooks with query key isolation and optimistic updates.
+- **Robust Centralized Error Handling** (`src/lib/errors.ts`):
+  - Domain error hierarchy: `AppError`, `NotFoundError`, `ValidationError`, `UnauthorizedError`, `ForbiddenError`, `ConflictError`, `BudgetExceededError`.
+  - Standardized JSON error response shape: `{ success: false, error: { code, message, details, timestamp } }`.
 - **API Engine**: ElysiaJS integrated directly inside Next.js via `src/app/api/[[...slugs]]/route.ts` using Web standard `Request`/`Response`.
 - **Client-to-Server RPC**: `@elysiajs/eden` for end-to-end typed contract without code generation or manual boilerplate.
-- **ORM & Database**: Drizzle ORM connected to PostgreSQL. All relational tables MUST enforce:
-  - Multi-branch tenant scoping (`branch_id` or `campus_id` foreign key).
-  - Soft-delete semantics (`deleted_at` timestamp) for sensitive records (members, transactions, contributions).
-  - Explicit audit trails (`created_by`, `updated_by`).
 
 ### 2.3 Media & Document Storage
 - **Cloudinary SDK**: Signed uploads for sermon audio/video, high-res member avatars, event media, receipts, and invoices.
