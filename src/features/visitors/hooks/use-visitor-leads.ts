@@ -1,116 +1,105 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { toast } from "sonner"
-import { apiClient, ApiResponse, PaginationParams } from "@/lib/axios"
-import { VisitorStage, UpdateLeadStageInput, CreateLeadInput } from "../schemas"
+import { apiClient, ApiResponse } from "@/lib/axios"
+import { CreateLeadInput, UpdateLeadStageInput } from "../schemas"
+import { useBranchStore } from "@/store/use-branch-store"
 
 export const VISITOR_KEYS = {
-  all: ["visitor-leads"] as const,
-  pipeline: (campusId?: string, search?: string) =>
-    [...VISITOR_KEYS.all, "pipeline", campusId || "all", search || ""] as const,
-  list: (params?: PaginationParams) =>
-    [...VISITOR_KEYS.all, "list", params?.page || 1, params?.pageSize || 10, params?.campusId || "all", params?.search || ""] as const,
+  all: ["visitors"] as const,
+  board: (campusId?: string, search?: string) =>
+    [...VISITOR_KEYS.all, "board", campusId || "all", search || ""] as const,
+  list: (page: number, campusId?: string) =>
+    [...VISITOR_KEYS.all, "list", page, campusId || "all"] as const,
   detail: (id: string) => [...VISITOR_KEYS.all, "detail", id] as const,
 }
 
-/**
- * Isolated hook to fetch Kanban pipeline leads via Axios with branch scoping
- */
-export function useVisitorLeads(campusId?: string, search?: string) {
+export function useVisitorBoard(search?: string) {
+  const campusId = useBranchStore((s) => s.activeCampusId)
   return useQuery({
-    queryKey: VISITOR_KEYS.pipeline(campusId, search),
+    queryKey: VISITOR_KEYS.board(campusId, search),
     queryFn: async () => {
-      const response = await apiClient.get<ApiResponse<any>>("/pipeline/deals", {
+      const response = await apiClient.get<ApiResponse<any>>("/visitors/board", {
         params: { campusId, search },
       })
-      return response.data.data || response.data
+      return response.data.data
     },
-    staleTime: 30 * 1000,
   })
 }
 
-/**
- * Isolated hook to fetch paginated visitor list via Axios
- */
-export function usePaginatedVisitors(params: PaginationParams = { page: 1, pageSize: 10 }) {
+export function useVisitorLeads(page = 1, pageSize = 10, stage?: string, search?: string) {
+  const campusId = useBranchStore((s) => s.activeCampusId)
   return useQuery({
-    queryKey: VISITOR_KEYS.list(params),
+    queryKey: [...VISITOR_KEYS.list(page, campusId), stage, search],
     queryFn: async () => {
-      const response = await apiClient.get<ApiResponse<any[]>>("/pipeline/deals/list", {
-        params,
+      const response = await apiClient.get<ApiResponse<any[]>>("/visitors", {
+        params: { page, pageSize, campusId, stage, search },
       })
       return response.data
     },
-    staleTime: 30 * 1000,
   })
 }
 
-/**
- * Isolated hook to fetch single lead details for the Slide-over drawer via Axios
- */
-export function useLeadDetail(leadId: string | null) {
+export function useVisitorDetail(leadId?: string | null) {
   return useQuery({
     queryKey: VISITOR_KEYS.detail(leadId || ""),
-    queryFn: async () => {
-      if (!leadId) return null
-      const response = await apiClient.get<ApiResponse<any>>(`/pipeline/deals/${leadId}`)
-      return response.data.data || response.data
-    },
     enabled: Boolean(leadId),
-    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const response = await apiClient.get<ApiResponse<any>>(`/visitors/${leadId}`)
+      return response.data.data
+    },
   })
 }
 
-/**
- * Isolated hook for moving a lead between stages with optimistic updates via Axios
- */
 export function useUpdateLeadStage() {
   const queryClient = useQueryClient()
+  const campusId = useBranchStore((s) => s.activeCampusId)
 
   return useMutation({
-    mutationFn: async ({ id, stage, reason }: { id: string; stage: VisitorStage; reason?: string }) => {
-      const response = await apiClient.patch<ApiResponse<any>>(`/pipeline/deals/${id}/stage`, {
-        stage,
-        reason,
-      } as UpdateLeadStageInput)
-      return response.data
+    mutationFn: async ({ id, ...input }: UpdateLeadStageInput & { id: string }) => {
+      const response = await apiClient.patch<ApiResponse<any>>(`/visitors/${id}/stage`, input)
+      return response.data.data
     },
     onMutate: async ({ id, stage }) => {
       await queryClient.cancelQueries({ queryKey: VISITOR_KEYS.all })
-      const previousData = queryClient.getQueryData(VISITOR_KEYS.pipeline())
-      toast.info(`Moving deal to ${stage.replace("_", " ").toUpperCase()}...`)
-      return { previousData }
+      const key = VISITOR_KEYS.board(campusId)
+      const previous = queryClient.getQueryData(key)
+      queryClient.setQueryData(key, (old: any) => {
+        if (!old?.stages) return old
+        const stages = old.stages.map((col: any) => ({
+          ...col,
+          leads: col.leads.filter((l: any) => l.id !== id),
+          leadCount: col.leads.filter((l: any) => l.id !== id).length,
+        }))
+        const moved = old.stages.flatMap((c: any) => c.leads).find((l: any) => l.id === id)
+        if (moved) {
+          const target = stages.find((c: any) => c.id === stage)
+          if (target) {
+            target.leads = [{ ...moved, stage }, ...target.leads]
+            target.leadCount = target.leads.length
+          }
+        }
+        return { ...old, stages }
+      })
+      return { previous, key }
     },
-    onError: (err: Error, variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(VISITOR_KEYS.pipeline(), context.previousData)
-      }
-      toast.error(err.message || "Could not move deal stage.")
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous && ctx.key) queryClient.setQueryData(ctx.key, ctx.previous)
     },
-    onSuccess: (data, variables) => {
-      toast.success(`Deal moved to ${variables.stage.replace("_", " ").toUpperCase()}`)
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.all })
     },
   })
 }
 
-/**
- * Isolated hook to create a new lead via Axios
- */
 export function useCreateLead() {
   const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: async (input: CreateLeadInput) => {
-      const response = await apiClient.post<ApiResponse<any>>("/pipeline/deals", input)
-      return response.data
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to create visitor lead.")
+      const response = await apiClient.post<ApiResponse<any>>("/visitors", input)
+      return response.data.data
     },
     onSuccess: () => {
-      toast.success("Visitor lead created successfully!")
       queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.all })
     },
   })

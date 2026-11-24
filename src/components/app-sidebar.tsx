@@ -24,6 +24,7 @@ import {
   UserGroupIcon,
   Calendar03Icon,
   Task01Icon,
+  Megaphone01Icon,
   Coins01Icon,
   Invoice01Icon,
   Folder01Icon,
@@ -32,42 +33,46 @@ import {
   UserCircle02Icon,
   ChartHistogramIcon,
   ChurchIcon,
+  UserAdd01Icon,
+  FileValidationIcon,
 } from "@hugeicons/core-free-icons"
+import { useNomenclatureStore } from "@/features/settings/use-nomenclature"
+import { useNomenclatureQuery } from "@/features/settings/hooks/use-nomenclature-api"
+import { useAbility } from "@/features/auth/ability-context"
+import { NAV_PERMISSION } from "@/features/auth/permissions-catalog"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  useNomenclatureQuery()
+  const { nomenclature } = useNomenclatureStore()
+  const { canAny } = useAbility()
 
   const dashboardItems = [
     {
       title: "Dashboard",
       url: "/dashboard",
       icon: DashboardSquare01Icon,
-      isActive: false,
     },
     {
-      title: "Deals Pipeline",
-      url: "/dashboard/pipeline",
-      icon: Coins01Icon,
+      title: `${nomenclature.visitorTermSingular} Pipeline`,
+      url: "/dashboard/visitors",
+      icon: UserAdd01Icon,
       badge: "32",
-      isActive: true, // Default active matching screenshot
     },
     {
       title: "Appointments",
       url: "/dashboard/appointments",
       icon: Calendar03Icon,
-      isActive: false,
     },
     {
       title: "Sunday Services",
-      url: "/dashboard/services",
+      url: "/dashboard/sunday-services",
       icon: ChurchIcon,
-      isActive: false,
     },
     {
-      title: "Tasks",
-      url: "/dashboard/tasks",
+      title: "Projects",
+      url: "/dashboard/projects",
       icon: Task01Icon,
-      isActive: false,
     },
   ]
 
@@ -78,12 +83,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: HierarchySquare02Icon,
     },
     {
-      title: "Members & Families",
+      title: `${nomenclature.memberTermPlural} & Families`,
       url: "/dashboard/members",
       icon: UserGroupIcon,
     },
     {
-      title: "Small Groups (Cells)",
+      title: nomenclature.groupTermPlural,
       url: "/dashboard/groups",
       icon: UserCircle02Icon,
     },
@@ -93,18 +98,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Invoice01Icon,
     },
     {
-      title: "Giving & Pledges",
+      title: nomenclature.givingTerm,
       url: "/dashboard/giving",
       icon: Coins01Icon,
     },
     {
-      title: "Document Vault",
-      url: "/dashboard/vault",
+      title: "Documents",
+      url: "/dashboard/documents",
       icon: Folder01Icon,
     },
     {
-      title: "Visitor Drip Sequences",
-      url: "/dashboard/sequences",
+      title: "Policies",
+      url: "/dashboard/policies",
+      icon: FileValidationIcon,
+    },
+    {
+      title: "Campaigns",
+      url: "/dashboard/campaigns",
+      icon: Megaphone01Icon,
+    },
+    {
+      title: "Communications",
+      url: "/dashboard/communications",
       icon: Mail01Icon,
     },
     {
@@ -125,6 +140,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     avatar: "/avatars/ahmad.jpg",
   }
 
+  function isAllowed(url: string) {
+    const required = NAV_PERMISSION[url]
+    if (!required) return true
+    return canAny(Array.isArray(required) ? required : [required])
+  }
+
+  const visibleDashboardItems = dashboardItems.filter((i) => isAllowed(i.url))
+  const visibleManagementItems = managementItems.filter((i) => isAllowed(i.url))
+
+  function isActive(url: string) {
+    if (url === "/dashboard") return pathname === "/dashboard"
+    return pathname === url || pathname.startsWith(`${url}/`)
+  }
+
   return (
     <Sidebar collapsible="icon" className="border-r border-zinc-200/80 bg-white dark:bg-zinc-950" {...props}>
       <SidebarHeader className="p-3 border-b border-zinc-100 dark:border-zinc-900">
@@ -132,63 +161,71 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-3 space-y-6">
-        {/* DASHBOARD SECTION */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 px-3">
             Dashboard
           </SidebarGroupLabel>
           <SidebarGroupContent className="mt-1">
             <SidebarMenu>
-              {dashboardItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    render={<Link href={item.url} />}
-                    tooltip={item.title}
-                    className={`h-9 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-between ${
-                      item.isActive
-                        ? "bg-[#eaf5ea] text-[#1b5e20] dark:bg-emerald-950/60 dark:text-emerald-300 font-semibold"
-                        : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <HugeiconsIcon
-                        icon={item.icon}
-                        strokeWidth={item.isActive ? 2.2 : 1.8}
-                        className={`size-4 ${item.isActive ? "text-[#1b5e20] dark:text-emerald-300" : "text-zinc-500"}`}
-                      />
-                      <span>{item.title}</span>
-                    </div>
-                    {item.badge && (
-                      <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100 font-semibold">
-                        {item.badge}
-                      </span>
-                    )}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {visibleDashboardItems.map((item) => {
+                const active = isActive(item.url)
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      render={<Link href={item.url} />}
+                      tooltip={item.title}
+                      className={`h-9 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-between ${
+                        active
+                          ? "bg-[#eaf5ea] text-[#1b5e20] dark:bg-emerald-950/60 dark:text-emerald-300 font-semibold"
+                          : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <HugeiconsIcon
+                          icon={item.icon}
+                          strokeWidth={active ? 2.2 : 1.8}
+                          className={`size-4 ${active ? "text-[#1b5e20] dark:text-emerald-300" : "text-zinc-500"}`}
+                        />
+                        <span>{item.title}</span>
+                      </div>
+                      {item.badge && (
+                        <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100 font-semibold">
+                          {item.badge}
+                        </span>
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* MANAGEMENT SECTION */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 px-3">
             Management
           </SidebarGroupLabel>
           <SidebarGroupContent className="mt-1">
             <SidebarMenu>
-              {managementItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    render={<Link href={item.url} />}
-                    tooltip={item.title}
-                    className="h-9 px-3 rounded-lg text-sm text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                  >
-                    <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-4 text-zinc-500" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {visibleManagementItems.map((item) => {
+                const active = isActive(item.url)
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      render={<Link href={item.url} />}
+                      tooltip={item.title}
+                      className={`h-9 px-3 rounded-lg text-sm transition-colors ${
+                        active
+                          ? "bg-[#eaf5ea] text-[#1b5e20] font-semibold"
+                          : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
+                      }`}
+                    >
+                      <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-4 text-zinc-500" />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -1,90 +1,304 @@
 "use client"
 
 import * as React from "react"
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  pointerWithin,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core"
+import { toast } from "sonner"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { apiClient, type ApiResponse } from "@/lib/axios"
+import { useBranchStore } from "@/store/use-branch-store"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Notification03Icon,
   HelpCircleIcon,
-  Download01Icon,
   PlusSignIcon,
   HierarchySquare02Icon,
-  UserCircle02Icon,
-  ArrowDown01Icon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons"
-import { useBranchStore } from "@/store/use-branch-store"
+
+interface OrgNode {
+  id: string
+  title: string
+  name: string
+  department: string | null
+  parentId: string | null
+  spanOfCare: number
+  orderIndex: number
+}
+
+interface OrgTreeResponse {
+  campusId: string
+  nodes: OrgNode[]
+}
+
+const ROOT_DROP_ID = "__root__"
+
+function initials(name: string) {
+  return name
+    .replace(/^(Pastor|Rev\.|Deaconess|Dr\.)\s+/i, "")
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p.charAt(0).toUpperCase())
+    .join("")
+}
+
+function buildChildrenMap(nodes: OrgNode[]) {
+  const map = new Map<string | null, OrgNode[]>()
+  for (const n of nodes) {
+    const list = map.get(n.parentId) ?? []
+    list.push(n)
+    map.set(n.parentId, list)
+  }
+  for (const list of map.values()) list.sort((a, b) => a.orderIndex - b.orderIndex)
+  return map
+}
+
+function collectDescendants(id: string, children: Map<string | null, OrgNode[]>) {
+  const out = new Set<string>()
+  const stack = [id]
+  while (stack.length) {
+    const current = stack.pop()!
+    for (const child of children.get(current) ?? []) {
+      if (!out.has(child.id)) {
+        out.add(child.id)
+        stack.push(child.id)
+      }
+    }
+  }
+  return out
+}
+
+function NodeCard({
+  node,
+  isRoot,
+  blocked,
+  overlay = false,
+}: {
+  node: OrgNode
+  isRoot: boolean
+  blocked: boolean
+  overlay?: boolean
+}) {
+  const drag = useDraggable({ id: node.id, data: { node }, disabled: overlay })
+  const drop = useDroppable({ id: node.id, disabled: overlay || blocked })
+
+  const setRefs = (el: HTMLDivElement | null) => {
+    drag.setNodeRef(el)
+    drop.setNodeRef(el)
+  }
+
+  const showName = node.name && node.name !== node.title
+
+  return (
+    <div
+      ref={overlay ? undefined : setRefs}
+      {...(overlay ? {} : drag.listeners)}
+      {...(overlay ? {} : drag.attributes)}
+      className={[
+        "w-64 touch-none select-none rounded-2xl border bg-white p-4 text-left shadow-xs transition-all dark:bg-zinc-900",
+        overlay ? "cursor-grabbing shadow-xl rotate-1" : "cursor-grab active:cursor-grabbing",
+        drag.isDragging ? "opacity-40" : "",
+        drop.isOver && !blocked
+          ? "border-emerald-500 ring-4 ring-emerald-100"
+          : isRoot
+            ? "border-emerald-400 hover:shadow-md"
+            : "border-zinc-200/80 hover:border-emerald-300 hover:shadow-md dark:border-zinc-800",
+      ].join(" ")}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          {node.department && (
+            <Badge
+              variant="outline"
+              className="border-emerald-200 bg-emerald-50 text-[10px] font-semibold uppercase tracking-wider text-emerald-700"
+            >
+              {node.department}
+            </Badge>
+          )}
+          <h3 className="mt-2 text-sm font-bold leading-snug text-zinc-900 dark:text-zinc-100">
+            {node.title}
+          </h3>
+          {showName && (
+            <p className="mt-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+              {node.name}
+            </p>
+          )}
+        </div>
+        <div
+          className={`flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+            isRoot ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700"
+          }`}
+        >
+          {initials(showName ? node.name : node.title)}
+        </div>
+      </div>
+
+      <div className="mt-3.5 flex items-center justify-between border-t border-zinc-100 pt-3 text-xs text-zinc-500 dark:border-zinc-800">
+        <span className="flex items-center gap-1.5">
+          <HugeiconsIcon icon={UserGroupIcon} strokeWidth={1.8} className="size-3.5 text-zinc-400" />
+          Span of care
+        </span>
+        <span className="font-bold text-zinc-800 dark:text-zinc-200">
+          {node.spanOfCare.toLocaleString()}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function TreeBranch({
+  node,
+  children,
+  childrenMap,
+  forbidden,
+  depth,
+}: {
+  node: OrgNode
+  children: OrgNode[]
+  childrenMap: Map<string | null, OrgNode[]>
+  forbidden: Set<string>
+  depth: number
+}) {
+  return (
+    <div className="flex flex-col items-center">
+      <NodeCard node={node} isRoot={depth === 0} blocked={forbidden.has(node.id)} />
+
+      {children.length > 0 && (
+        <>
+          <div className="h-6 w-px bg-zinc-300 dark:bg-zinc-700" />
+          <div className="flex items-start justify-center">
+            {children.map((child, idx) => (
+              <div key={child.id} className="relative flex flex-col items-center px-3 pt-6">
+                <span className="pointer-events-none absolute inset-x-0 top-0 h-6">
+                  {children.length > 1 && idx > 0 && (
+                    <span className="absolute left-0 top-0 h-px w-1/2 bg-zinc-300 dark:bg-zinc-700" />
+                  )}
+                  {children.length > 1 && idx < children.length - 1 && (
+                    <span className="absolute right-0 top-0 h-px w-1/2 bg-zinc-300 dark:bg-zinc-700" />
+                  )}
+                  <span className="absolute left-1/2 top-0 h-6 w-px bg-zinc-300 dark:bg-zinc-700" />
+                </span>
+                <TreeBranch
+                  node={child}
+                  children={childrenMap.get(child.id) ?? []}
+                  childrenMap={childrenMap}
+                  forbidden={forbidden}
+                  depth={depth + 1}
+                />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function RootDropZone({ visible }: { visible: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({ id: ROOT_DROP_ID })
+  if (!visible) return null
+  return (
+    <div
+      ref={setNodeRef}
+      className={`mb-6 w-full max-w-md rounded-xl border-2 border-dashed px-4 py-3 text-center text-xs font-medium transition-colors ${
+        isOver
+          ? "border-emerald-500 bg-emerald-50 text-emerald-800"
+          : "border-zinc-300 bg-white text-zinc-500"
+      }`}
+    >
+      Drop here to make this a top-level role
+    </div>
+  )
+}
 
 export default function OrganigramPage() {
-  const { activeCampus } = useBranchStore()
+  const { activeCampus, activeCampusId } = useBranchStore()
+  const [nodes, setNodes] = React.useState<OrgNode[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
+  const [activeNode, setActiveNode] = React.useState<OrgNode | null>(null)
 
-  const orgTree = {
-    root: {
-      id: "node-1",
-      title: "Senior Pastor / Bishop",
-      name: "Pastor David Johnson",
-      department: "Executive Spiritual Council",
-      spanOfCare: 1420,
-      avatar: "DJ",
-      color: "border-emerald-500 bg-emerald-50/40 text-emerald-950",
-    },
-    executives: [
-      {
-        id: "node-2",
-        title: "Executive Pastor (Operations)",
-        name: "Rev. Marcus Vance",
-        department: "Operations & Admin",
-        spanOfCare: 680,
-        avatar: "MV",
-        color: "border-blue-400 bg-blue-50/40 text-blue-950",
-      },
-      {
-        id: "node-3",
-        title: "Campus Pastor (Main Campus)",
-        name: "Ahmad Fawaid",
-        department: "Pastoral Care & Worship",
-        spanOfCare: 450,
-        avatar: "AF",
-        color: "border-emerald-400 bg-emerald-50/40 text-emerald-950",
-      },
-      {
-        id: "node-4",
-        title: "Executive Director of Finance",
-        name: "Eleanor Pena",
-        department: "Treasury & Stewardship",
-        spanOfCare: 290,
-        avatar: "EP",
-        color: "border-amber-400 bg-amber-50/40 text-amber-950",
-      },
-    ],
-    directors: [
-      {
-        id: "node-5",
-        title: "Worship & Creative Arts Director",
-        name: "Sarah Miller",
-        department: "Creative Arts",
-        spanOfCare: 45,
-        avatar: "SM",
-      },
-      {
-        id: "node-6",
-        title: "Life Group Network Coordinator",
-        name: "Kathryn Murphy",
-        department: "Discipleship & Cells",
-        spanOfCare: 180,
-        avatar: "KM",
-      },
-      {
-        id: "node-7",
-        title: "Children & Youth Ministry Director",
-        name: "Brian Robbin",
-        department: "NextGen Ministries",
-        spanOfCare: 120,
-        avatar: "BR",
-      },
-    ],
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+  )
+
+  React.useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    apiClient
+      .get<ApiResponse<OrgTreeResponse>>("/organigram/tree", {
+        params: { campusId: activeCampusId },
+      })
+      .then((res) => {
+        if (!cancelled) setNodes(res.data.data.nodes)
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [activeCampusId])
+
+  const childrenMap = React.useMemo(() => buildChildrenMap(nodes), [nodes])
+  const roots = childrenMap.get(null) ?? []
+  const totalSpan = roots.reduce((sum, n) => sum + n.spanOfCare, 0)
+
+  // Nodes that can't receive the dragged node (itself and its own reports).
+  const forbidden = React.useMemo(() => {
+    if (!activeNode) return new Set<string>()
+    const set = collectDescendants(activeNode.id, childrenMap)
+    set.add(activeNode.id)
+    return set
+  }, [activeNode, childrenMap])
+
+  function onDragStart(event: DragStartEvent) {
+    setActiveNode((event.active.data.current?.node as OrgNode) ?? null)
+  }
+
+  async function onDragEnd(event: DragEndEvent) {
+    const dragged = activeNode
+    setActiveNode(null)
+    const { over } = event
+    if (!over || !dragged) return
+
+    const newParentId = over.id === ROOT_DROP_ID ? null : String(over.id)
+    if (newParentId === dragged.parentId) return
+    if (newParentId && (newParentId === dragged.id || collectDescendants(dragged.id, childrenMap).has(newParentId))) {
+      toast.error("A role can't report to itself or to one of its own reports.")
+      return
+    }
+
+    const previous = nodes
+    const targetName = newParentId ? nodes.find((n) => n.id === newParentId)?.title : "top level"
+    setNodes((prev) =>
+      prev.map((n) => (n.id === dragged.id ? { ...n, parentId: newParentId, orderIndex: 999 } : n))
+    )
+
+    try {
+      await apiClient.patch(`/organigram/nodes/${dragged.id}`, { parentId: newParentId })
+      toast.success(`${dragged.title} now reports to ${targetName}`)
+    } catch (err) {
+      setNodes(previous)
+      toast.error(err instanceof Error ? err.message : "Couldn't update the reporting line.")
+    }
   }
 
   return (
@@ -97,154 +311,94 @@ export default function OrganigramPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="bg-[#fbfcfb] dark:bg-zinc-950 min-h-screen">
-        
-        {/* HEADER BAR */}
+      <SidebarInset className="min-h-screen bg-[#fbfcfb] dark:bg-zinc-950">
         <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
                 <HugeiconsIcon icon={HierarchySquare02Icon} strokeWidth={2} className="size-6 text-emerald-600" />
-                <span>Church Organigram & Reporting Tree</span>
+                <span>Leadership Organigram</span>
               </h1>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Multi-branch visual hierarchy, pastoral reporting lines, and real-time span-of-care capacity metrics.
+              <p className="mt-0.5 text-xs text-zinc-400">
+                Reporting lines across your ministry, with the number of people each role cares for.
               </p>
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <HugeiconsIcon icon={Notification03Icon} strokeWidth={2} className="size-4" />
               </button>
-              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} className="size-4" />
               </button>
-
-              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-semibold gap-1.5 shadow-2xs">
-                <HugeiconsIcon icon={Download01Icon} strokeWidth={2} className="size-3.5 text-zinc-600" />
-                <span>Export Org Chart</span>
-              </Button>
-
-              <Button className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-semibold gap-1.5 shadow-xs">
+              <Button className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#16a34a]">
                 <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
-                <span>Add Position</span>
+                <span>Add Role</span>
               </Button>
             </div>
           </div>
 
           <div className="mt-4 flex items-center justify-between text-xs text-zinc-500">
             <div>
-              <span>Viewing Scope: <strong className="text-zinc-800 dark:text-zinc-200">{activeCampus.name}</strong></span>
+              <span>
+                Viewing: <strong className="text-zinc-800 dark:text-zinc-200">{activeCampus.name}</strong>
+              </span>
               <span className="mx-2 text-zinc-300">·</span>
-              <span>Total Shepherding Span: <strong className="text-emerald-700 dark:text-emerald-400 font-bold">1,420 disciples</strong></span>
+              <span>
+                Roles: <strong className="text-zinc-800 dark:text-zinc-200">{nodes.length}</strong>
+              </span>
+              <span className="mx-2 text-zinc-300">·</span>
+              <span>
+                Span of care:{" "}
+                <strong className="font-bold text-emerald-700 dark:text-emerald-400">
+                  {totalSpan.toLocaleString()} people
+                </strong>
+              </span>
             </div>
-            <span className="text-[11px] text-zinc-400">Drag & drop nodes to reorganize reporting relationships</span>
+            <span className="text-[11px] text-zinc-400">
+              Drag a role onto another to change who it reports to
+            </span>
           </div>
         </div>
 
-        {/* INTERACTIVE ORGANIGRAM CANVAS */}
-        <div className="p-8 flex flex-col items-center">
-          
-          {/* ROOT LEVEL: SENIOR PASTOR */}
-          <div className="flex flex-col items-center">
-            <div className={`w-80 rounded-2xl border-2 p-5 shadow-sm bg-white dark:bg-zinc-900 border-emerald-500 hover:shadow-md transition-all`}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold uppercase tracking-wider">
-                    {orgTree.root.department}
-                  </Badge>
-                  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-2">
-                    {orgTree.root.title}
-                  </h3>
-                  <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                    {orgTree.root.name}
-                  </p>
-                </div>
-                <div className="flex size-10 items-center justify-center rounded-full bg-emerald-600 text-white font-bold text-xs shadow-2xs">
-                  {orgTree.root.avatar}
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
-                <span>Span of Care:</span>
-                <span className="font-bold text-zinc-800 dark:text-zinc-200">{orgTree.root.spanOfCare} members</span>
-              </div>
+        <div className="overflow-auto p-8">
+          {loading ? (
+            <p className="text-sm text-zinc-500">Loading organigram…</p>
+          ) : error ? (
+            <div className="max-w-md rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+              Couldn&apos;t load the organigram: {error}
             </div>
-
-            {/* Tree Branch Line */}
-            <div className="w-0.5 h-8 bg-zinc-300 dark:bg-zinc-700" />
-            <div className="w-[640px] h-0.5 bg-zinc-300 dark:bg-zinc-700" />
-          </div>
-
-          {/* LEVEL 2: EXECUTIVE PASTORS */}
-          <div className="grid grid-cols-3 gap-8 mt-8 w-full max-w-4xl">
-            {orgTree.executives.map((node) => (
-              <div
-                key={node.id}
-                className="relative rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 hover:border-emerald-400 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                      {node.department}
-                    </span>
-                    <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 mt-1">
-                      {node.title}
-                    </h4>
-                    <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mt-0.5">
-                      {node.name}
-                    </p>
-                  </div>
-                  <div className="flex size-8 items-center justify-center rounded-full bg-zinc-100 text-zinc-700 font-bold text-xs">
-                    {node.avatar}
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
-                  <span>Direct Oversight:</span>
-                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">{node.spanOfCare}</span>
+          ) : roots.length === 0 ? (
+            <p className="text-sm text-zinc-500">No roles have been added yet.</p>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={pointerWithin}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              onDragCancel={() => setActiveNode(null)}
+            >
+              <div className="flex min-w-max flex-col items-center">
+                <RootDropZone visible={!!activeNode && activeNode.parentId !== null} />
+                <div className="flex items-start gap-8">
+                  {roots.map((root) => (
+                    <TreeBranch
+                      key={root.id}
+                      node={root}
+                      children={childrenMap.get(root.id) ?? []}
+                      childrenMap={childrenMap}
+                      forbidden={forbidden}
+                      depth={0}
+                    />
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* LEVEL 3: DIRECTORS & COORDINATORS */}
-          <div className="w-0.5 h-8 bg-zinc-300 dark:bg-zinc-700 mt-4" />
-          <div className="w-[720px] h-0.5 bg-zinc-300 dark:bg-zinc-700" />
-
-          <div className="grid grid-cols-3 gap-8 mt-8 w-full max-w-4xl">
-            {orgTree.directors.map((node) => (
-              <div
-                key={node.id}
-                className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 hover:border-emerald-400 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                      {node.department}
-                    </span>
-                    <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 mt-1">
-                      {node.title}
-                    </h4>
-                    <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mt-0.5">
-                      {node.name}
-                    </p>
-                  </div>
-                  <div className="flex size-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs">
-                    {node.avatar}
-                  </div>
-                </div>
-
-                <div className="mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px] text-zinc-500">
-                  <span>Assigned Leaders:</span>
-                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">{node.spanOfCare}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
+              <DragOverlay>
+                {activeNode ? <NodeCard node={activeNode} isRoot={false} blocked overlay /> : null}
+              </DragOverlay>
+            </DndContext>
+          )}
         </div>
-
       </SidebarInset>
     </SidebarProvider>
   )

@@ -38,6 +38,44 @@ export const createCategorySchema = z.object({
   permissions: z.array(z.string()).default([]),
 })
 
+export const householdRoleSchema = z.enum([
+  "father",
+  "mother",
+  "spouse",
+  "son",
+  "daughter",
+  "guardian",
+  "head",
+  "other",
+])
+
+export const updatePersonTypeSchema = z.object({
+  personType: personTypeEnumSchema,
+  changedByUserId: z.string().min(1, "Actor user id is required"),
+  reason: z.string().optional(),
+})
+
+export const attachHouseholdSchema = z.object({
+  householdId: z.string().uuid().optional(),
+  householdName: z.string().min(2).optional(),
+  householdRole: householdRoleSchema,
+  campusId: z.string().uuid().optional(),
+})
+
 export type CreateMemberInput = z.infer<typeof createMemberSchema>
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>
+export type UpdatePersonTypeInput = z.infer<typeof updatePersonTypeSchema>
+export type AttachHouseholdInput = z.infer<typeof attachHouseholdSchema>
+export type HouseholdRole = z.infer<typeof householdRoleSchema>
 export type PersonType = z.infer<typeof personTypeEnumSchema>
+
+export const HOUSEHOLD_ROLE_LABELS: Record<HouseholdRole, string> = {
+  father: "Father",
+  mother: "Mother",
+  spouse: "Spouse",
+  son: "Son",
+  daughter: "Daughter",
+  guardian: "Guardian",
+  head: "Head of Household",
+  other: "Other",
+}

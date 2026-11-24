@@ -6,6 +6,7 @@ export interface PaginationParams {
   pageSize?: number
   search?: string
   campusId?: string
+  status?: string
 }
 
 export interface PaginationMeta {

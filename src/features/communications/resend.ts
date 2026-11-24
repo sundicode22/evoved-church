@@ -99,6 +99,28 @@ export const emailService = {
   },
 
   /**
+   * Generic campaign HTML email (Resend only — SMS uses a separate provider).
+   */
+  async sendRawCampaign({
+    to,
+    subject,
+    html,
+  }: {
+    to: string
+    subject: string
+    html: string
+  }): Promise<{ id: string }> {
+    const result = await resend.emails.send({
+      from: `Evolve Church <${FROM_EMAIL}>`,
+      to,
+      subject,
+      html,
+    })
+    if (result.error) throw new Error(result.error.message)
+    return { id: result.data?.id || `email-${Date.now()}` }
+  },
+
+  /**
    * 501(c)(3) Annual Charitable Contribution Statement
    */
   async sendTaxContributionStatement({

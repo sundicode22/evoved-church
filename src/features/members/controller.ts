@@ -1,12 +1,13 @@
 import { Elysia } from "elysia"
 import { memberService } from "./service"
-import { createCategorySchema } from "./schemas"
+import {
+  createCategorySchema,
+  updatePersonTypeSchema,
+  attachHouseholdSchema,
+} from "./schemas"
 import { formatErrorResponse } from "@/lib/errors"
 
-export const memberController = new Elysia({ prefix: "/people" })
-  /**
-   * GET /api/people - Real SQL-level database paginated people query
-   */
+export const memberController = new Elysia({ prefix: "/members" })
   .get("/", async ({ query, headers, set }) => {
     try {
       const page = Number(query.page || 1)
@@ -35,9 +36,6 @@ export const memberController = new Elysia({ prefix: "/people" })
     }
   })
 
-  /**
-   * GET /api/people/categories - Retrieves dynamic user categories
-   */
   .get("/categories", async ({ set }) => {
     try {
       const data = await memberService.getCategories()
@@ -49,14 +47,46 @@ export const memberController = new Elysia({ prefix: "/people" })
     }
   })
 
-  /**
-   * POST /api/people/categories - Creates a new dynamic user category
-   */
   .post("/categories", async ({ body, set }) => {
     try {
       const parsed = createCategorySchema.parse(body)
       const data = await memberService.createCategory(parsed)
       set.status = 201
+      return { success: true, data }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
+  .get("/:id", async ({ params, set }) => {
+    try {
+      const data = await memberService.getMemberById(params.id)
+      return { success: true, data }
+    } catch (error) {
+      const { status, body } = formatErrorResponse(error)
+      set.status = status
+      return body
+    }
+  })
+
+  .post("/:id/household", async ({ params, body, set }) => {
+    try {
+      const parsed = attachHouseholdSchema.parse(body)
+      const data = await memberService.attachHousehold(params.id, parsed)
+      return { success: true, data }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
+  .patch("/:id/person-type", async ({ params, body, set }) => {
+    try {
+      const parsed = updatePersonTypeSchema.parse(body)
+      const data = await memberService.updatePersonType(params.id, parsed)
       return { success: true, data }
     } catch (error) {
       const { status, body: errBody } = formatErrorResponse(error)

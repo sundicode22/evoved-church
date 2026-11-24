@@ -12,14 +12,28 @@ export const auth = betterAuth({
       session: schema.sessions,
       account: schema.accounts,
       verification: schema.verifications,
+      organization: schema.organizations,
+      member: schema.organizationMembers,
+      invitation: schema.invitations,
+      twoFactor: schema.twoFactors,
     },
   }),
   emailAndPassword: {
     enabled: true,
   },
+  socialProviders: {
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? {
+          google: {
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          },
+        }
+      : {}),
+  },
   plugins: [
     organization({
-      allowUserToCreateOrganization: false, // Managed by Church Super Admins / Central Office
+      allowUserToCreateOrganization: true,
     }),
     twoFactor({
       issuer: "Evolve Church Management",
@@ -40,3 +54,5 @@ export const auth = betterAuth({
     },
   },
 })
+
+export type Session = typeof auth.$Infer.Session

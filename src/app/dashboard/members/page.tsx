@@ -21,10 +21,14 @@ import {
   SecurityCheckIcon,
 } from "@hugeicons/core-free-icons"
 import { useMembers, useUserCategories } from "@/features/members/hooks/use-members"
+import { MemberDrawer } from "@/components/members/member-drawer"
+import { RequireAbility } from "@/components/auth/can"
+import { HOUSEHOLD_ROLE_LABELS, type HouseholdRole } from "@/features/members/schemas"
 
 export default function MembersPage() {
   const [activeTab, setActiveTab] = React.useState<string>("all")
   const [searchQuery, setSearchQuery] = React.useState("")
+  const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const { data: membersResponse, isLoading } = useMembers({
     personType: activeTab === "all" ? undefined : activeTab,
     search: searchQuery,
@@ -45,16 +49,16 @@ export default function MembersPage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset className="bg-[#fbfcfb] dark:bg-zinc-950 min-h-screen">
-        
+        <RequireAbility permission="members.read">
         {/* TOP HEADER */}
         <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                People & Members Directory
+                Church Members Directory
               </h1>
               <p className="text-xs text-zinc-400 mt-0.5">
-                Explicit lifecycle distinction: from first-time visitors to ordained ministers and elders.
+                Church members with household roles (Father, Mother, …), lifecycle stages, and safety clearances.
               </p>
             </div>
 
@@ -136,24 +140,38 @@ export default function MembersPage() {
           </div>
         </div>
 
-        {/* DIRECTORY TABLE */}
-        <div className="p-8">
+        <div className="p-8 space-y-4">
+          {members.some(
+            (p: any) =>
+              p.backgroundCheckStatus === "expired" ||
+              (p.backgroundCheckExpiresAt &&
+                new Date(p.backgroundCheckExpiresAt) < new Date(Date.now() + 30 * 86400000))
+          ) && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <strong>Background check alert:</strong> One or more members have expired or soon-to-expire
+              child-safety clearances. Review the Child Safety Clearance column.
+            </div>
+          )}
           <div className="rounded-2xl border border-zinc-200/80 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-zinc-50/70 border-b border-zinc-200/70 text-zinc-400 font-semibold uppercase tracking-wider text-[11px] dark:bg-zinc-900/40">
                   <tr>
-                    <th className="px-6 py-3.5">Name & Ecclesiastical Title</th>
-                    <th className="px-6 py-3.5">Category & Lifecycle</th>
+                    <th className="px-6 py-3.5">Name & Title</th>
+                    <th className="px-6 py-3.5">Lifecycle</th>
+                    <th className="px-6 py-3.5">Household role</th>
                     <th className="px-6 py-3.5">Serving Ministries</th>
-                    <th className="px-6 py-3.5">Ordination / Sacraments</th>
-                    <th className="px-6 py-3.5">Child Safety Clearance</th>
+                    <th className="px-6 py-3.5">Child Safety</th>
                     <th className="px-6 py-3.5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                   {members.map((person: any) => (
-                    <tr key={person.id} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40 transition-colors">
+                    <tr
+                      key={person.id}
+                      className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer"
+                      onClick={() => setSelectedId(person.id)}
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="flex size-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs">
@@ -168,7 +186,7 @@ export default function MembersPage() {
                                 {person.recordedTitle}
                               </p>
                             ) : (
-                              <p className="text-[11px] text-zinc-400">Main Campus</p>
+                              <p className="text-[11px] text-zinc-400">Main Location</p>
                             )}
                           </div>
                         </div>
@@ -178,6 +196,17 @@ export default function MembersPage() {
                         <span className="inline-block rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200 uppercase">
                           {person.personType.replace("_", " ")}
                         </span>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        {person.householdRole ? (
+                          <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200">
+                            {HOUSEHOLD_ROLE_LABELS[person.householdRole as HouseholdRole] ||
+                              person.householdRole}
+                          </Badge>
+                        ) : (
+                          <span className="text-[11px] text-zinc-400">—</span>
+                        )}
                       </td>
 
                       <td className="px-6 py-4">
@@ -198,26 +227,14 @@ export default function MembersPage() {
                       </td>
 
                       <td className="px-6 py-4">
-                        {person.ordinationDate ? (
-                          <div className="text-[11px]">
-                            <span className="font-semibold text-zinc-700 dark:text-zinc-300">Ordained: </span>
-                            <span className="text-zinc-500">{person.ordinationDate}</span>
-                          </div>
-                        ) : person.baptismDate ? (
-                          <div className="text-[11px] text-zinc-500 flex items-center gap-1">
-                            <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-3 text-emerald-600" />
-                            <span>Water Baptized ({person.baptismDate})</span>
-                          </div>
-                        ) : (
-                          <span className="text-[11px] text-zinc-400">—</span>
-                        )}
-                      </td>
-
-                      <td className="px-6 py-4">
                         {person.backgroundCheckStatus === "cleared" ? (
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                             <HugeiconsIcon icon={SecurityCheckIcon} strokeWidth={2} className="size-3 text-emerald-600" />
-                            <span>Cleared (Expires 2027)</span>
+                            <span>Cleared</span>
+                          </span>
+                        ) : person.backgroundCheckStatus === "expired" ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            Expired
                           </span>
                         ) : (
                           <span className="text-[11px] text-zinc-400">Not required</span>
@@ -225,7 +242,15 @@ export default function MembersPage() {
                       </td>
 
                       <td className="px-6 py-4 text-right">
-                        <Button variant="ghost" size="icon" className="size-8">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedId(person.id)
+                          }}
+                        >
                           <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} className="size-4 text-zinc-400" />
                         </Button>
                       </td>
@@ -236,7 +261,15 @@ export default function MembersPage() {
             </div>
           </div>
         </div>
+        </RequireAbility>
 
+        <MemberDrawer
+          memberId={selectedId}
+          open={Boolean(selectedId)}
+          onOpenChange={(open) => {
+            if (!open) setSelectedId(null)
+          }}
+        />
       </SidebarInset>
     </SidebarProvider>
   )

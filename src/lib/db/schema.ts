@@ -36,13 +36,12 @@ export const campusTypeEnum = pgEnum("campus_type", [
 ])
 
 export const visitorStageEnum = pgEnum("visitor_stage", [
-  "new_leads",
-  "request_received",
-  "in_draft",
-  "proposal_sent",
-  "approved",
-  "rejected",
-  "integrated_member",
+  "first_visit",
+  "welcome_call",
+  "pastoral_visit",
+  "foundations_class",
+  "group_integration",
+  "active_partner",
 ])
 
 export const fundTypeEnum = pgEnum("fund_type", [
@@ -199,6 +198,51 @@ export const verifications = pgTable("verifications", {
   updatedAt: timestamp("updated_at").defaultNow(),
 })
 
+// Better Auth organization plugin tables
+export const organizations = pgTable("organizations", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  logo: text("logo"),
+  metadata: text("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const organizationMembers = pgTable("organization_members", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id")
+    .references(() => organizations.id)
+    .notNull(),
+  userId: text("user_id")
+    .references(() => users.id)
+    .notNull(),
+  role: text("role").default("member").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const invitations = pgTable("invitations", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id")
+    .references(() => organizations.id)
+    .notNull(),
+  email: text("email").notNull(),
+  role: text("role"),
+  status: text("status").default("pending").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  inviterId: text("inviter_id")
+    .references(() => users.id)
+    .notNull(),
+})
+
+export const twoFactors = pgTable("two_factors", {
+  id: text("id").primaryKey(),
+  secret: text("secret").notNull(),
+  backupCodes: text("backup_codes").notNull(),
+  userId: text("user_id")
+    .references(() => users.id)
+    .notNull(),
+})
+
 // ==========================================
 // MULTI-BRANCH / CAMPUSES
 // ==========================================
@@ -250,10 +294,22 @@ export const households = pgTable("households", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
 
+export const householdRoleEnum = pgEnum("household_role", [
+  "father",
+  "mother",
+  "spouse",
+  "son",
+  "daughter",
+  "guardian",
+  "head",
+  "other",
+])
+
 export const members = pgTable("members", {
   id: uuid("id").defaultRandom().primaryKey(),
   campusId: uuid("campus_id").references(() => campuses.id).notNull(),
   householdId: uuid("household_id").references(() => households.id),
+  householdRole: householdRoleEnum("household_role"),
   personType: personTypeEnum("person_type").default("covenant_member").notNull(),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
@@ -313,11 +369,11 @@ export const childCheckinBadges = pgTable("child_checkin_badges", {
 // ==========================================
 export const visitorLeads = pgTable("visitor_leads", {
   id: uuid("id").defaultRandom().primaryKey(),
-  dealNumber: varchar("deal_number", { length: 50 }).notNull(), // "#192748"
+  leadNumber: varchar("lead_number", { length: 50 }).notNull(), // "#192748"
   campusId: uuid("campus_id").references(() => campuses.id).notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   location: varchar("location", { length: 255 }),
-  stage: visitorStageEnum("stage").default("new_leads").notNull(),
+  stage: visitorStageEnum("stage").default("first_visit").notNull(),
   contactName: varchar("contact_name", { length: 255 }).notNull(),
   contactEmail: varchar("contact_email", { length: 255 }),
   contactPhone: varchar("contact_phone", { length: 50 }),
@@ -440,7 +496,10 @@ export const journalEntries = pgTable("journal_entries", {
   entryNumber: varchar("entry_number", { length: 50 }).notNull().unique(),
   entryDate: timestamp("entry_date").notNull(),
   memo: text("memo").notNull(),
-  status: varchar("status", { length: 50 }).default("draft").notNull(),
+  status: varchar("status", { length: 50 }).default("draft").notNull(), // draft | posted
+  createdByUserId: text("created_by_user_id").references(() => users.id).notNull(),
+  postedByUserId: text("posted_by_user_id").references(() => users.id),
+  postedAt: timestamp("posted_at"),
   approvedByUserId: text("approved_by_user_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -470,6 +529,41 @@ export const givingContributions = pgTable("giving_contributions", {
 })
 
 // ==========================================
+// BUDGET LINES (per fund / fiscal period)
+// ==========================================
+export const budgetLines = pgTable("budget_lines", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id).notNull(),
+  fundId: uuid("fund_id").references(() => accountingFunds.id).notNull(),
+  accountId: uuid("account_id").references(() => chartOfAccounts.id),
+  fiscalYear: integer("fiscal_year").notNull(),
+  department: varchar("department", { length: 150 }),
+  label: varchar("label", { length: 255 }).notNull(),
+  allocatedAmount: decimal("allocated_amount", { precision: 14, scale: 2 }).default("0.00").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+// ==========================================
+// CHURCH POLICIES (module-scoped, rich HTML body)
+// ==========================================
+export const churchPolicies = pgTable("church_policies", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  module: varchar("module", { length: 50 }).notNull(), // accounting | visitors | safety…
+  summary: text("summary"),
+  bodyHtml: text("body_html").notNull(),
+  status: varchar("status", { length: 30 }).default("draft").notNull(), // draft | published | archived
+  version: integer("version").default(1).notNull(),
+  updatedByUserId: text("updated_by_user_id").references(() => users.id),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+// ==========================================
 // DOCUMENTS & MEDIA VAULT (CLOUDINARY)
 // ==========================================
 export const documentFolders = pgTable("document_folders", {
@@ -492,6 +586,113 @@ export const churchDocuments = pgTable("church_documents", {
   format: varchar("format", { length: 20 }),
   fileSizeBytes: integer("file_size_bytes"),
   minRoleRequired: varchar("min_role_required", { length: 50 }).default("member").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+// ==========================================
+// DYNAMIC RBAC (roles + permissions — never stored in cookies)
+// ==========================================
+export const appRoles = pgTable("app_roles", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  name: varchar("name", { length: 150 }).notNull(),
+  description: text("description"),
+  isSystem: boolean("is_system").default(false).notNull(),
+  isAdmin: boolean("is_admin").default(false).notNull(), // wildcard: all permissions
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const appPermissions = pgTable("app_permissions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  key: varchar("key", { length: 150 }).notNull().unique(), // e.g. accounting.journal.post
+  label: varchar("label", { length: 255 }).notNull(),
+  groupName: varchar("group_name", { length: 100 }).notNull(), // Visitors, Members, Accounting…
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const rolePermissions = pgTable("role_permissions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  roleId: uuid("role_id")
+    .references(() => appRoles.id, { onDelete: "cascade" })
+    .notNull(),
+  permissionId: uuid("permission_id")
+    .references(() => appPermissions.id, { onDelete: "cascade" })
+    .notNull(),
+})
+
+export const userRoles = pgTable("user_roles", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  roleId: uuid("role_id")
+    .references(() => appRoles.id, { onDelete: "cascade" })
+    .notNull(),
+  campusId: uuid("campus_id").references(() => campuses.id), // optional location scope
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+// ==========================================
+// CAMPAIGNS CMS (email + SMS)
+// ==========================================
+export const campaigns = pgTable("campaigns", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  channel: varchar("channel", { length: 20 }).default("email").notNull(), // email | sms | both
+  status: varchar("status", { length: 30 }).default("draft").notNull(), // draft | scheduled | sending | sent
+  subject: varchar("subject", { length: 255 }),
+  emailBody: text("email_body"),
+  smsBody: text("sms_body"),
+  audienceFilter: jsonb("audience_filter").$type<Record<string, unknown>>().default({}),
+  scheduleAt: timestamp("schedule_at"),
+  createdByUserId: text("created_by_user_id").references(() => users.id),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const campaignSends = pgTable("campaign_sends", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campaignId: uuid("campaign_id")
+    .references(() => campaigns.id, { onDelete: "cascade" })
+    .notNull(),
+  recipientName: varchar("recipient_name", { length: 255 }),
+  recipientEmail: varchar("recipient_email", { length: 255 }),
+  recipientPhone: varchar("recipient_phone", { length: 50 }),
+  channel: varchar("channel", { length: 20 }).notNull(),
+  status: varchar("status", { length: 30 }).default("queued").notNull(),
+  providerId: varchar("provider_id", { length: 150 }),
+  errorMessage: text("error_message"),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+// ==========================================
+// PROJECTS KANBAN
+// ==========================================
+export const projectStageEnum = pgEnum("project_stage", [
+  "backlog",
+  "in_progress",
+  "review",
+  "done",
+])
+
+export const projectCards = pgTable("project_cards", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  stage: projectStageEnum("stage").default("backlog").notNull(),
+  priority: varchar("priority", { length: 30 }).default("normal").notNull(),
+  assigneeName: varchar("assignee_name", { length: 150 }),
+  projectName: varchar("project_name", { length: 255 }),
+  dueLabel: varchar("due_label", { length: 100 }),
+  orderIndex: integer("order_index").default(0).notNull(),
+  stageChangedAt: timestamp("stage_changed_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })

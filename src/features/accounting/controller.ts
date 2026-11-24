@@ -1,12 +1,17 @@
 import { Elysia } from "elysia"
 import { accountingService } from "./service"
-import { createRequisitionSchema, approveRequisitionSchema } from "./schemas"
+import {
+  createRequisitionSchema,
+  approveRequisitionSchema,
+  createJournalEntrySchema,
+  postJournalEntrySchema,
+  fundTransferSchema,
+  createFundSchema,
+  createBudgetLineSchema,
+} from "./schemas"
 import { formatErrorResponse } from "@/lib/errors"
 
 export const accountingController = new Elysia({ prefix: "/accounting" })
-  /**
-   * GET /api/accounting/funds - Lists all church funds with budget, encumbrance, and balances
-   */
   .get("/funds", async ({ query, headers, set }) => {
     try {
       const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
@@ -19,9 +24,44 @@ export const accountingController = new Elysia({ prefix: "/accounting" })
     }
   })
 
-  /**
-   * GET /api/accounting/chart-of-accounts - Lists standard double-entry Chart of Accounts
-   */
+  .post("/funds", async ({ body, set }) => {
+    try {
+      const parsed = createFundSchema.parse(body)
+      const created = await accountingService.createFund(parsed)
+      set.status = 201
+      return { success: true, data: created }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
+  .get("/budget-lines", async ({ query, set }) => {
+    try {
+      const fundId = (query.fundId as string) || undefined
+      const data = await accountingService.listBudgetLines(fundId)
+      return { success: true, data }
+    } catch (error) {
+      const { status, body } = formatErrorResponse(error)
+      set.status = status
+      return body
+    }
+  })
+
+  .post("/budget-lines", async ({ body, set }) => {
+    try {
+      const parsed = createBudgetLineSchema.parse(body)
+      const created = await accountingService.createBudgetLine(parsed)
+      set.status = 201
+      return { success: true, data: created }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
   .get("/chart-of-accounts", async ({ query, headers, set }) => {
     try {
       const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
@@ -34,22 +74,19 @@ export const accountingController = new Elysia({ prefix: "/accounting" })
     }
   })
 
-  /**
-   * GET /api/accounting/requisitions - Real SQL-level paginated requisitions & approvals
-   */
   .get("/requisitions", async ({ query, headers, set }) => {
     try {
       const page = Number(query.page || 1)
       const pageSize = Number(query.pageSize || 10)
       const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
-      const status = (query.status as string) || undefined
+      const statusFilter = (query.status as string) || undefined
       const search = (query.search as string) || undefined
 
       const result = await accountingService.getPaginatedRequisitions({
         page,
         pageSize,
         campusId,
-        status,
+        status: statusFilter,
         search,
       })
 
@@ -65,9 +102,6 @@ export const accountingController = new Elysia({ prefix: "/accounting" })
     }
   })
 
-  /**
-   * POST /api/accounting/requisitions - Creates a new expense requisition with budget check
-   */
   .post("/requisitions", async ({ body, headers, set }) => {
     try {
       const parsed = createRequisitionSchema.parse(body)
@@ -82,14 +116,63 @@ export const accountingController = new Elysia({ prefix: "/accounting" })
     }
   })
 
-  /**
-   * PATCH /api/accounting/requisitions/:id/approve - Approves or rejects an expense requisition
-   */
-  .patch("/requisitions/:id/approve", async ({ params, body, set }) => {
+  .post("/requisitions/:id/approvals", async ({ params, body, set }) => {
     try {
       const parsed = approveRequisitionSchema.parse(body)
       const updated = await accountingService.approveRequisition(params.id, parsed)
       return { success: true, data: updated }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
+  .get("/journal-entries", async ({ query, headers, set }) => {
+    try {
+      const campusId = (query.campusId as string) || (headers["x-campus-id"] as string)
+      const data = await accountingService.getJournalEntries(campusId)
+      return { success: true, data }
+    } catch (error) {
+      const { status, body } = formatErrorResponse(error)
+      set.status = status
+      return body
+    }
+  })
+
+  .post("/journal-entries", async ({ body, set }) => {
+    try {
+      const parsed = createJournalEntrySchema.parse(body)
+      const created = await accountingService.createJournalEntry(parsed)
+      set.status = 201
+      return { success: true, data: created }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
+  .post("/journal-entries/:id/post", async ({ params, body, set }) => {
+    try {
+      const parsed = postJournalEntrySchema.parse(body)
+      const posted = await accountingService.postJournalEntry(params.id, parsed)
+      return { success: true, data: posted }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
+  .post("/fund-transfers", async ({ body, headers, set }) => {
+    try {
+      const parsed = fundTransferSchema.parse(body)
+      const authorizedBy =
+        (headers["x-user-id"] as string) || (body as { authorizedByUserId?: string }).authorizedByUserId || "user-1"
+      const transfer = await accountingService.createFundTransfer(parsed, authorizedBy)
+      set.status = 201
+      return { success: true, data: transfer }
     } catch (error) {
       const { status, body: errBody } = formatErrorResponse(error)
       set.status = status

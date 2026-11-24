@@ -4,17 +4,68 @@ import {
   chartOfAccounts,
   expenseRequisitions,
   expenseApprovals,
-  expenseApprovalRules,
   journalEntries,
   journalLines,
+  fundTransfers,
   campuses,
-  users,
 } from "@/lib/db/schema"
 import { eq, desc, and, ilike, sql } from "drizzle-orm"
 import { NotFoundError, ValidationError, BudgetExceededError } from "@/lib/errors"
-import { CreateRequisitionInput, ApproveRequisitionInput, FundTransferInput } from "./schemas"
+import {
+  CreateRequisitionInput,
+  ApproveRequisitionInput,
+  FundTransferInput,
+  CreateJournalEntryInput,
+  PostJournalEntryInput,
+  CreateFundInput,
+  CreateBudgetLineInput,
+} from "./schemas"
 import { emailService } from "@/features/communications/resend"
 import { DbPaginationResult } from "@/lib/db/pagination"
+
+/** In-memory demo overlays when DB rows are empty / demo ids are used. */
+const demoFundsExtra: any[] = []
+const demoBudgetLines: {
+  id: string
+  fundId: string
+  fundName?: string
+  fiscalYear: number
+  department?: string
+  label: string
+  allocatedAmount: number
+  notes?: string
+  accountId?: string
+}[] = [
+  {
+    id: "bl-1",
+    fundId: "fund-1",
+    fundName: "General Operating Fund",
+    fiscalYear: new Date().getFullYear(),
+    department: "Worship",
+    label: "Production & AV",
+    allocatedAmount: 28000,
+  },
+  {
+    id: "bl-2",
+    fundId: "fund-1",
+    fundName: "General Operating Fund",
+    fiscalYear: new Date().getFullYear(),
+    department: "Facilities",
+    label: "Utilities & Maintenance",
+    allocatedAmount: 42000,
+  },
+  {
+    id: "bl-3",
+    fundId: "fund-3",
+    fundName: "World Missions & Regional Church Planting",
+    fiscalYear: new Date().getFullYear(),
+    department: "Missions",
+    label: "Partner support",
+    allocatedAmount: 35000,
+  },
+]
+const demoJournalPosted = new Set<string>()
+const demoReqDecisions = new Map<string, { status: string; decision: string }>()
 
 export const accountingService = {
   /**
@@ -33,7 +84,7 @@ export const accountingService = {
         .where(and(...conditions))
 
       if (funds.length === 0) {
-        return [
+        const demo = [
           {
             id: "fund-1",
             code: "GEN-100",
@@ -78,7 +129,9 @@ export const accountingService = {
             balance: 18250.0,
             netAvailable: 18250.0 - 2200.0,
           },
+          ...demoFundsExtra,
         ]
+        return demo
       }
 
       return funds.map((f) => {
@@ -148,6 +201,7 @@ export const accountingService = {
 
       // Fallback demo row if empty in local dev
       if (records.length === 0 && !params.search) {
+        const decision = demoReqDecisions.get("req-1")
         return {
           data: [
             {
@@ -157,10 +211,12 @@ export const accountingService = {
               vendorName: "Sweetwater Sound",
               department: "Creative Arts & Worship",
               description: "Replacement Wireless In-Ear Monitors for Praise Team",
-              status: "pending_tier_2",
+              status: decision?.status || "pending_tier_2",
               currentTierLevel: 2,
               currentApprover: "Campus Pastor (Ahmad Fawaid)",
               fundName: "General Operating Fund",
+              fundId: "fund-1",
+              accountId: "acct-5030",
               receiptUrl: "https://res.cloudinary.com/evolve-church/receipts/req001.pdf",
               createdAt: new Date().toISOString(),
             },
@@ -197,16 +253,16 @@ export const accountingService = {
       const accounts = await db.select().from(chartOfAccounts).where(eq(chartOfAccounts.isActive, true))
       if (accounts.length === 0) {
         return [
-          { accountNumber: "1010", accountName: "Operating Checking Account", category: "asset", balance: 145890.5 },
-          { accountNumber: "1020", accountName: "Building Fund Savings", category: "asset", balance: 320400.0 },
-          { accountNumber: "2010", accountName: "Accounts Payable (Vendors)", category: "liability", balance: 14200.0 },
-          { accountNumber: "3010", accountName: "Unrestricted Net Assets", category: "net_assets", balance: 145890.5 },
-          { accountNumber: "3020", accountName: "Restricted Net Assets", category: "net_assets", balance: 387550.0 },
-          { accountNumber: "4010", accountName: "General Tithes & Offerings", category: "revenue", balance: 295400.0 },
-          { accountNumber: "4020", accountName: "Building Pledges Received", category: "revenue", balance: 145000.0 },
-          { accountNumber: "5010", accountName: "Pastoral & Staff Payroll", category: "expense", balance: 98000.0 },
-          { accountNumber: "5020", accountName: "Sanctuary Facility Lease", category: "expense", balance: 42000.0 },
-          { accountNumber: "5030", accountName: "Worship & Production Gear", category: "expense", balance: 16450.0 },
+          { id: "acct-1010", accountNumber: "1010", accountName: "Operating Checking Account", category: "asset", balance: 145890.5 },
+          { id: "acct-1020", accountNumber: "1020", accountName: "Building Fund Savings", category: "asset", balance: 320400.0 },
+          { id: "acct-2010", accountNumber: "2010", accountName: "Accounts Payable (Vendors)", category: "liability", balance: 14200.0 },
+          { id: "acct-3010", accountNumber: "3010", accountName: "Unrestricted Net Assets", category: "net_assets", balance: 145890.5 },
+          { id: "acct-3020", accountNumber: "3020", accountName: "Restricted Net Assets", category: "net_assets", balance: 387550.0 },
+          { id: "acct-4010", accountNumber: "4010", accountName: "General Tithes & Offerings", category: "revenue", balance: 295400.0 },
+          { id: "acct-4020", accountNumber: "4020", accountName: "Building Pledges Received", category: "revenue", balance: 145000.0 },
+          { id: "acct-5010", accountNumber: "5010", accountName: "Pastoral & Staff Payroll", category: "expense", balance: 98000.0 },
+          { id: "acct-5020", accountNumber: "5020", accountName: "Sanctuary Facility Lease", category: "expense", balance: 42000.0 },
+          { id: "acct-5030", accountNumber: "5030", accountName: "Worship & Production Gear", category: "expense", balance: 16450.0 },
         ]
       }
       return accounts
@@ -220,6 +276,29 @@ export const accountingService = {
    * Submits an expense requisition and checks budget constraints
    */
   async createRequisition(input: CreateRequisitionInput, requestedByUserId = "user-1") {
+    // Demo funds — return a synthetic requisition for local UX
+    if (input.fundId.startsWith("fund-")) {
+      const funds = await this.getFunds()
+      const fund = funds.find((f: any) => f.id === input.fundId)
+      if (fund) {
+        const unencumbered = Number(fund.netAvailable ?? Number(fund.balance) - Number(fund.encumberedAmount || 0))
+        if (input.amount > unencumbered) {
+          throw new BudgetExceededError(fund.name, input.amount, unencumbered)
+        }
+      }
+      const randomReq = Math.floor(1000 + Math.random() * 9000)
+      return {
+        id: `req-${crypto.randomUUID().slice(0, 8)}`,
+        requisitionNumber: `REQ-${new Date().getFullYear()}-${randomReq}`,
+        ...input,
+        amount: input.amount,
+        status: input.amount > 500 ? "pending_tier_2" : "pending_tier_1",
+        currentTierLevel: input.amount > 500 ? 2 : 1,
+        requestedByUserId,
+        createdAt: new Date().toISOString(),
+      }
+    }
+
     const fundRecords = await db.select().from(accountingFunds).where(eq(accountingFunds.id, input.fundId)).limit(1)
 
     if (fundRecords.length > 0) {
@@ -294,10 +373,89 @@ export const accountingService = {
     return created
   },
 
+  async createFund(input: CreateFundInput) {
+    try {
+      let campusId = input.campusId
+      if (!campusId) {
+        const defaultCampus = await db.select().from(campuses).limit(1)
+        campusId = defaultCampus[0]?.id
+      }
+      if (campusId) {
+        const [created] = await db
+          .insert(accountingFunds)
+          .values({
+            campusId,
+            name: input.name,
+            code: input.code,
+            type: input.type,
+            budgetAmount: input.budgetAmount.toString(),
+            description: input.description || null,
+            balance: "0.00",
+          })
+          .returning()
+        return created
+      }
+    } catch (err) {
+      console.error("[accountingService.createFund] falling back to demo store", err)
+    }
+
+    const fund = {
+      id: `fund-${crypto.randomUUID().slice(0, 8)}`,
+      code: input.code,
+      name: input.name,
+      type: input.type,
+      budgetAmount: input.budgetAmount,
+      encumberedAmount: 0,
+      expendedAmount: 0,
+      balance: 0,
+      netAvailable: 0,
+      description: input.description,
+    }
+    demoFundsExtra.unshift(fund)
+    return fund
+  },
+
+  async listBudgetLines(fundId?: string) {
+    const rows = fundId ? demoBudgetLines.filter((l) => l.fundId === fundId) : [...demoBudgetLines]
+    return rows
+  },
+
+  async createBudgetLine(input: CreateBudgetLineInput) {
+    const funds = await this.getFunds()
+    const fund = funds.find((f: any) => f.id === input.fundId)
+    const line = {
+      id: `bl-${crypto.randomUUID().slice(0, 8)}`,
+      fundId: input.fundId,
+      fundName: fund?.name,
+      fiscalYear: input.fiscalYear,
+      department: input.department,
+      label: input.label,
+      allocatedAmount: input.allocatedAmount,
+      notes: input.notes,
+      accountId: input.accountId,
+    }
+    demoBudgetLines.unshift(line)
+    return line
+  },
+
   /**
    * Approves or rejects a requisition through the tier pipeline
    */
   async approveRequisition(id: string, input: ApproveRequisitionInput, approverUserId = "user-approver") {
+    if (id.startsWith("req-")) {
+      demoReqDecisions.set(id, {
+        status: input.decision === "rejected" ? "rejected" : "approved",
+        decision: input.decision,
+      })
+      return {
+        id,
+        status: input.decision === "rejected" ? "rejected" : "approved",
+        decision: input.decision,
+        comments: input.comments,
+        approverUserId,
+      }
+    }
+
     const existing = await db.select().from(expenseRequisitions).where(eq(expenseRequisitions.id, id)).limit(1)
     if (existing.length === 0) {
       throw new NotFoundError("Expense Requisition", id)
@@ -349,5 +507,158 @@ export const accountingService = {
       .returning()
 
     return updated
+  },
+
+  async getJournalEntries(campusId?: string) {
+    try {
+      const conditions = []
+      if (campusId && campusId !== "all") {
+        conditions.push(eq(journalEntries.campusId, campusId))
+      }
+      const entries = await db
+        .select()
+        .from(journalEntries)
+        .where(conditions.length ? and(...conditions) : undefined)
+        .orderBy(desc(journalEntries.createdAt))
+        .limit(50)
+
+      if (entries.length === 0) {
+        return [
+          {
+            id: "je-demo-1",
+            entryNumber: "JE-2024-001",
+            entryDate: new Date().toISOString(),
+            memo: "Sunday offering batch — General Fund (draft)",
+            status: demoJournalPosted.has("je-demo-1") ? "posted" : "draft",
+            createdByUserId: "user-finance-1",
+            createdByName: "Finance Admin",
+            postedByUserId: demoJournalPosted.has("je-demo-1") ? "user-pastor-1" : null,
+            postedByName: demoJournalPosted.has("je-demo-1") ? "Campus Pastor Ahmad" : null,
+            postedAt: demoJournalPosted.has("je-demo-1") ? new Date().toISOString() : null,
+          },
+          {
+            id: "je-demo-2",
+            entryNumber: "JE-2024-002",
+            entryDate: new Date(Date.now() - 86400000).toISOString(),
+            memo: "Worship gear expense disbursement",
+            status: "posted",
+            createdByUserId: "user-finance-1",
+            createdByName: "Finance Admin",
+            postedByUserId: "user-pastor-1",
+            postedByName: "Campus Pastor Ahmad",
+            postedAt: new Date(Date.now() - 80000000).toISOString(),
+          },
+        ]
+      }
+      return entries
+    } catch (err) {
+      console.error("[accountingService.getJournalEntries]", err)
+      return []
+    }
+  },
+
+  async createJournalEntry(input: CreateJournalEntryInput) {
+    const totalDebit = input.lines.reduce((s, l) => s + l.debit, 0)
+    const totalCredit = input.lines.reduce((s, l) => s + l.credit, 0)
+    if (Math.abs(totalDebit - totalCredit) > 0.001) {
+      throw new ValidationError("Journal entry must balance: debits must equal credits.")
+    }
+
+    let campusId = input.campusId
+    if (!campusId) {
+      const defaultCampus = await db.select().from(campuses).limit(1)
+      campusId = defaultCampus[0]?.id
+    }
+    if (!campusId) {
+      throw new ValidationError("Campus is required to create a journal entry.")
+    }
+
+    const entryNumber = `JE-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+    const [entry] = await db
+      .insert(journalEntries)
+      .values({
+        campusId,
+        entryNumber,
+        entryDate: new Date(input.entryDate),
+        memo: input.memo,
+        status: "draft",
+        createdByUserId: input.createdByUserId,
+      })
+      .returning()
+
+    await db.insert(journalLines).values(
+      input.lines.map((line) => ({
+        journalEntryId: entry.id,
+        accountId: line.accountId,
+        fundId: line.fundId,
+        debit: line.debit.toString(),
+        credit: line.credit.toString(),
+        memo: line.memo || null,
+      }))
+    )
+
+    return entry
+  },
+
+  /**
+   * Explicit post — never auto. Records who posted and when.
+   */
+  async postJournalEntry(id: string, input: PostJournalEntryInput) {
+    if (id.startsWith("je-demo-")) {
+      if (demoJournalPosted.has(id)) throw new ValidationError("Journal entry is already posted.")
+      demoJournalPosted.add(id)
+      return {
+        id,
+        status: "posted",
+        postedByUserId: input.postedByUserId,
+        postedByName: "Campus Pastor Ahmad",
+        postedAt: new Date().toISOString(),
+      }
+    }
+
+    const existing = await db.select().from(journalEntries).where(eq(journalEntries.id, id)).limit(1)
+    if (existing.length === 0) throw new NotFoundError("Journal Entry", id)
+    if (existing[0].status === "posted") {
+      throw new ValidationError("Journal entry is already posted.")
+    }
+
+    const [updated] = await db
+      .update(journalEntries)
+      .set({
+        status: "posted",
+        postedByUserId: input.postedByUserId,
+        postedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(journalEntries.id, id))
+      .returning()
+
+    return updated
+  },
+
+  async createFundTransfer(input: FundTransferInput, authorizedByUserId: string) {
+    if (input.fromFundId === input.toFundId) {
+      throw new ValidationError("Cannot transfer a fund to itself.")
+    }
+    let campusId = input.campusId
+    if (!campusId) {
+      const defaultCampus = await db.select().from(campuses).limit(1)
+      campusId = defaultCampus[0]?.id
+    }
+    if (!campusId) throw new ValidationError("Campus is required.")
+
+    const [transfer] = await db
+      .insert(fundTransfers)
+      .values({
+        campusId,
+        fromFundId: input.fromFundId,
+        toFundId: input.toFundId,
+        amount: input.amount.toString(),
+        transferReason: input.transferReason,
+        authorizedByUserId,
+      })
+      .returning()
+
+    return transfer
   },
 }

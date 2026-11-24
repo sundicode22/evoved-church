@@ -5,9 +5,6 @@ import { qrService } from "./qr-service"
 import { formatErrorResponse } from "@/lib/errors"
 
 export const attendanceController = new Elysia({ prefix: "/attendance" })
-  /**
-   * GET /api/attendance/qr-code - Generates scannable QR code for connection card
-   */
   .get("/qr-code", async ({ query, set }) => {
     try {
       const slug = (query.campusSlug as string) || "main-campus"
@@ -21,10 +18,7 @@ export const attendanceController = new Elysia({ prefix: "/attendance" })
     }
   })
 
-  /**
-   * POST /api/attendance/checkin - Sunday service check-in with automatic newcomer lead pipeline linkage
-   */
-  .post("/checkin", async ({ body, set }) => {
+  .post("/check-ins", async ({ body, set }) => {
     try {
       const parsed = sundayCheckinSchema.parse(body)
       const result = await attendanceService.processSundayCheckin(parsed)
@@ -37,10 +31,7 @@ export const attendanceController = new Elysia({ prefix: "/attendance" })
     }
   })
 
-  /**
-   * POST /api/attendance/child-checkin - Kids check-in with 4-character security pickup code
-   */
-  .post("/child-checkin", async ({ body, set }) => {
+  .post("/child-check-ins", async ({ body, set }) => {
     try {
       const parsed = childKioskCheckinSchema.parse(body)
       const result = await attendanceService.processChildCheckin(parsed)

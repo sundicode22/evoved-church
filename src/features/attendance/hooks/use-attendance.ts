@@ -39,7 +39,7 @@ export function useSundayCheckin() {
 
   return useMutation({
     mutationFn: async (input: SundayCheckinInput) => {
-      const response = await apiClient.post<ApiResponse<any>>("/attendance/checkin", input)
+      const response = await apiClient.post<ApiResponse<any>>("/attendance/check-ins", input)
       return response.data
     },
     onError: (err: Error) => {
@@ -62,7 +62,7 @@ export function useSundayCheckin() {
 export function useChildCheckin() {
   return useMutation({
     mutationFn: async (input: ChildKioskCheckinInput) => {
-      const response = await apiClient.post<ApiResponse<any>>("/attendance/child-checkin", input)
+      const response = await apiClient.post<ApiResponse<any>>("/attendance/child-check-ins", input)
       return response.data
     },
     onError: (err: Error) => {

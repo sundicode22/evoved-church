@@ -1,9 +1,48 @@
 import { db } from "@/lib/db"
-import { members, userCategories, campuses } from "@/lib/db/schema"
+import { members, userCategories, campuses, households } from "@/lib/db/schema"
 import { eq, desc, and, or, ilike, sql } from "drizzle-orm"
 import { NotFoundError, ValidationError } from "@/lib/errors"
-import { CreateMemberInput, CreateCategoryInput } from "./schemas"
+import {
+  CreateCategoryInput,
+  UpdatePersonTypeInput,
+  AttachHouseholdInput,
+  HOUSEHOLD_ROLE_LABELS,
+} from "./schemas"
 import { DbPaginationResult } from "@/lib/db/pagination"
+
+const DEMO_HOUSEHOLD = {
+  id: "hh-cooper",
+  name: "The Cooper Household",
+  members: [
+    {
+      id: "mem-1",
+      firstName: "David",
+      lastName: "Johnson",
+      personType: "staff_minister",
+      householdRole: "father",
+      recordedTitle: "Senior Pastor",
+      backgroundCheckStatus: "cleared",
+    },
+    {
+      id: "mem-spouse",
+      firstName: "Rachel",
+      lastName: "Johnson",
+      personType: "covenant_member",
+      householdRole: "mother",
+      recordedTitle: null,
+      backgroundCheckStatus: "cleared",
+    },
+    {
+      id: "mem-child",
+      firstName: "Noah",
+      lastName: "Johnson",
+      personType: "regular_attender",
+      householdRole: "son",
+      recordedTitle: null,
+      backgroundCheckStatus: "none",
+    },
+  ],
+}
 
 export const memberService = {
   /**
@@ -68,6 +107,7 @@ export const memberService = {
               lastName: "Johnson",
               personType: "staff_minister",
               recordedTitle: "Senior Pastor",
+              householdRole: "father",
               ministryRoles: ["Preaching", "Board of Elders"],
               ordinationDate: "2010-06-15",
               ordinationCredentials: "Acts Assemblies Presbytery #4492",
@@ -81,6 +121,7 @@ export const memberService = {
               firstName: "Marcus",
               lastName: "Vance",
               personType: "staff_minister",
+              householdRole: "head",
               recordedTitle: "Executive Pastor (Operations)",
               ministryRoles: ["Operations", "Finance Committee"],
               ordinationDate: "2014-08-20",
@@ -110,6 +151,18 @@ export const memberService = {
               backgroundCheckStatus: "none",
               category: "Newcomers & Visitors",
               badgeColor: "amber",
+            },
+            {
+              id: "mem-5",
+              firstName: "Brian",
+              lastName: "Robbin",
+              personType: "volunteer",
+              recordedTitle: null,
+              ministryRoles: ["Kids Check-in"],
+              backgroundCheckStatus: "expired",
+              backgroundCheckExpiresAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+              category: "Volunteers",
+              badgeColor: "rose",
             },
           ],
           pagination: { page: 1, pageSize: 10, total: 4, totalPages: 1, hasNext: false, hasPrev: false },
@@ -174,5 +227,129 @@ export const memberService = {
       })
       .returning()
     return created
+  },
+
+  async getMemberById(id: string) {
+    try {
+      const rows = await db.select().from(members).where(eq(members.id, id)).limit(1)
+      if (rows[0]) {
+        let householdPeers: unknown[] = []
+        if (rows[0].householdId) {
+          householdPeers = await db
+            .select()
+            .from(members)
+            .where(eq(members.householdId, rows[0].householdId))
+        }
+        return { ...rows[0], householdPeers }
+      }
+    } catch {
+      /* demo */
+    }
+    const all = [
+      ...DEMO_HOUSEHOLD.members,
+      {
+        id: "mem-5",
+        firstName: "Brian",
+        lastName: "Robbin",
+        personType: "volunteer",
+        householdRole: "other" as const,
+        recordedTitle: null,
+        backgroundCheckStatus: "expired",
+        backgroundCheckExpiresAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+        ministryRoles: ["Kids Check-in"],
+      },
+    ]
+    const found = all.find((m) => m.id === id) || all[0]
+    const peers =
+      found.id === "mem-5"
+        ? [found]
+        : DEMO_HOUSEHOLD.members.map((m) => ({
+            ...m,
+            roleLabel: HOUSEHOLD_ROLE_LABELS[m.householdRole as keyof typeof HOUSEHOLD_ROLE_LABELS],
+          }))
+    return {
+      ...found,
+      householdId: found.id === "mem-5" ? null : DEMO_HOUSEHOLD.id,
+      householdName: found.id === "mem-5" ? null : DEMO_HOUSEHOLD.name,
+      householdPeers: peers,
+      email: `${found.firstName.toLowerCase()}@gracecity.church`,
+      phoneNumber: "(555) 010-1000",
+      ministryRoles: (found as { ministryRoles?: string[] }).ministryRoles || ["Pastoral Care"],
+    }
+  },
+
+  async attachHousehold(id: string, input: AttachHouseholdInput) {
+    try {
+      let householdId = input.householdId
+      if (!householdId && input.householdName) {
+        let campusId = input.campusId
+        if (!campusId) {
+          const c = await db.select().from(campuses).limit(1)
+          campusId = c[0]?.id
+        }
+        if (!campusId) throw new ValidationError("Campus/location required to create household")
+        const [hh] = await db
+          .insert(households)
+          .values({ name: input.householdName, campusId })
+          .returning()
+        householdId = hh.id
+      }
+      if (!householdId) throw new ValidationError("householdId or householdName required")
+
+      const [updated] = await db
+        .update(members)
+        .set({
+          householdId,
+          householdRole: input.householdRole,
+          isHeadOfHousehold: input.householdRole === "head" || input.householdRole === "father",
+          updatedAt: new Date(),
+        })
+        .where(eq(members.id, id))
+        .returning()
+      return updated || { id, householdId, householdRole: input.householdRole }
+    } catch (e) {
+      if (e instanceof ValidationError) throw e
+      return { id, householdId: input.householdId || "hh-demo", householdRole: input.householdRole }
+    }
+  },
+
+  /**
+   * Lifecycle promotion/demotion with actor audit note
+   */
+  async updatePersonType(id: string, input: UpdatePersonTypeInput) {
+    try {
+      const existing = await db.select().from(members).where(eq(members.id, id)).limit(1)
+      if (existing.length === 0) {
+        return {
+          id,
+          personType: input.personType,
+          changedByUserId: input.changedByUserId,
+          reason: input.reason || `Lifecycle set to ${input.personType}`,
+        }
+      }
+      const previous = existing[0].personType
+      const [updated] = await db
+        .update(members)
+        .set({ personType: input.personType, updatedAt: new Date() })
+        .where(eq(members.id, id))
+        .returning()
+      return {
+        ...updated,
+        lifecycleAudit: {
+          previous,
+          next: input.personType,
+          changedByUserId: input.changedByUserId,
+          reason: input.reason || null,
+          changedAt: new Date().toISOString(),
+        },
+      }
+    } catch {
+      return {
+        id,
+        personType: input.personType,
+        changedByUserId: input.changedByUserId,
+        reason: input.reason,
+      }
+    }
   },
 }

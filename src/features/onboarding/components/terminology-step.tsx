@@ -1,0 +1,47 @@
+"use client"
+
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
+import { cn } from "@/lib/utils"
+import { NOMENCLATURE_PRESETS, type NomenclaturePresetKey } from "@/features/onboarding/presets"
+
+interface TerminologyStepProps {
+  value: NomenclaturePresetKey
+  onChange: (key: NomenclaturePresetKey) => void
+}
+
+export function TerminologyStep({ value, onChange }: TerminologyStepProps) {
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-zinc-500">
+        Pick the language your church uses. You can fine-tune every term later in Settings.
+      </p>
+      <div className="grid gap-3">
+        {NOMENCLATURE_PRESETS.map((preset) => {
+          const selected = preset.key === value
+          return (
+            <button
+              key={preset.key}
+              type="button"
+              onClick={() => onChange(preset.key)}
+              className={cn(
+                "flex items-center justify-between rounded-xl border bg-white p-4 text-left transition-all",
+                selected
+                  ? "border-[#16a34a] bg-emerald-50/60 shadow-sm ring-1 ring-[#16a34a]/20"
+                  : "border-zinc-200/70 hover:border-zinc-300 hover:bg-zinc-50"
+              )}
+            >
+              <span>
+                <span className="block text-sm font-semibold text-slate-900">{preset.label}</span>
+                <span className="block text-xs text-zinc-500">{preset.description}</span>
+              </span>
+              {selected && (
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-5 text-[#16a34a]" />
+              )}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

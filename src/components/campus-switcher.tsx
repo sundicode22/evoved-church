@@ -16,12 +16,14 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useBranchStore, Campus } from "@/store/use-branch-store"
+import { useNomenclatureStore } from "@/features/settings/use-nomenclature"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Building01Icon, ArrowUpDownIcon, PlusSignIcon } from "@hugeicons/core-free-icons"
 
 export function CampusSwitcher() {
   const { isMobile } = useSidebar()
   const { activeCampus, availableCampuses, setActiveCampus } = useBranchStore()
+  const campusTermSingular = useNomenclatureStore((s) => s.nomenclature.campusTermSingular)
 
   return (
     <SidebarMenu>
@@ -58,8 +60,9 @@ export function CampusSwitcher() {
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-2 py-1.5">
-              Select Campus / Branch
+              Locations
             </DropdownMenuLabel>
+            <p className="px-2 pb-1.5 text-[11px] text-zinc-400">Filter this church by site</p>
             {availableCampuses.map((campus: Campus) => (
               <DropdownMenuItem
                 key={campus.id}
@@ -84,7 +87,7 @@ export function CampusSwitcher() {
               <div className="flex size-6 items-center justify-center rounded-md border border-dashed border-emerald-300 bg-emerald-50/50">
                 <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-3.5" />
               </div>
-              <span>Add New Campus / Church Plant</span>
+              <span>Add New {campusTermSingular}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

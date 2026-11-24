@@ -1,14 +1,24 @@
 import { z } from "zod"
 
-export const visitorStageSchema = z.enum([
-  "new_leads",
-  "request_received",
-  "in_draft",
-  "proposal_sent",
-  "approved",
-  "rejected",
-  "integrated_member",
-])
+export const VISITOR_STAGES = [
+  "first_visit",
+  "welcome_call",
+  "pastoral_visit",
+  "foundations_class",
+  "group_integration",
+  "active_partner",
+] as const
+
+export const VISITOR_STAGE_LABELS: Record<(typeof VISITOR_STAGES)[number], string> = {
+  first_visit: "First Visit",
+  welcome_call: "Welcome Call",
+  pastoral_visit: "Pastoral Visit / Coffee",
+  foundations_class: "Foundations Class",
+  group_integration: "Group Integration",
+  active_partner: "Active Partner",
+}
+
+export const visitorStageSchema = z.enum(VISITOR_STAGES)
 
 export const createLeadSchema = z.object({
   title: z.string().min(2, "Title is required"),

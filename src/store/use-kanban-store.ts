@@ -2,26 +2,26 @@ import { create } from "zustand"
 
 interface KanbanState {
   searchQuery: string
-  selectedDealId: string | null
+  selectedLeadId: string | null
   isDrawerOpen: boolean
-  activeView: "pipeline" | "list"
+  activeView: "board" | "list"
   setSearchQuery: (query: string) => void
-  setSelectedDealId: (id: string | null) => void
+  setSelectedLeadId: (id: string | null) => void
   setIsDrawerOpen: (isOpen: boolean) => void
-  setActiveView: (view: "pipeline" | "list") => void
-  openDealDrawer: (id: string) => void
-  closeDealDrawer: () => void
+  setActiveView: (view: "board" | "list") => void
+  openLeadDrawer: (id: string) => void
+  closeLeadDrawer: () => void
 }
 
 export const useKanbanStore = create<KanbanState>((set) => ({
   searchQuery: "",
-  selectedDealId: "deal-10",
+  selectedLeadId: null,
   isDrawerOpen: false,
-  activeView: "pipeline",
+  activeView: "board",
   setSearchQuery: (searchQuery) => set({ searchQuery }),
-  setSelectedDealId: (selectedDealId) => set({ selectedDealId }),
+  setSelectedLeadId: (selectedLeadId) => set({ selectedLeadId }),
   setIsDrawerOpen: (isDrawerOpen) => set({ isDrawerOpen }),
   setActiveView: (activeView) => set({ activeView }),
-  openDealDrawer: (id) => set({ selectedDealId: id, isDrawerOpen: true }),
-  closeDealDrawer: () => set({ isDrawerOpen: false }),
+  openLeadDrawer: (id) => set({ selectedLeadId: id, isDrawerOpen: true }),
+  closeLeadDrawer: () => set({ isDrawerOpen: false }),
 }))

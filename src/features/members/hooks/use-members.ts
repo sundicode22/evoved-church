@@ -27,7 +27,7 @@ export function useMembers(params?: PaginationParams & { personType?: string }) 
   return useQuery({
     queryKey: MEMBER_KEYS.list(params),
     queryFn: async () => {
-      const response = await apiClient.get<ApiResponse<any[]>>("/people", {
+      const response = await apiClient.get<ApiResponse<any[]>>("/members", {
         params,
       })
       return response.data
@@ -43,7 +43,7 @@ export function useUserCategories() {
   return useQuery({
     queryKey: MEMBER_KEYS.categories(),
     queryFn: async () => {
-      const response = await apiClient.get<ApiResponse<any[]>>("/people/categories")
+      const response = await apiClient.get<ApiResponse<any[]>>("/members/categories")
       return response.data.data || response.data
     },
     staleTime: 5 * 60 * 1000,
@@ -58,7 +58,7 @@ export function useCreateCategory() {
 
   return useMutation({
     mutationFn: async (input: CreateCategoryInput) => {
-      const response = await apiClient.post<ApiResponse<any>>("/people/categories", input)
+      const response = await apiClient.post<ApiResponse<any>>("/members/categories", input)
       return response.data
     },
     onError: (err: Error) => {

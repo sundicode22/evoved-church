@@ -9,7 +9,7 @@ export const attendanceService = {
   /**
    * Processes a Sunday Service check-in.
    * If the person is marked as isFirstTimer = true, it automatically:
-   * 1. Creates a visitor lead in the Kanban pipeline in 'new_leads' stage.
+   * 1. Creates a visitor lead in the Kanban at 'first_visit' stage.
    * 2. Triggers the automated Welcome Drip email via Resend.
    */
   async processSundayCheckin(input: SundayCheckinInput) {
@@ -21,13 +21,13 @@ export const attendanceService = {
 
     let visitorLeadId: string | null = null
 
-    // If marked as first-timer, automatically link into Kanban CRM pipeline
+    // If marked as first-timer, automatically link into visitor CRM
     if (input.isFirstTimer && campusId) {
-      const dealNumber = `#${Math.floor(100000 + Math.random() * 900000)}`
+      const leadNumber = `#${Math.floor(100000 + Math.random() * 900000)}`
       const [lead] = await db
         .insert(visitorLeads)
         .values({
-          dealNumber,
+          leadNumber,
           campusId,
           title: `First Visit: ${input.fullName}`,
           location: "Sunday Sanctuary Service",
@@ -35,8 +35,8 @@ export const attendanceService = {
           contactEmail: input.email || null,
           contactPhone: input.phone || null,
           source: "Sunday Service Check-in",
-          stage: "new_leads",
-          tags: ["HOT LEADS", "FIRST-TIMER", "SUNDAY CHECK-IN"],
+          stage: "first_visit",
+          tags: ["FIRST-TIMER", "SUNDAY CHECK-IN"],
           activeSequence: "Welcome Drip Sequence",
           nextDripAction: "Welcome email sent via Resend",
         })
@@ -44,7 +44,6 @@ export const attendanceService = {
 
       visitorLeadId = lead.id
 
-      // Log activity
       await db.insert(visitorActivities).values({
         leadId: lead.id,
         type: "sunday_checkin",

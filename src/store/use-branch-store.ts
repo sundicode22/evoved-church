@@ -11,6 +11,7 @@ export interface Campus {
 
 interface BranchState {
   activeCampus: Campus
+  activeCampusId: string
   availableCampuses: Campus[]
   setActiveCampus: (campus: Campus) => void
   setAvailableCampuses: (campuses: Campus[]) => void
@@ -45,7 +46,8 @@ const defaultCampuses: Campus[] = [
 
 export const useBranchStore = create<BranchState>((set) => ({
   activeCampus: defaultCampuses[0],
+  activeCampusId: defaultCampuses[0].id,
   availableCampuses: defaultCampuses,
-  setActiveCampus: (campus) => set({ activeCampus: campus }),
+  setActiveCampus: (campus) => set({ activeCampus: campus, activeCampusId: campus.id }),
   setAvailableCampuses: (campuses) => set({ availableCampuses: campuses }),
 }))

@@ -1,0 +1,70 @@
+/**
+ * Canonical permission keys for Evolve ChMS.
+ * Stored in DB as app_permissions; admin role bypasses all checks.
+ */
+export const PERMISSION_CATALOG = [
+  // Visitors / leads
+  { key: "visitors.read", label: "View visitor pipeline", groupName: "Visitors" },
+  { key: "visitors.write", label: "Create & edit visitors", groupName: "Visitors" },
+  { key: "visitors.stage", label: "Move visitor stages", groupName: "Visitors" },
+  // Members
+  { key: "members.read", label: "View church members", groupName: "Members" },
+  { key: "members.write", label: "Edit members & households", groupName: "Members" },
+  { key: "members.lifecycle", label: "Change person lifecycle", groupName: "Members" },
+  // Groups
+  { key: "groups.read", label: "View groups", groupName: "Groups" },
+  { key: "groups.write", label: "Manage groups & rosters", groupName: "Groups" },
+  // Accounting
+  { key: "accounting.read", label: "View funds & requisitions", groupName: "Accounting" },
+  { key: "accounting.requisitions", label: "Create & approve expenses", groupName: "Accounting" },
+  { key: "accounting.journal.post", label: "Post journal entries", groupName: "Accounting" },
+  { key: "accounting.transfers", label: "Authorize fund transfers", groupName: "Accounting" },
+  { key: "accounting.budgets", label: "Manage budget lines", groupName: "Accounting" },
+  // Policies
+  { key: "policies.read", label: "View church policies", groupName: "Policies" },
+  { key: "policies.write", label: "Create & edit policies", groupName: "Policies" },
+  { key: "policies.publish", label: "Publish policies", groupName: "Policies" },
+  // Campaigns
+  { key: "campaigns.read", label: "View campaigns", groupName: "Campaigns" },
+  { key: "campaigns.write", label: "Create & edit campaigns", groupName: "Campaigns" },
+  { key: "campaigns.send", label: "Send email / SMS campaigns", groupName: "Campaigns" },
+  // Projects
+  { key: "projects.read", label: "View projects board", groupName: "Projects" },
+  { key: "projects.write", label: "Manage project cards", groupName: "Projects" },
+  // Documents
+  { key: "documents.read", label: "View documents", groupName: "Documents" },
+  { key: "documents.write", label: "Upload & manage documents", groupName: "Documents" },
+  // Reports
+  { key: "reports.read", label: "View financial & ministry reports", groupName: "Reports" },
+  // Organigram / services
+  { key: "organigram.read", label: "View organigram", groupName: "Structure" },
+  { key: "organigram.write", label: "Edit organigram", groupName: "Structure" },
+  { key: "services.read", label: "View Sunday services", groupName: "Services" },
+  { key: "services.write", label: "Edit run of service", groupName: "Services" },
+  // Settings
+  { key: "settings.read", label: "View settings", groupName: "Settings" },
+  { key: "settings.write", label: "Edit nomenclature & integrations", groupName: "Settings" },
+  { key: "settings.roles", label: "Manage roles & permissions", groupName: "Settings" },
+] as const
+
+export type PermissionKey = (typeof PERMISSION_CATALOG)[number]["key"]
+
+export const NAV_PERMISSION: Record<string, PermissionKey | PermissionKey[]> = {
+  "/dashboard": "visitors.read",
+  "/dashboard/visitors": "visitors.read",
+  "/dashboard/appointments": "visitors.read",
+  "/dashboard/sunday-services": "services.read",
+  "/dashboard/tasks": "projects.read",
+  "/dashboard/projects": "projects.read",
+  "/dashboard/organigram": "organigram.read",
+  "/dashboard/members": "members.read",
+  "/dashboard/groups": "groups.read",
+  "/dashboard/accounting": "accounting.read",
+  "/dashboard/giving": "accounting.read",
+  "/dashboard/documents": "documents.read",
+  "/dashboard/policies": "policies.read",
+  "/dashboard/communications": "campaigns.read",
+  "/dashboard/campaigns": "campaigns.read",
+  "/dashboard/metrics": "reports.read",
+  "/dashboard/settings": "settings.read",
+}
