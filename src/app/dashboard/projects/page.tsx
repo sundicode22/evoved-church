@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { formatDistanceToNow } from "date-fns"
-import { ListTodo, Plus, Search } from "lucide-react"
+import { ListTodo, Plus } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -38,6 +38,7 @@ import {
   TableChrome,
   TablePagination,
   TablePanel,
+  TableSearch,
   ViewToggle,
   useColumnVisibility,
   type ColumnOption,
@@ -151,22 +152,9 @@ export default function ProjectsPage() {
           <PageHeader
             title="Projects"
             description={`Open ${total - doneCount} · Done ${doneCount}. List first; board is optional.`}
-            icon={<ListTodo className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            icon={<ListTodo className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
             actions={<ViewToggle value={view} onChange={setView} />}
-          >
-            <div className="relative max-w-xs">
-              <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
-              <Input
-                placeholder="Search projects…"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value)
-                  setPage(1)
-                }}
-                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
-              />
-            </div>
-          </PageHeader>
+          />
 
           <div className="p-6 md:p-8">
             {view === "board" ? (
@@ -182,6 +170,16 @@ export default function ProjectsPage() {
             ) : (
               <TablePanel>
                 <TableChrome
+                  search={
+                    <TableSearch
+                      value={search}
+                      onChange={(v) => {
+                        setSearch(v)
+                        setPage(1)
+                      }}
+                      placeholder="Search projects…"
+                    />
+                  }
                   trailing={
                     <>
                       <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
@@ -319,7 +317,7 @@ export default function ProjectsPage() {
                   <Button
                     type="submit"
                     disabled={createCard.isPending || title.trim().length < 2}
-                    className="h-9 bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Add task
                   </Button>

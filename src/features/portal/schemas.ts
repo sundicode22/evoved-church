@@ -47,9 +47,20 @@ export type PortalAnnouncement = {
   postedAt: string | null
 }
 
+export type PortalBlogCard = {
+  id: string
+  title: string
+  slug: string
+  excerpt: string
+  coverImageUrl: string | null
+  authorName: string
+  publishedAt: string | null
+}
+
 export type PortalPublicView = {
   settings: PortalSettings
   events: PortalEvent[]
   groups: PortalGroup[]
   announcements: PortalAnnouncement[]
+  posts: PortalBlogCard[]
 }

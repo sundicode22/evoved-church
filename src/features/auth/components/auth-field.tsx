@@ -64,7 +64,7 @@ export function AuthFormField<T extends FieldValues>({
                 autoComplete={autoComplete}
                 disabled={disabled}
                 aria-invalid={fieldState.invalid}
-                className={cn("h-10 rounded-lg bg-white", isPassword && "pr-10")}
+                className={cn(isPassword && "pr-10")}
               />
               {isPassword ? (
                 <button

@@ -309,7 +309,7 @@ export default function OrganigramPage() {
         <PageHeader
           title="Organigram"
           description="Reporting lines across your ministry."
-          icon={<Network className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+          icon={<Network className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
           actions={
             <TableAddButton>
               <Plus className="size-3.5" strokeWidth={1.75} />

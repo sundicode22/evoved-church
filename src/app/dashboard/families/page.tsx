@@ -1,11 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Home, Search } from "lucide-react"
+import { Home } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -21,6 +20,7 @@ import {
   TableChrome,
   TablePagination,
   TablePanel,
+  TableSearch,
   useColumnVisibility,
   type ColumnOption,
 } from "@/components/table-panel"
@@ -70,25 +70,22 @@ export default function FamiliesPage() {
           <PageHeader
             title="Families"
             description="Households linked to church members."
-            icon={<Home className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
-          >
-            <div className="relative max-w-xs">
-              <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
-              <Input
-                placeholder="Search households…"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setPage(1)
-                }}
-                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
-              />
-            </div>
-          </PageHeader>
+            icon={<Home className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+          />
 
           <div className="p-6 md:p-8">
             <TablePanel>
               <TableChrome
+                search={
+                  <TableSearch
+                    value={searchQuery}
+                    onChange={(v) => {
+                      setSearchQuery(v)
+                      setPage(1)
+                    }}
+                    placeholder="Search households…"
+                  />
+                }
                 trailing={
                   <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
                 }

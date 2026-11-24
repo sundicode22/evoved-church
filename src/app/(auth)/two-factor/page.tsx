@@ -63,7 +63,7 @@ export default function TwoFactorPage() {
           <Button
             type="submit"
             disabled={form.formState.isSubmitting}
-            className="h-10 w-full rounded-lg bg-[#16a34a] text-sm text-white shadow-xs hover:bg-[#15803d]"
+            className="h-10 w-full rounded-lg bg-[var(--brand)] text-sm text-white shadow-xs hover:bg-[var(--brand-hover)]"
           >
             {form.formState.isSubmitting ? "Verifying…" : "Verify"}
           </Button>
@@ -73,12 +73,12 @@ export default function TwoFactorPage() {
               setUseBackup((v) => !v)
               form.reset({ code: "" })
             }}
-            className="w-full text-center text-xs font-medium text-[#16a34a] hover:underline"
+            className="w-full text-center text-xs font-medium text-[var(--brand)] hover:underline"
           >
             {useBackup ? "Use authenticator code instead" : "Use a backup code instead"}
           </button>
           <p className="text-center text-xs text-zinc-500">
-            <Link href="/login" className="font-medium text-[#16a34a] hover:underline">
+            <Link href="/login" className="font-medium text-[var(--brand)] hover:underline">
               Back to sign in
             </Link>
           </p>

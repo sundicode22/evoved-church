@@ -9,37 +9,8 @@ import {
 
 const DEMO_CAMPUS = "campus-demo-main"
 const now = () => new Date().toISOString()
-const daysAgo = (d: number) => new Date(Date.now() - d * 86_400_000).toISOString()
 
-const store: Announcement[] = [
-  {
-    id: "ann-1",
-    campusId: DEMO_CAMPUS,
-    title: "Easter Sunday Schedule",
-    bodyHtml:
-      "<p>Join us for <strong>Easter Sunday</strong> services at 9am and 11am. Childcare available.</p>",
-    isPinned: true,
-    status: "posted",
-    scheduledAt: null,
-    postedAt: daysAgo(5),
-    postedByName: "Communications Team",
-    createdAt: daysAgo(7),
-    updatedAt: daysAgo(5),
-  },
-  {
-    id: "ann-2",
-    campusId: DEMO_CAMPUS,
-    title: "Volunteer Appreciation Night",
-    bodyHtml: "<p>Dinner is on us this Friday evening for all serving volunteers.</p>",
-    isPinned: false,
-    status: "draft",
-    scheduledAt: null,
-    postedAt: null,
-    postedByName: "",
-    createdAt: daysAgo(1),
-    updatedAt: daysAgo(1),
-  },
-]
+const store: Announcement[] = []
 
 function find(id: string) {
   const row = store.find((x) => x.id === id)

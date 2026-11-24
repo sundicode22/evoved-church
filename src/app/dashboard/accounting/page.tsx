@@ -320,7 +320,7 @@ export default function AccountingPage() {
           <PageHeader
             title="Fund"
             description="Funds, budgets, encumbrance, and the audited ledger."
-            icon={<Coins className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            icon={<Coins className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
             actions={
               <>
                 <AccountingCommand
@@ -389,7 +389,7 @@ export default function AccountingPage() {
                 </Can>
                 <Can permission="accounting.requisitions">
                   <Button
-                    className="h-8 gap-1.5 rounded-lg bg-[#22c55e] px-3.5 text-xs font-normal text-white hover:bg-[#16a34a]"
+                    className="h-8 gap-1.5 rounded-lg bg-[var(--brand)] px-3.5 text-xs font-normal text-white hover:bg-[var(--brand)]"
                     onClick={() => setReqSheetOpen(true)}
                   >
                     <Plus strokeWidth={2} className="size-3.5" />
@@ -553,7 +553,7 @@ export default function AccountingPage() {
                       <Can permission="accounting.budgets">
                         <Button
                           size="sm"
-                          className="h-8 bg-[#22c55e] text-xs text-white hover:bg-[#16a34a]"
+                          className="h-8 bg-[var(--brand)] text-xs text-white hover:bg-[var(--brand)]"
                           onClick={() => setLineSheetOpen(true)}
                         >
                           Add line
@@ -1036,7 +1036,7 @@ export default function AccountingPage() {
                   <Button
                     type="submit"
                     disabled={createReq.isPending || !reqForm.fundId || !reqForm.accountId}
-                    className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Submit requisition
                   </Button>
@@ -1136,7 +1136,7 @@ export default function AccountingPage() {
                   <Button
                     type="submit"
                     disabled={createFund.isPending}
-                    className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Create fund
                   </Button>
@@ -1237,7 +1237,7 @@ export default function AccountingPage() {
                   <Button
                     type="submit"
                     disabled={createLine.isPending || !lineForm.fundId}
-                    className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Add line
                   </Button>

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { HandCoins, Plus, Search } from "lucide-react"
+import { HandCoins, Plus } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -44,6 +44,7 @@ import {
   TableChrome,
   TablePagination,
   TablePanel,
+  TableSearch,
   useColumnVisibility,
   type ColumnOption,
 } from "@/components/table-panel"
@@ -211,29 +212,8 @@ export default function GivingPage() {
           <PageHeader
             title="Offering"
             description="Record contributions and post them to the books."
-            icon={<HandCoins className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
-            actions={
-              <Can permission="accounting.journal.post">
-                <TableAddButton onClick={() => setSheetOpen(true)}>
-                  <Plus className="size-3.5" strokeWidth={1.75} />
-                  Add giving
-                </TableAddButton>
-              </Can>
-            }
-          >
-            <div className="relative max-w-xs">
-              <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
-              <Input
-                placeholder="Search contributions…"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setPage(1)
-                }}
-                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
-              />
-            </div>
-          </PageHeader>
+            icon={<HandCoins className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+          />
 
           <div className="space-y-6 p-6 md:p-8">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -254,8 +234,26 @@ export default function GivingPage() {
 
             <TablePanel>
               <TableChrome
+                search={
+                  <TableSearch
+                    value={searchQuery}
+                    onChange={(v) => {
+                      setSearchQuery(v)
+                      setPage(1)
+                    }}
+                    placeholder="Search contributions…"
+                  />
+                }
                 trailing={
-                  <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                  <>
+                    <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                    <Can permission="accounting.journal.post">
+                      <TableAddButton onClick={() => setSheetOpen(true)}>
+                        <Plus className="size-3.5" strokeWidth={1.75} />
+                        Add giving
+                      </TableAddButton>
+                    </Can>
+                  </>
                 }
               />
               <Table>
@@ -509,7 +507,7 @@ export default function GivingPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending}
-                    className="h-9 bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     {create.isPending ? "Saving…" : "Record contribution"}
                   </Button>

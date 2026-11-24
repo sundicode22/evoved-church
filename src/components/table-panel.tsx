@@ -8,8 +8,10 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Columns3,
+  Search,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -187,25 +189,60 @@ export function TableTabs({
   )
 }
 
-/** Toolbar row above the table body (Columns + primary). */
+/** Compact search field for table chrome — sits on the same row as Columns / actions. */
+export function TableSearch({
+  value,
+  onChange,
+  placeholder = "Search…",
+  className,
+}: {
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  className?: string
+}) {
+  return (
+    <div className={cn("relative w-full min-w-[11rem] max-w-xs sm:w-56", className)}>
+      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
+      />
+    </div>
+  )
+}
+
+/** Toolbar row above the table body: tabs | search + Columns + actions (one line). */
 export function TableChrome({
   tabs,
+  search,
   trailing,
   className,
 }: {
   tabs?: React.ReactNode
+  search?: React.ReactNode
   trailing?: React.ReactNode
   className?: string
 }) {
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-between gap-2 px-1",
+        "flex flex-col gap-2 px-1 sm:flex-row sm:items-center sm:justify-between",
         className
       )}
     >
-      <div className="min-w-0">{tabs}</div>
-      <div className="flex flex-wrap items-center gap-2">{trailing}</div>
+      {tabs ? <div className="min-w-0 shrink-0">{tabs}</div> : null}
+      <div
+        className={cn(
+          "flex min-w-0 flex-wrap items-center gap-2",
+          tabs ? "sm:ml-auto sm:justify-end" : "w-full justify-between sm:justify-end"
+        )}
+      >
+        {search}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">{trailing}</div>
+      </div>
     </div>
   )
 }

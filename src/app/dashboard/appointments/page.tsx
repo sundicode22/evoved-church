@@ -115,11 +115,11 @@ export default function AppointmentsPage() {
           <PageHeader
             title="Appointments"
             description="Pastoral booking windows guests can schedule into."
-            icon={<CalendarClock className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            icon={<CalendarClock className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
             actions={
               <Can permission="appointments.write">
                 <Button
-                  className="h-8 gap-1.5 bg-[#22c55e] text-xs font-normal text-white hover:bg-[#16a34a]"
+                  className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                   onClick={openCreate}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
@@ -298,7 +298,7 @@ export default function AppointmentsPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending || name.trim().length < 2}
-                    className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Save schedule
                   </Button>

@@ -74,15 +74,15 @@ export function TableToolbar({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
         {onSearchChange && (
-          <div className="relative w-44 sm:w-56">
-            <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
+          <div className="relative w-full min-w-[11rem] max-w-xs sm:w-56">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
             <Input
               value={search ?? ""}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
-              className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs"
+              className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
             />
           </div>
         )}

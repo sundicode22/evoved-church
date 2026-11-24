@@ -143,11 +143,11 @@ export default function ChurchCalendarPage() {
           <PageHeader
             title="Calendar"
             description="Programs, services, and who is responsible."
-            icon={<CalendarIcon className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            icon={<CalendarIcon className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
             actions={
               <Can permission="calendar.write">
                 <Button
-                  className="h-8 gap-1.5 bg-[#22c55e] text-xs font-normal text-white hover:bg-[#16a34a]"
+                  className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                   onClick={openCreate}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
@@ -433,7 +433,7 @@ export default function ChurchCalendarPage() {
                   <Button
                     type="submit"
                     disabled={createOcc.isPending || createProgram.isPending}
-                    className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Save event
                   </Button>

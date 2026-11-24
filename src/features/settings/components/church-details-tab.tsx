@@ -44,7 +44,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
     <div className="mx-auto max-w-3xl space-y-8">
       <section className="rounded-xl border bg-white p-6 shadow-xs">
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs font-semibold tracking-wide text-[#16a34a]">Church details</p>
+          <p className="text-xs font-semibold tracking-wide text-[var(--brand)]">Church details</p>
           {canEdit ? (
             <Button
               variant="ghost"
@@ -68,7 +68,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={nomenclature.logoUrl} alt="" className="size-full object-cover" />
                 ) : (
-                  <span className="text-xs font-semibold text-[#16a34a]">Evolve</span>
+                  <span className="text-[10px] font-semibold tracking-wide text-zinc-700">LOGO</span>
                 )}
               </div>
               <p className="text-xs text-zinc-400">Max 1 MB</p>
@@ -89,7 +89,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
 
       <section className="rounded-xl border bg-white p-6 shadow-xs">
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs font-semibold tracking-wide text-[#16a34a]">Contact details</p>
+          <p className="text-xs font-semibold tracking-wide text-[var(--brand)]">Contact details</p>
           {canEdit ? (
             <Button
               variant="ghost"
@@ -148,7 +148,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-[#16a34a] text-white hover:bg-[#15803d]"
+              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
               disabled={save.isPending}
               onClick={() => saveDraft(() => setChurchOpen(false))}
             >
@@ -207,7 +207,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-[#16a34a] text-white hover:bg-[#15803d]"
+              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
               disabled={save.isPending}
               onClick={() => saveDraft(() => setContactOpen(false))}
             >

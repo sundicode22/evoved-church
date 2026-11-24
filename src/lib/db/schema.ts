@@ -566,6 +566,7 @@ export const announcementStatusEnum = pgEnum("announcement_status", [
   "scheduled",
   "posted",
 ])
+export const blogPostStatusEnum = pgEnum("blog_post_status", ["draft", "published", "archived"])
 export const formFieldTypeEnum = pgEnum("form_field_type", [
   "short_text",
   "long_text",
@@ -807,6 +808,23 @@ export const portalSettings = pgTable("portal_settings", {
   publicEvents: boolean("public_events").default(true).notNull(),
   publicGroups: boolean("public_groups").default(true).notNull(),
   stripeConnected: boolean("stripe_connected").default(false).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+/** Member-portal blog / stories with cover image + rich HTML body. */
+export const blogPosts = pgTable("blog_posts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 160 }).notNull().unique(),
+  excerpt: text("excerpt"),
+  coverImageUrl: text("cover_image_url"),
+  bodyHtml: text("body_html").notNull(),
+  authorName: varchar("author_name", { length: 150 }),
+  status: blogPostStatusEnum("status").default("draft").notNull(),
+  publishedAt: timestamp("published_at"),
+  createdByUserId: text("created_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
 

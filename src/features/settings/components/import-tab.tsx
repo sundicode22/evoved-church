@@ -270,7 +270,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
           <Button
             type="button"
             disabled={!canEdit || busy || rows.length === 0 || !report}
-            className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+            className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
             onClick={() => setConfirmApply(true)}
           >
             Apply import

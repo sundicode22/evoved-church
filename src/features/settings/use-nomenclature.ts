@@ -29,7 +29,7 @@ interface NomenclatureStore {
 }
 
 const defaultNomenclature: NomenclatureSettings = {
-  churchName: "Evolve Church",
+  churchName: "",
   churchEmail: "",
   churchPhone: "",
   churchAddress: "",

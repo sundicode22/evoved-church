@@ -300,7 +300,7 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
               List
             </button>
           </div>
-          <Button className="h-9 bg-[#16a34a] text-white hover:bg-[#15803d]">
+          <Button className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]">
             <Plus className="size-4" />
             Add visitor
           </Button>

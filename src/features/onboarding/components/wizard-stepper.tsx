@@ -8,7 +8,7 @@ interface WizardStepperProps {
 
 export function WizardStepper({ steps, current }: WizardStepperProps) {
   return (
-    <ol className="flex items-center gap-2">
+    <ol className="flex w-full items-center gap-2">
       {steps.map((label, i) => {
         const done = i < current
         const active = i === current
@@ -16,19 +16,24 @@ export function WizardStepper({ steps, current }: WizardStepperProps) {
           <li key={label} className="flex flex-1 items-center gap-2">
             <span
               className={cn(
-                "flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold transition-colors",
-                done && "border-[#16a34a] bg-[#16a34a] text-white",
-                active && "border-[#16a34a] bg-emerald-50 text-emerald-700",
+                "flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold shadow-xs transition-colors",
+                done && "border-[var(--brand)] bg-[var(--brand)] text-white",
+                active && "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--brand-ink)]",
                 !done && !active && "border-zinc-200 bg-white text-zinc-400"
               )}
             >
-              {done ? <Check strokeWidth={3} className="size-3" /> : i + 1}
+              {done ? <Check strokeWidth={3} className="size-3.5" /> : i + 1}
             </span>
-            <span className={cn("hidden text-xs font-medium sm:block", active ? "text-slate-900" : "text-zinc-400")}>
+            <span
+              className={cn(
+                "hidden text-sm font-medium sm:block",
+                active ? "text-slate-900" : "text-zinc-400"
+              )}
+            >
               {label}
             </span>
             {i < steps.length - 1 && (
-              <span className={cn("h-px flex-1", done ? "bg-[#16a34a]" : "bg-zinc-200")} />
+              <span className={cn("h-px flex-1", done ? "bg-[var(--brand)]" : "bg-zinc-200")} />
             )}
           </li>
         )

@@ -224,12 +224,21 @@ export default function DocumentsPage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset className="min-h-screen bg-white dark:bg-zinc-950">
-                <PageHeader
+        <PageHeader
           title="Documents"
           description="Bylaws, minutes, and handbooks with role-based access."
-          icon={<ShieldCheck className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+          icon={<ShieldCheck className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
           actions={
             <>
+              <div className="relative hidden w-56 sm:block">
+                <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
+                <Input
+                  placeholder="Search documents…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
+                />
+              </div>
               <TableAddButton onClick={() => setFolderDialog(true)}>
                 <Plus className="size-3.5 text-zinc-500" strokeWidth={1.75} />
                 New Folder
@@ -240,24 +249,7 @@ export default function DocumentsPage() {
               </TableAddButton>
             </>
           }
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
-            <span>
-              Folders: <span className="text-zinc-800">{folders.length}</span>
-              <span className="mx-2 text-zinc-300">·</span>
-              Files: <span className="text-zinc-800">{documents.length}</span>
-            </span>
-            <div className="relative w-full max-w-xs">
-              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-zinc-400" />
-              <Input
-                placeholder="Search documents…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
-              />
-            </div>
-          </div>
-        </PageHeader>
+        />
 
         <div className="space-y-8 p-8">
           {loading ? (
@@ -428,7 +420,7 @@ export default function DocumentsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="h-9 rounded-lg bg-[#22c55e] px-4 font-normal text-white hover:bg-[#16a34a]"
+                  className="h-9 rounded-lg bg-[var(--brand)] px-4 font-normal text-white hover:bg-[var(--brand)]"
                 >
                   Create folder
                 </Button>
@@ -506,7 +498,7 @@ export default function DocumentsPage() {
                 <Button
                   type="submit"
                   disabled={uploading}
-                  className="h-9 rounded-lg bg-[#22c55e] px-4 font-normal text-white hover:bg-[#16a34a]"
+                  className="h-9 rounded-lg bg-[var(--brand)] px-4 font-normal text-white hover:bg-[var(--brand)]"
                 >
                   {uploading ? "Uploading…" : "Upload"}
                 </Button>

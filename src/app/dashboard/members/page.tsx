@@ -1,12 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { Download, Plus, Search, ShieldCheck } from "lucide-react"
+import { Download, Plus, ShieldCheck } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import {
   Table,
@@ -27,6 +26,7 @@ import {
   TableChrome,
   TablePagination,
   TablePanel,
+  TableSearch,
   TableTabs,
   useColumnVisibility,
   type ColumnOption,
@@ -79,36 +79,7 @@ export default function MembersPage() {
           <PageHeader
             title="Members"
             description="Church members, household roles, and safety clearances."
-            actions={
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-1.5 rounded-lg border-zinc-200 text-xs font-normal shadow-xs"
-                >
-                  <Download className="size-3.5" strokeWidth={1.75} />
-                  Export
-                </Button>
-                <TableAddButton>
-                  <Plus className="size-3.5" strokeWidth={1.75} />
-                  Add Person
-                </TableAddButton>
-              </>
-            }
-          >
-            <div className="relative max-w-xs">
-              <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
-              <Input
-                placeholder="Search people…"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setPage(1)
-                }}
-                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
-              />
-            </div>
-          </PageHeader>
+          />
 
           <div className="space-y-4 p-6 md:p-8">
             {members.some(
@@ -139,8 +110,32 @@ export default function MembersPage() {
                     }}
                   />
                 }
+                search={
+                  <TableSearch
+                    value={searchQuery}
+                    onChange={(v) => {
+                      setSearchQuery(v)
+                      setPage(1)
+                    }}
+                    placeholder="Search people…"
+                  />
+                }
                 trailing={
-                  <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                  <>
+                    <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5 rounded-lg border-zinc-200 text-xs font-normal shadow-xs"
+                    >
+                      <Download className="size-3.5" strokeWidth={1.75} />
+                      Export
+                    </Button>
+                    <TableAddButton>
+                      <Plus className="size-3.5" strokeWidth={1.75} />
+                      Add Person
+                    </TableAddButton>
+                  </>
                 }
               />
               <Table>

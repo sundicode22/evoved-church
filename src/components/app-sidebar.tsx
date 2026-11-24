@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useNomenclatureStore } from "@/features/settings/use-nomenclature"
 import { useNomenclatureQuery } from "@/features/settings/hooks/use-nomenclature-api"
+import { useBranchStore } from "@/store/use-branch-store"
 import { useAbility } from "@/features/auth/ability-context"
 import { NAV_PERMISSION } from "@/features/auth/permissions-catalog"
 
@@ -109,6 +110,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { title: "Campaigns", url: "/dashboard/campaigns" },
         { title: "Drips", url: "/dashboard/communications" },
         { title: "Announcements", url: "/dashboard/announcements" },
+        { title: "Blog", url: "/dashboard/blog" },
         { title: "Documents", url: "/dashboard/documents" },
         { title: "Policies", url: "/dashboard/policies" },
       ],
@@ -140,10 +142,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }))
     .filter((group) => group.items.length > 0)
 
+  const churchName = useNomenclatureStore((s) => s.nomenclature.churchName)
+  const activeCampus = useBranchStore((s) => s.activeCampus)
   const currentUser = {
-    name: "Ahmad Fawaid",
-    email: "Grace City Main Campus",
-    avatar: "/avatars/ahmad.jpg",
+    name: churchName || "Church admin",
+    email: activeCampus.name || "No location selected",
+    avatar: "",
   }
 
   return (

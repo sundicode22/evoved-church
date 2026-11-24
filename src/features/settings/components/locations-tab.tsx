@@ -73,7 +73,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
         {canEdit ? (
           <Button
             onClick={() => setOpen(true)}
-            className="h-9 rounded-lg bg-[#16a34a] text-sm text-white hover:bg-[#15803d]"
+            className="h-9 rounded-lg bg-[var(--brand)] text-sm text-white hover:bg-[var(--brand-hover)]"
           >
             Add location
           </Button>
@@ -102,7 +102,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
                   <TableCell>
                     {l.name}
                     {l.isMainCampus ? (
-                      <span className="ml-2 text-xs text-[#16a34a]">Main</span>
+                      <span className="ml-2 text-xs text-[var(--brand)]">Main</span>
                     ) : null}
                   </TableCell>
                   <TableCell className="font-mono text-xs">{l.slug}</TableCell>
@@ -150,7 +150,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
             <Button
               disabled={name.trim().length < 2 || create.isPending}
               onClick={() => create.mutate()}
-              className="bg-[#16a34a] text-white hover:bg-[#15803d]"
+              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
             >
               Save location
             </Button>

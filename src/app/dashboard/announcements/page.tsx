@@ -82,11 +82,11 @@ export default function AnnouncementsPage() {
           <PageHeader
             title="Announcements"
             description="Post news for the member portal and campus screens."
-            icon={<Megaphone className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            icon={<Megaphone className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
             actions={
               <Can permission="announcements.write">
                 <Button
-                  className="h-8 gap-1.5 bg-[#22c55e] text-xs font-normal text-white hover:bg-[#16a34a]"
+                  className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                   onClick={() => setOpen(true)}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
@@ -224,7 +224,7 @@ export default function AnnouncementsPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending || title.trim().length < 2}
-                    className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Save draft
                   </Button>

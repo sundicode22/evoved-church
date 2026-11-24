@@ -6,7 +6,6 @@ import { Plus, UserPlus } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -24,6 +23,7 @@ import {
   TableChrome,
   TablePagination,
   TablePanel,
+  TableSearch,
   ViewToggle,
   useColumnVisibility,
   type ColumnOption,
@@ -83,19 +83,9 @@ export default function VisitorsPage() {
           <PageHeader
             title="Visitors"
             description="Follow up with guests. Use List by default; Board is optional."
-            icon={<UserPlus className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            icon={<UserPlus className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
             actions={<ViewToggle value={view} onChange={setView} />}
-          >
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                setPage(1)
-              }}
-              placeholder="Search visitors…"
-              className="h-8 max-w-sm rounded-lg border-zinc-200 bg-zinc-50 text-xs shadow-xs"
-            />
-          </PageHeader>
+          />
 
           <div className="p-6 md:p-8">
             {view === "board" ? (
@@ -105,6 +95,16 @@ export default function VisitorsPage() {
             ) : (
               <TablePanel>
                 <TableChrome
+                  search={
+                    <TableSearch
+                      value={search}
+                      onChange={(v) => {
+                        setSearch(v)
+                        setPage(1)
+                      }}
+                      placeholder="Search visitors…"
+                    />
+                  }
                   trailing={
                     <>
                       <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />

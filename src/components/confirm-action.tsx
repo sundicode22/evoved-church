@@ -76,7 +76,7 @@ export function ConfirmAction({
             className={
               variant === "destructive"
                 ? "bg-rose-600 text-white hover:bg-rose-700"
-                : "bg-[#16a34a] text-white hover:bg-[#15803d]"
+                : "bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
             }
           >
             {pending ? "Working…" : confirmLabel}

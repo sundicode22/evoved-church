@@ -1,5 +1,7 @@
 import { NotFoundError } from "@/lib/errors"
 import { announcementsService } from "@/features/announcements/service"
+import { blogService } from "@/features/blog/service"
+import { settingsService } from "@/features/settings/service"
 import type {
   PortalEvent,
   PortalGroup,
@@ -8,31 +10,12 @@ import type {
 } from "./schemas"
 
 const now = () => new Date().toISOString()
-const daysFromNow = (d: number, hour = 10) => {
-  const dt = new Date()
-  dt.setDate(dt.getDate() + d)
-  dt.setHours(hour, 0, 0, 0)
-  return dt.toISOString()
-}
 
 const portals: PortalSettings[] = [
   {
-    id: "portal-1",
-    campusId: "campus-demo-main",
-    churchName: "Grace City Church",
-    slug: "grace-city",
-    publicDirectory: false,
-    publicGiving: true,
-    publicEvents: true,
-    publicGroups: true,
-    stripeConnected: false,
-    givingUrl: "/give/grace-city",
-    updatedAt: now(),
-  },
-  {
     id: "portal-main",
-    campusId: "campus-demo-main",
-    churchName: "Grace City Church",
+    campusId: "",
+    churchName: "",
     slug: "main",
     publicDirectory: false,
     publicGiving: true,
@@ -44,40 +27,21 @@ const portals: PortalSettings[] = [
   },
 ]
 
-const events: PortalEvent[] = [
-  {
-    id: "pe-1",
-    title: "Sunday Morning Worship",
-    startsAt: daysFromNow(7 - new Date().getDay(), 10),
-    locationLabel: "Main Sanctuary",
-  },
-  {
-    id: "pe-2",
-    title: "Community Food Pantry",
-    startsAt: daysFromNow(3, 9),
-    locationLabel: "Fellowship Hall",
-  },
-]
+const events: PortalEvent[] = []
 
-const groups: PortalGroup[] = [
-  {
-    id: "pg-1",
-    name: "Young Adults",
-    meetingDay: "Thursdays 7pm",
-    description: "Bible study and fellowship for ages 18–35.",
-  },
-  {
-    id: "pg-2",
-    name: "Women's Circle",
-    meetingDay: "Tuesdays 10am",
-    description: "Prayer and encouragement for women.",
-  },
-]
+const groups: PortalGroup[] = []
 
 export const portalService = {
   async getBySlug(slug: string): Promise<PortalPublicView> {
     const settings = portals.find((p) => p.slug === slug)
     if (!settings) throw new NotFoundError("Portal", slug)
+
+    try {
+      const nom = await settingsService.getNomenclature("default")
+      if (nom?.churchName) settings.churchName = String(nom.churchName)
+    } catch {
+      /* keep portal settings as-is */
+    }
 
     let announcements: PortalPublicView["announcements"] = []
     try {
@@ -92,11 +56,28 @@ export const portalService = {
       announcements = []
     }
 
+    let posts: PortalPublicView["posts"] = []
+    try {
+      const published = await blogService.listPublished()
+      posts = published.slice(0, 6).map((p) => ({
+        id: p.id,
+        title: p.title,
+        slug: p.slug,
+        excerpt: p.excerpt,
+        coverImageUrl: p.coverImageUrl,
+        authorName: p.authorName,
+        publishedAt: p.publishedAt,
+      }))
+    } catch {
+      posts = []
+    }
+
     return {
       settings: { ...settings },
       events: settings.publicEvents ? [...events] : [],
       groups: settings.publicGroups ? [...groups] : [],
       announcements,
+      posts,
     }
   },
 

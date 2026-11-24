@@ -17,37 +17,28 @@ interface BranchState {
   setAvailableCampuses: (campuses: Campus[]) => void
 }
 
-const defaultCampuses: Campus[] = [
-  {
-    id: "1",
-    name: "Grace City - Main Campus",
-    slug: "main-campus",
-    type: "main",
-    city: "Atlanta",
-    isMainCampus: true,
-  },
-  {
-    id: "2",
-    name: "Grace City - North Campus",
-    slug: "north-campus",
-    type: "regional",
-    city: "Alpharetta",
-    isMainCampus: false,
-  },
-  {
-    id: "3",
-    name: "Grace City - Online Global",
-    slug: "online-global",
-    type: "online",
-    city: "Digital Hub",
-    isMainCampus: false,
-  },
-]
+const emptyCampus: Campus = {
+  id: "",
+  name: "",
+  slug: "",
+  type: "main",
+  city: "",
+  isMainCampus: true,
+}
 
 export const useBranchStore = create<BranchState>((set) => ({
-  activeCampus: defaultCampuses[0],
-  activeCampusId: defaultCampuses[0].id,
-  availableCampuses: defaultCampuses,
+  activeCampus: emptyCampus,
+  activeCampusId: "",
+  availableCampuses: [],
   setActiveCampus: (campus) => set({ activeCampus: campus, activeCampusId: campus.id }),
-  setAvailableCampuses: (campuses) => set({ availableCampuses: campuses }),
+  setAvailableCampuses: (campuses) =>
+    set((state) => {
+      const nextActive =
+        campuses.find((c) => c.id === state.activeCampusId) || campuses[0] || emptyCampus
+      return {
+        availableCampuses: campuses,
+        activeCampus: nextActive,
+        activeCampusId: nextActive.id,
+      }
+    }),
 }))

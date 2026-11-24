@@ -78,11 +78,11 @@ export default function RoomsPage() {
           <PageHeader
             title="Rooms"
             description="Bookable spaces across your locations."
-            icon={<DoorOpen className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            icon={<DoorOpen className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
             actions={
               <Can permission="facilities.write">
                 <Button
-                  className="h-8 gap-1.5 bg-[#22c55e] text-xs font-normal text-white hover:bg-[#16a34a]"
+                  className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                   onClick={() => setOpen(true)}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
@@ -103,7 +103,7 @@ export default function RoomsPage() {
                 </EmptyHeader>
                 <Can permission="facilities.write">
                   <Button
-                    className="mt-4 bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="mt-4 bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                     onClick={() => setOpen(true)}
                   >
                     Create room
@@ -223,7 +223,7 @@ export default function RoomsPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending || name.trim().length < 2}
-                    className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Save room
                   </Button>

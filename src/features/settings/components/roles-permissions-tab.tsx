@@ -116,7 +116,7 @@ function CreateRoleSheet({
             <Button
               type="submit"
               disabled={create.isPending || name.trim().length < 2}
-              className="h-9 bg-[#22c55e] text-white hover:bg-[#16a34a]"
+              className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
             >
               Create role
             </Button>
@@ -193,7 +193,7 @@ export function RolesPermissionsTab() {
             <Button
               size="sm"
               onClick={() => setDialogOpen(true)}
-              className="h-8 gap-1.5 bg-[#22c55e] font-normal text-white hover:bg-[#16a34a]"
+              className="h-8 gap-1.5 bg-[var(--brand)] font-normal text-white hover:bg-[var(--brand)]"
             >
               <Plus className="size-3.5" />
               New role
@@ -278,64 +278,74 @@ export function RolesPermissionsTab() {
                 : selected?.description || "Choose what this role can see and do."}
             </SheetDescription>
           </SheetHeader>
-          <SheetBody>
+          <SheetBody className="gap-4">
             {selected?.isAdmin && (
-              <Alert className="border-emerald-200 bg-emerald-50/80 text-emerald-900">
+              <Alert className="border-[var(--brand)]/20 bg-[var(--brand-soft)] text-[var(--brand-ink)]">
                 <Info className="size-3.5" />
                 <AlertTitle>Administrator</AlertTitle>
-                <AlertDescription>
-                  This role always receives every permission. The list below is read-only.
+                <AlertDescription className="text-[var(--brand-ink)]/80">
+                  This role always has every permission. The list below is read-only.
                 </AlertDescription>
               </Alert>
             )}
             <ScrollArea className="h-[min(520px,60vh)] pr-3">
-              <Accordion multiple defaultValue={grouped.map(([g]) => g)}>
+              <Accordion
+                multiple
+                defaultValue={grouped.slice(0, 2).map(([g]) => g)}
+                className="gap-2 overflow-visible rounded-none border-0"
+              >
                 {grouped.map(([group, items]) => {
-                  const allOn = items.every((p) => checked.has(p.key))
+                  const selectedCount = items.filter(
+                    (p) => checked.has(p.key) || selected?.isAdmin
+                  ).length
+                  const allOn = selectedCount === items.length
                   return (
-                    <AccordionItem key={group} value={group}>
-                      <AccordionTrigger className="px-3 py-2.5 hover:no-underline">
-                        <div className="flex w-full items-center justify-between gap-3 pr-2">
-                          <span className="text-sm text-foreground">{group}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {items.filter((p) => checked.has(p.key) || selected?.isAdmin).length}/
-                            {items.length}
+                    <AccordionItem
+                      key={group}
+                      value={group}
+                      className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xs data-open:bg-white"
+                    >
+                      <AccordionTrigger className="px-4 py-3 text-sm hover:no-underline">
+                        <div className="flex w-full items-center justify-between gap-3 pr-2 text-left">
+                          <span className="font-semibold text-zinc-900">{group}</span>
+                          <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium tabular-nums text-zinc-700">
+                            {selectedCount}/{items.length}
                           </span>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="px-3 pb-3">
-                        <div className="mb-2 flex justify-end">
-                          <Can permission="settings.roles">
-                            <button
-                              type="button"
-                              disabled={selected?.isAdmin}
-                              onClick={() => toggleGroup(items, !allOn)}
-                              className="text-xs text-emerald-700 hover:underline disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                              {allOn ? "Clear group" : "Select all in group"}
-                            </button>
-                          </Can>
-                        </div>
-                        <div className="space-y-2.5">
-                          {items.map((p) => (
-                            <label
-                              key={p.key}
-                              className="flex cursor-pointer items-start gap-2.5 text-sm text-foreground"
-                            >
-                              <Checkbox
-                                checked={Boolean(selected?.isAdmin || checked.has(p.key))}
-                                disabled={selected?.isAdmin}
-                                onCheckedChange={(v) => toggle(p.key, Boolean(v))}
-                                className="mt-0.5"
-                              />
-                              <span>
-                                {p.label}
-                                <span className="block font-mono text-xs text-muted-foreground">
-                                  {p.key}
+                      <AccordionContent className="border-t border-zinc-100 px-2 pb-2">
+                        {!selected?.isAdmin ? (
+                          <div className="flex justify-end px-2 pt-2">
+                            <Can permission="settings.roles">
+                              <button
+                                type="button"
+                                onClick={() => toggleGroup(items, !allOn)}
+                                className="text-xs font-medium text-[var(--brand-hover)] hover:underline"
+                              >
+                                {allOn ? "Clear group" : "Select all"}
+                              </button>
+                            </Can>
+                          </div>
+                        ) : null}
+                        <div className="space-y-1 pt-1">
+                          {items.map((p) => {
+                            const on = Boolean(selected?.isAdmin || checked.has(p.key))
+                            return (
+                              <label
+                                key={p.key}
+                                className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-zinc-50"
+                              >
+                                <Checkbox
+                                  checked={on}
+                                  disabled={selected?.isAdmin}
+                                  onCheckedChange={(v) => toggle(p.key, Boolean(v))}
+                                />
+                                <span className="text-sm font-medium leading-snug text-zinc-900">
+                                  {p.label}
                                 </span>
-                              </span>
-                            </label>
-                          ))}
+                              </label>
+                            )
+                          })}
                         </div>
                       </AccordionContent>
                     </AccordionItem>
@@ -367,7 +377,7 @@ export function RolesPermissionsTab() {
                     }
                   )
                 }
-                className="bg-[#22c55e] font-normal text-white hover:bg-[#16a34a]"
+                className="bg-[var(--brand)] font-normal text-white hover:bg-[var(--brand)]"
               >
                 <CheckCircle2 className="size-3.5" />
                 Save permissions

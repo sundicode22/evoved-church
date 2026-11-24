@@ -12,44 +12,16 @@ type CampusRecord = {
   isMainCampus: boolean
 }
 
-const DEMO_CAMPUSES: CampusRecord[] = [
-  {
-    id: "1",
-    name: "Grace City - Main Campus",
-    slug: "main-campus",
-    type: "main",
-    city: "Atlanta",
-    isMainCampus: true,
-  },
-  {
-    id: "2",
-    name: "Grace City - North Campus",
-    slug: "north-campus",
-    type: "regional",
-    city: "Alpharetta",
-    isMainCampus: false,
-  },
-  {
-    id: "3",
-    name: "Grace City - Online Global",
-    slug: "online-global",
-    type: "online",
-    city: "Digital Hub",
-    isMainCampus: false,
-  },
-]
-
-/** In-memory campuses created during onboarding when DB write fails / demos. */
+/** In-memory campuses when DB write fails (onboarding). */
 const memoryCampuses: CampusRecord[] = []
 
 export const campusService = {
   async listCampuses() {
     try {
       const rows = await db.select().from(campuses).where(eq(campuses.isActive, true))
-      if (rows.length === 0) return [...DEMO_CAMPUSES, ...memoryCampuses]
-      return rows
+      return rows.length > 0 ? rows : [...memoryCampuses]
     } catch {
-      return [...DEMO_CAMPUSES, ...memoryCampuses]
+      return [...memoryCampuses]
     }
   },
 
@@ -58,13 +30,9 @@ export const campusService = {
       const rows = await db.select().from(campuses).where(eq(campuses.slug, slug)).limit(1)
       if (rows[0]) return rows[0]
     } catch {
-      /* demo fallback */
+      /* memory fallback */
     }
-    return (
-      memoryCampuses.find((c) => c.slug === slug) ||
-      DEMO_CAMPUSES.find((c) => c.slug === slug) ||
-      DEMO_CAMPUSES[0]
-    )
+    return memoryCampuses.find((c) => c.slug === slug) || null
   },
 
   async createCampus(input: CreateCampusInput) {

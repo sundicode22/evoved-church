@@ -145,12 +145,12 @@ export default function PoliciesPage() {
           <PageHeader
             title="Policies"
             description="Module-scoped policies for your teams."
-            icon={<FileCheck className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            icon={<FileCheck className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
             actions={
               <Can permission="policies.write">
                 <Button
                   onClick={openCreate}
-                  className="h-8 gap-1.5 bg-[#22c55e] text-xs font-normal text-white hover:bg-[#16a34a]"
+                  className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
                   New policy
@@ -384,7 +384,7 @@ export default function PoliciesPage() {
                       create.isPending ||
                       update.isPending
                     }
-                    className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     {editing ? "Save changes" : "Create draft"}
                   </Button>

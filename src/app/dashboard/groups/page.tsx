@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Search, UsersRound } from "lucide-react"
+import { Plus, UsersRound } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -41,6 +41,7 @@ import {
   TableChrome,
   TablePagination,
   TablePanel,
+  TableSearch,
   useColumnVisibility,
   type ColumnOption,
 } from "@/components/table-panel"
@@ -118,29 +119,8 @@ export default function GroupsPage() {
           <PageHeader
             title="Groups"
             description="Small groups, teams, and cell ministry."
-            icon={<UsersRound className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
-            actions={
-              <Can permission="groups.write">
-                <TableAddButton onClick={() => setSheetOpen(true)}>
-                  <Plus className="size-3.5" strokeWidth={1.75} />
-                  Create group
-                </TableAddButton>
-              </Can>
-            }
-          >
-            <div className="relative max-w-xs">
-              <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
-              <Input
-                placeholder="Search groups…"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setPage(1)
-                }}
-                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
-              />
-            </div>
-          </PageHeader>
+            icon={<UsersRound className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+          />
 
           <div className="p-6 md:p-8">
             {isEmpty ? (
@@ -153,7 +133,7 @@ export default function GroupsPage() {
                 </EmptyHeader>
                 <Can permission="groups.write">
                   <Button
-                    className="mt-4 h-8 gap-1.5 bg-[#22c55e] text-xs text-white hover:bg-[#16a34a]"
+                    className="mt-4 h-8 gap-1.5 bg-[var(--brand)] text-xs text-white hover:bg-[var(--brand)]"
                     onClick={() => setSheetOpen(true)}
                   >
                     <Plus className="size-3.5" strokeWidth={1.75} />
@@ -164,8 +144,26 @@ export default function GroupsPage() {
             ) : (
               <TablePanel>
                 <TableChrome
+                  search={
+                    <TableSearch
+                      value={searchQuery}
+                      onChange={(v) => {
+                        setSearchQuery(v)
+                        setPage(1)
+                      }}
+                      placeholder="Search groups…"
+                    />
+                  }
                   trailing={
-                    <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                    <>
+                      <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                      <Can permission="groups.write">
+                        <TableAddButton onClick={() => setSheetOpen(true)}>
+                          <Plus className="size-3.5" strokeWidth={1.75} />
+                          Create group
+                        </TableAddButton>
+                      </Can>
+                    </>
                   }
                 />
                 <Table>
@@ -292,7 +290,7 @@ export default function GroupsPage() {
                             className={cn(
                               "h-8 rounded-md border px-3 text-xs capitalize transition-colors",
                               type === t
-                                ? "border-[#16a34a] bg-[#eaf5ea] text-[#1b5e20]"
+                                ? "border-[var(--brand)] bg-[#eaf5ea] text-[#1b5e20]"
                                 : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
                             )}
                           >
@@ -324,7 +322,7 @@ export default function GroupsPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending}
-                    className="h-9 bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                    className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     {create.isPending ? "Saving…" : "Create group"}
                   </Button>

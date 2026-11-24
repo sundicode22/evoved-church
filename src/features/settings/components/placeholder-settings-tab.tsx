@@ -15,7 +15,7 @@ export function PlaceholderSettingsTab({
       <h2 className="text-base font-semibold text-zinc-900">{title}</h2>
       <p className="mt-2 text-sm text-zinc-500">{description}</p>
       <Button
-        className="mt-6 h-9 rounded-lg bg-[#16a34a] text-sm text-white hover:bg-[#15803d]"
+        className="mt-6 h-9 rounded-lg bg-[var(--brand)] text-sm text-white hover:bg-[var(--brand-hover)]"
         onClick={() => toast.message("Coming in a later release")}
       >
         Notify me

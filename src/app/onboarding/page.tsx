@@ -131,24 +131,22 @@ export default function OnboardingPage() {
   const copy = STEP_COPY[step]
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center bg-[#fbfcfb] px-4 py-12 font-sans">
+    <main className="relative flex min-h-screen flex-col items-center justify-center bg-[#fbfcfb] px-4 py-10 font-sans">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-emerald-50/80 to-transparent"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(22,163,74,0.08),_transparent_55%)]"
       />
-      <div className="relative z-10 flex w-full max-w-xl flex-col gap-8">
-        <div className="flex justify-center">
-          <BrandMark />
-        </div>
+      <div className="relative z-10 flex w-full max-w-xl flex-col items-center gap-8">
+        <BrandMark />
         <WizardStepper steps={STEPS} current={step} />
-        <Card className="rounded-2xl border border-zinc-200/60 bg-white shadow-xs">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-xl font-medium tracking-tight text-slate-900">
+        <Card className="w-full rounded-2xl border border-zinc-200/70 bg-white shadow-xs">
+          <CardHeader className="space-y-2 px-6 pt-6 pb-2 sm:px-8">
+            <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
               {copy.title}
             </CardTitle>
-            <CardDescription className="text-sm text-zinc-500">{copy.description}</CardDescription>
+            <CardDescription className="text-base text-zinc-600">{copy.description}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-7 px-6 pb-6 sm:px-8">
             <FieldGroup>
               {step === 0 && (
                 <ChurchStep
@@ -176,13 +174,13 @@ export default function OnboardingPage() {
               {step === 3 && <InviteStep emails={invites} onChange={setInvites} />}
             </FieldGroup>
 
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center justify-between pt-1">
               <Button
                 type="button"
                 variant="ghost"
                 disabled={step === 0 || pending}
                 onClick={() => setStep(step - 1)}
-                className="h-10 gap-1 rounded-lg px-3 text-sm text-zinc-600"
+                className="h-10 gap-1 rounded-lg px-3 text-sm font-medium text-zinc-600"
               >
                 <ChevronLeft className="size-4" />
                 Back
@@ -191,7 +189,7 @@ export default function OnboardingPage() {
                 type="button"
                 disabled={!canContinue || pending}
                 onClick={next}
-                className="h-10 gap-1 rounded-lg bg-[#16a34a] px-5 text-sm text-white shadow-xs hover:bg-[#15803d]"
+                className="h-10 gap-1 rounded-lg bg-[var(--brand)] px-5 text-sm font-medium text-white shadow-xs hover:bg-[var(--brand-hover)]"
               >
                 {step === STEPS.length - 1 ? (pending ? "Finishing…" : "Finish setup") : "Continue"}
                 {step < STEPS.length - 1 && <ChevronRight className="size-4" />}

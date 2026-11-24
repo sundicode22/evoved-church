@@ -22,6 +22,13 @@
       "when": 1795536940928,
       "tag": "0002_ordinary_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795540687920,
+      "tag": "0003_blog_posts",
+      "breakpoints": true
     }
   ]
 }

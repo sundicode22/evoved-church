@@ -1,11 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Landmark, Search } from "lucide-react"
+import { Landmark } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -23,6 +22,7 @@ import {
   TableChrome,
   TablePagination,
   TablePanel,
+  TableSearch,
   useColumnVisibility,
   type ColumnOption,
 } from "@/components/table-panel"
@@ -74,25 +74,22 @@ export default function FundsPage() {
           <PageHeader
             title="Funds"
             description="Fund balances from the chart of accounts."
-            icon={<Landmark className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
-          >
-            <div className="relative max-w-xs">
-              <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
-              <Input
-                placeholder="Search funds…"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setPage(1)
-                }}
-                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
-              />
-            </div>
-          </PageHeader>
+            icon={<Landmark className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+          />
 
           <div className="p-6 md:p-8">
             <TablePanel>
               <TableChrome
+                search={
+                  <TableSearch
+                    value={searchQuery}
+                    onChange={(v) => {
+                      setSearchQuery(v)
+                      setPage(1)
+                    }}
+                    placeholder="Search funds…"
+                  />
+                }
                 trailing={
                   <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
                 }

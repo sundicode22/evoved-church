@@ -5,8 +5,8 @@ import { CreateCustomFieldInput, UpdateNomenclatureInput } from "./schemas"
 
 const DEFAULT_NOM = {
   tenantId: "default",
-  churchName: "Grace City Church",
-  churchEmail: "hello@gracecity.church",
+  churchName: "",
+  churchEmail: "",
   churchPhone: "",
   churchAddress: "",
   churchCity: "",
@@ -24,7 +24,7 @@ const DEFAULT_NOM = {
   pastorTermSingular: "Pastor",
   givingTerm: "Tithes & Offerings",
   currencyCode: "USD",
-  onboardingCompletedAt: null as string | null,
+  onboardingCompletedAt: null as Date | null,
 }
 
 /** Demo/in-memory onboarding completion when DB is unavailable. */

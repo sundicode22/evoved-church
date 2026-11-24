@@ -37,7 +37,7 @@ function DatePicker({
             variant="outline"
             data-empty={!value}
             className={cn(
-              "h-9 w-full justify-start gap-2 rounded-lg border-zinc-200 bg-white px-3 text-left text-xs font-normal data-[empty=true]:text-muted-foreground",
+              "h-10 w-full justify-start gap-2 rounded-lg border-input bg-white px-3.5 text-left text-sm font-normal shadow-xs data-[empty=true]:text-muted-foreground",
               className
             )}
           />

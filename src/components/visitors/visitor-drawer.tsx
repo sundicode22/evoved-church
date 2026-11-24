@@ -84,7 +84,7 @@ export function VisitorDrawer() {
                   </Badge>
                   <Button
                     size="sm"
-                    className="h-8 gap-1 bg-[#16a34a] text-white hover:bg-[#15803d]"
+                    className="h-8 gap-1 bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
                   >
                     Create appointment
                   </Button>

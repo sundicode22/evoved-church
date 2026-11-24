@@ -120,7 +120,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
                 <Button
                   disabled={!canEdit}
                   onClick={() => setSheet("stripe")}
-                  className="h-9 w-full rounded-lg bg-[#16a34a] text-xs text-white hover:bg-[#15803d]"
+                  className="h-9 w-full rounded-lg bg-[var(--brand)] text-xs text-white hover:bg-[var(--brand-hover)]"
                 >
                   {stripeConnected ? "Manage Stripe" : "Connect your account"}
                 </Button>
@@ -147,7 +147,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
           </p>
         </div>
         <Button
-          className="h-9 shrink-0 rounded-lg bg-[#16a34a] text-xs text-white hover:bg-[#15803d]"
+          className="h-9 shrink-0 rounded-lg bg-[var(--brand)] text-xs text-white hover:bg-[var(--brand-hover)]"
           onClick={() => toast.success("Thanks — request noted (demo)")}
         >
           Request an Integration
@@ -184,7 +184,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-[#16a34a] text-white hover:bg-[#15803d]"
+              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
               onClick={() => void connectStripe()}
             >
               Connect your account
@@ -224,7 +224,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-[#16a34a] text-white hover:bg-[#15803d]"
+              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
               onClick={() => {
                 toast.success("Resend settings saved locally (demo)")
                 setSheet(null)
@@ -270,7 +270,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-[#16a34a] text-white hover:bg-[#15803d]"
+              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
               onClick={() => {
                 toast.success("Twilio settings saved locally (demo)")
                 setSheet(null)

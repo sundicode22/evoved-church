@@ -5,10 +5,20 @@ import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import Link from "@tiptap/extension-link"
+import Image from "@tiptap/extension-image"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "cn"
-import { Bold as BoldIcon, Heading2, Italic as ItalicIcon, Link as LinkIcon, List, ListOrdered, Quote as QuoteIcon } from "lucide-react"
+import {
+  Bold as BoldIcon,
+  Heading2,
+  ImageIcon,
+  Italic as ItalicIcon,
+  Link as LinkIcon,
+  List,
+  ListOrdered,
+  Quote as QuoteIcon,
+} from "lucide-react"
 
 type RichTextEditorProps = {
   value: string
@@ -17,18 +27,21 @@ type RichTextEditorProps = {
   className?: string
   minHeight?: string
   disabled?: boolean
+  /** Enable image insert (URL). Default true for blog / portal content. */
+  enableImages?: boolean
 }
 
 /**
- * TipTap policy / document editor — bold, lists, headings, links.
+ * TipTap editor — headings, lists, links, optional images.
  */
 export function RichTextEditor({
   value,
   onChange,
-  placeholder = "Write policy content…",
+  placeholder = "Write content…",
   className,
   minHeight = "220px",
   disabled = false,
+  enableImages = true,
 }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -38,8 +51,18 @@ export function RichTextEditor({
       Placeholder.configure({ placeholder }),
       Link.configure({
         openOnClick: false,
-        HTMLAttributes: { class: "text-emerald-700 underline" },
+        HTMLAttributes: { class: "text-[var(--brand-hover)] underline" },
       }),
+      ...(enableImages
+        ? [
+            Image.configure({
+              HTMLAttributes: {
+                class:
+                  "my-4 max-h-[420px] w-full rounded-xl border border-zinc-200/80 object-cover shadow-xs",
+              },
+            }),
+          ]
+        : []),
     ],
     content: value || "",
     editable: !disabled,
@@ -49,8 +72,9 @@ export function RichTextEditor({
       attributes: {
         class: cn(
           "prose prose-sm max-w-none px-4 py-3 text-sm text-zinc-800 outline-none focus:outline-none",
-          "[&_blockquote]:border-l-2 [&_blockquote]:border-emerald-300 [&_blockquote]:pl-3 [&_blockquote]:text-zinc-600",
-          "[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+          "[&_blockquote]:border-l-2 [&_blockquote]:border-[var(--brand)]/40 [&_blockquote]:pl-3 [&_blockquote]:text-zinc-600",
+          "[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5",
+          "[&_img]:rounded-xl"
         ),
         style: `min-height:${minHeight}`,
       },
@@ -91,6 +115,12 @@ export function RichTextEditor({
       return
     }
     editor!.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+  }
+
+  function addImage() {
+    const url = window.prompt("Image URL", "https://")
+    if (!url) return
+    editor!.chain().focus().setImage({ src: url }).run()
   }
 
   const tools = [
@@ -136,6 +166,16 @@ export function RichTextEditor({
       active: editor.isActive("link"),
       action: setLink,
     },
+    ...(enableImages
+      ? [
+          {
+            label: "Image",
+            icon: ImageIcon,
+            active: false,
+            action: addImage,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -160,7 +200,7 @@ export function RichTextEditor({
               title={t.label}
               className={cn(
                 "size-7 text-zinc-600",
-                t.active && "bg-emerald-50 text-emerald-800"
+                t.active && "bg-[var(--brand-soft)] text-[var(--brand-ink)]"
               )}
               onMouseDown={(e) => {
                 e.preventDefault()
