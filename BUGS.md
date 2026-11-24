@@ -7,20 +7,24 @@
 - [x] Sidebar-07 dropdown location + user
 - [x] Visitors / Projects table-first + column customize
 - [x] Members / Giving / Campaigns use `TablePanel`
-- [x] Canvas `#f4f6f5` unified; **shadows minimized** (`shadow-xs` default)
-- [x] Onboarding: nomenclature + campus create API + invite queue
+- [x] Canvas unified; **shadows minimized** (`shadow-xs` default)
+- [x] Onboarding: nomenclature + campus create API + invite queue + Location wording + redirect gates
 - [x] Smoke CSV fixtures complete (11/11 pass)
-- [x] Settings `POST /invites` stub
+- [x] Settings `POST /invites` stub (+ Resend when keyed)
+- [x] Groups / Giving / Batches / Pledges / Funds live (Sheets + Zod)
+- [x] Custom fields + Locations Settings tabs
+- [x] Write-to-books fund balance bump on journal post
 
 ## Still open (non-blocking)
-- [ ] Wire full Add Visitor / Add Person create sheets end-to-end
-- [ ] Groups page: same TablePanel + column customize pattern
-- [ ] Invite emails actually sent via Resend when `RESEND_API_KEY` set
+- [ ] Wire full Add Visitor / Add Person create sheets end-to-end (partial)
+- [ ] Native mobile app / drag-drop website studio (out of v1)
+- [ ] Full Stripe Payment Element checkout (stub activate only)
 - [ ] Metadata still says “visitor CRM” (copy polish only)
 
 ## Design defaults
 - Shadows: **minimal** (`shadow-xs` / border) — no heavy elevation
 - Accent: `#16a34a` / `#22c55e`
 - Active nav: `#eaf5ea` + `#1b5e20`
+- Creates/edits: **inset Sheets** + Field/FieldGroup + Zod only
 - Tables first; board optional
 - Lucide stroke ~1.75

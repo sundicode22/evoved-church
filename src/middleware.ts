@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 const PROTECTED_PREFIXES = ["/dashboard", "/onboarding"]
+const ONBOARDING_COOKIE = "evolve_onboarding_completed"
 
 function hasSessionCookie(request: NextRequest): boolean {
   return request.cookies
@@ -19,16 +20,26 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+  const hasSession = hasSessionCookie(request)
+  const onboardingDone = request.cookies.get(ONBOARDING_COOKIE)?.value === "1"
 
-  if (isProtected && !hasSessionCookie(request)) {
+  if (isProtected && !hasSession) {
     const loginUrl = new URL("/login", request.url)
     loginUrl.searchParams.set("redirect", pathname)
     return NextResponse.redirect(loginUrl)
+  }
+
+  if (hasSession && pathname.startsWith("/dashboard") && !onboardingDone) {
+    return NextResponse.redirect(new URL("/onboarding", request.url))
+  }
+
+  if (hasSession && pathname.startsWith("/onboarding") && onboardingDone) {
+    return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/onboarding/:path*"],
+  matcher: ["/dashboard/:path*", "/onboarding", "/onboarding/:path*"],
 }

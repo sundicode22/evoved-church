@@ -22,3 +22,16 @@ export const childKioskCheckinSchema = z.object({
 
 export type SundayCheckinInput = z.infer<typeof sundayCheckinSchema>
 export type ChildKioskCheckinInput = z.infer<typeof childKioskCheckinSchema>
+
+export type AttendanceSession = {
+  id: string
+  campusId: string
+  sessionName: string
+  sessionDate: string
+  sessionType: "service" | "kids" | "youth" | "class"
+  qrToken: string
+  checkinUrl: string
+  headcountAdults: number
+  headcountChildren: number
+  createdAt: string
+}

@@ -13,6 +13,16 @@ import { policiesController } from "@/features/policies/controller"
 import { servicesController } from "@/features/services/controller"
 import { calendarController } from "@/features/calendar/controller"
 import { importController } from "@/features/import/controller"
+import { facilitiesController } from "@/features/facilities/controller"
+import { appointmentsController } from "@/features/appointments/controller"
+import { followUpsController } from "@/features/follow-ups/controller"
+import { dripsController } from "@/features/drips/controller"
+import { announcementsController } from "@/features/announcements/controller"
+import { formsController } from "@/features/forms/controller"
+import { portalController } from "@/features/portal/controller"
+import { givingController } from "@/features/giving/controller"
+import { groupsController } from "@/features/groups/controller"
+import { reportsController } from "@/features/reports/controller"
 import { formatErrorResponse } from "@/lib/errors"
 
 export const app = new Elysia({ prefix: "/api" })
@@ -42,5 +52,15 @@ export const app = new Elysia({ prefix: "/api" })
   .use(servicesController)
   .use(calendarController)
   .use(importController)
+  .use(facilitiesController)
+  .use(appointmentsController)
+  .use(followUpsController)
+  .use(dripsController)
+  .use(announcementsController)
+  .use(formsController)
+  .use(portalController)
+  .use(givingController)
+  .use(groupsController)
+  .use(reportsController)
 
 export type App = typeof app

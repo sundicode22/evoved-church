@@ -15,7 +15,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Evolve Church — Modern Church Management & Leadership OS",
-  description: "Next-generation ChMS with visual organigram, fund accounting, visitor CRM, campaigns, and multi-location management.",
+  description: "All-in-one church management — people, giving, calendar, campaigns, and multi-location ops.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

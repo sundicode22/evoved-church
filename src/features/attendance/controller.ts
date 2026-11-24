@@ -5,6 +5,17 @@ import { qrService } from "./qr-service"
 import { formatErrorResponse } from "@/lib/errors"
 
 export const attendanceController = new Elysia({ prefix: "/attendance" })
+  .get("/sessions", async ({ set }) => {
+    try {
+      const data = await attendanceService.listSessions()
+      return { success: true, data }
+    } catch (error) {
+      const { status, body } = formatErrorResponse(error)
+      set.status = status
+      return body
+    }
+  })
+
   .get("/qr-code", async ({ query, set }) => {
     try {
       const slug = (query.campusSlug as string) || "main-campus"

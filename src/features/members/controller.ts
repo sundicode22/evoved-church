@@ -47,6 +47,17 @@ export const memberController = new Elysia({ prefix: "/members" })
     }
   })
 
+  .get("/households", async ({ set }) => {
+    try {
+      const data = await memberService.listHouseholds()
+      return { success: true, data }
+    } catch (error) {
+      const { status, body } = formatErrorResponse(error)
+      set.status = status
+      return body
+    }
+  })
+
   .post("/categories", async ({ body, set }) => {
     try {
       const parsed = createCategorySchema.parse(body)

@@ -18,6 +18,7 @@ export const MEMBER_KEYS = {
       params?.search || "",
     ] as const,
   categories: () => [...MEMBER_KEYS.all, "categories"] as const,
+  households: () => [...MEMBER_KEYS.all, "households"] as const,
 }
 
 /**
@@ -31,6 +32,17 @@ export function useMembers(params?: PaginationParams & { personType?: string }) 
         params,
       })
       return response.data
+    },
+    staleTime: 60 * 1000,
+  })
+}
+
+export function useHouseholds() {
+  return useQuery({
+    queryKey: MEMBER_KEYS.households(),
+    queryFn: async () => {
+      const response = await apiClient.get<ApiResponse<any[]>>("/members/households")
+      return response.data.data || []
     },
     staleTime: 60 * 1000,
   })

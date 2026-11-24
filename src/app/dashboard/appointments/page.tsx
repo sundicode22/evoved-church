@@ -1,13 +1,21 @@
 "use client"
 
 import * as React from "react"
+import { format, parseISO } from "date-fns"
+import { CalendarClock, Plus } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
+import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Sheet,
   SheetBody,
@@ -17,18 +25,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { DatePicker } from "@/components/date-picker"
-import { TimePicker } from "@/components/time-picker"
-import { format } from "date-fns"
-import { toast } from "sonner"
-import { Calendar as Calendar, Download, MapPin, MoreHorizontal, Plus } from "lucide-react"
-import { PageHeader } from "@/components/page-header"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import {
   Table,
   TableBody,
@@ -37,464 +40,273 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Can, RequireAbility } from "@/components/auth/can"
+import { StatusPill, TablePanel } from "@/components/table-panel"
 import {
-  ColumnCustomize,
-  StatusPill,
-  TableAddButton,
-  TableChrome,
-  TablePagination,
-  TablePanel,
-  useColumnVisibility,
-  type ColumnOption,
-} from "@/components/table-panel"
-
-interface Appointment {
-  id: string
-  day: string
-  date: string
-  time: string
-  title: string
-  location: string
-  type: string
-  staff: string
-  status: string
-}
-
-const APPOINTMENT_TYPES = [
-  "First-Timer Follow-up",
-  "Spiritual Milestone",
-  "Hospital & Benevolence",
-  "Leadership Development",
-  "Pastoral Counseling",
-]
-
-function formatTime(value: string) {
-  const [h, m] = value.split(":").map(Number)
-  const d = new Date()
-  d.setHours(h, m, 0, 0)
-  return format(d, "h:mm a")
-}
-
-function addMinutes(value: string, minutes: number) {
-  const [h, m] = value.split(":").map(Number)
-  const total = (h * 60 + m + minutes) % (24 * 60)
-  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`
-}
-
-const COLUMNS: ColumnOption[] = [
-  { id: "when", label: "When" },
-  { id: "title", label: "Visit" },
-  { id: "type", label: "Type" },
-  { id: "location", label: "Location" },
-  { id: "staff", label: "Shepherd" },
-  { id: "status", label: "Status" },
-]
-
-const selectClass =
-  "h-9 w-full rounded-lg border border-zinc-200 bg-white px-3 text-xs outline-none focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/20"
-
-const INITIAL_APPOINTMENTS: Appointment[] = [
-    {
-      id: "app-1",
-      day: "Monday",
-      date: "January 19, 2024",
-      time: "10:00 AM - 10:30 AM",
-      title: "Pastoral Discovery Coffee with Brian Robbin",
-      location: "4517 Washington Ave, Manchester, KY 39495",
-      type: "First-Timer Follow-up",
-      staff: "Pastor Ahmad Fawaid",
-      status: "confirmed",
-    },
-    {
-      id: "app-2",
-      day: "Tuesday",
-      date: "January 20, 2024",
-      time: "2:00 PM - 3:00 PM",
-      title: "Baptism Counseling & Foundations with Jane Cooper",
-      location: "Main Sanctuary - Pastoral Office 102",
-      type: "Spiritual Milestone",
-      staff: "Pastor Marcus Vance",
-      status: "confirmed",
-    },
-    {
-      id: "app-3",
-      day: "Thursday",
-      date: "January 22, 2024",
-      time: "11:30 AM - 12:30 PM",
-      title: "Hospital Pastoral Care Visit with Eleanor Pena",
-      location: "St. Jude Memorial Hospital - Room 412",
-      type: "Hospital & Benevolence",
-      staff: "Pastor David Johnson",
-      status: "confirmed",
-    },
-    {
-      id: "app-4",
-      day: "Saturday",
-      date: "January 24, 2024",
-      time: "9:00 AM - 10:30 AM",
-      title: "Life Group Leader Orientation with Kathryn Murphy",
-      location: "Fellowship Hall - Room B",
-      type: "Leadership Development",
-      staff: "Pastor Ahmad Fawaid",
-      status: "scheduled",
-    },
-]
+  useAppointmentSchedules,
+  useAppointmentSummary,
+  useCreateSchedule,
+} from "@/features/appointments/hooks/use-appointments"
+import { SCHEDULE_STATUSES } from "@/features/appointments/schemas"
 
 export default function AppointmentsPage() {
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const [page, setPage] = React.useState(1)
-  const [pageSize, setPageSize] = React.useState(10)
-  const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
-  const [appointments, setAppointments] = React.useState<Appointment[]>(INITIAL_APPOINTMENTS)
-  const [dialogOpen, setDialogOpen] = React.useState(false)
-  const [form, setForm] = React.useState({
-    title: "",
-    type: APPOINTMENT_TYPES[0],
-    location: "",
-    notes: "",
-    date: undefined as Date | undefined,
-    startTime: "10:00",
-    endTime: "10:30",
-    reminder: true,
-  })
+  const { data: summary } = useAppointmentSummary()
+  const { data: schedules, isLoading } = useAppointmentSchedules()
+  const create = useCreateSchedule()
 
-  const filtered = React.useMemo(
-    () =>
-      appointments.filter((app) =>
-        app.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
-      ),
-    [appointments, searchQuery]
+  const [open, setOpen] = React.useState(false)
+  const [name, setName] = React.useState("")
+  const [ownerDisplayName, setOwnerDisplayName] = React.useState("")
+  const [durationMinutes, setDurationMinutes] = React.useState("30")
+  const [windowStart, setWindowStart] = React.useState("")
+  const [windowEnd, setWindowEnd] = React.useState("")
+  const [status, setStatus] = React.useState<"open_for_bookings" | "closed">(
+    "open_for_bookings"
   )
-  const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
 
-  const resetForm = () =>
-    setForm({
-      title: "",
-      type: APPOINTMENT_TYPES[0],
-      location: "",
-      notes: "",
-      date: undefined,
-      startTime: "10:00",
-      endTime: "10:30",
-      reminder: true,
-    })
-
-  function handleCreate(e: React.FormEvent) {
-    e.preventDefault()
-    if (!form.title.trim()) {
-      toast.error("Please give the visit a title.")
-      return
-    }
-    if (!form.date) {
-      toast.error("Please choose a date.")
-      return
-    }
-    if (form.endTime <= form.startTime) {
-      toast.error("The end time must be after the start time.")
-      return
-    }
-
-    const created: Appointment = {
-      id: `app-${Date.now()}`,
-      day: format(form.date, "EEEE"),
-      date: format(form.date, "MMMM d, yyyy"),
-      time: `${formatTime(form.startTime)} - ${formatTime(form.endTime)}`,
-      title: form.title.trim(),
-      location: form.location.trim() || "Location to be confirmed",
-      type: form.type,
-      staff: "Pastor Ahmad Fawaid",
-      status: "scheduled",
-    }
-    setAppointments((prev) => [created, ...prev])
-    setDialogOpen(false)
-    resetForm()
-    toast.success(`Visit scheduled for ${created.date} at ${formatTime(form.startTime)}`)
+  function openCreate() {
+    const start = new Date()
+    start.setHours(9, 0, 0, 0)
+    const end = new Date()
+    end.setDate(end.getDate() + 14)
+    end.setHours(17, 0, 0, 0)
+    setWindowStart(format(start, "yyyy-MM-dd'T'HH:mm"))
+    setWindowEnd(format(end, "yyyy-MM-dd'T'HH:mm"))
+    setOpen(true)
   }
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault()
+    create.mutate(
+      {
+        name,
+        ownerDisplayName,
+        durationMinutes: Number(durationMinutes) || 30,
+        windowStart: new Date(windowStart).toISOString(),
+        windowEnd: new Date(windowEnd).toISOString(),
+        status,
+      },
+      {
+        onSuccess: () => {
+          setOpen(false)
+          setName("")
+          setOwnerDisplayName("")
+          setDurationMinutes("30")
+          setStatus("open_for_bookings")
+        },
+      }
+    )
+  }
+
+  const cards = [
+    { label: "Open schedules", value: summary?.openSchedules ?? 0 },
+    { label: "Upcoming bookings", value: summary?.upcomingBookings ?? 0 },
+    { label: "Completed this week", value: summary?.completedThisWeek ?? 0 },
+    { label: "Closed schedules", value: summary?.closedSchedules ?? 0 },
+  ]
 
   return (
     <SidebarProvider
-      style={
-        {
-          "--sidebar-width": "16rem",
-          "--header-height": "3.5rem",
-        } as React.CSSProperties
-      }
+      style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white dark:bg-zinc-950">
-        
-        <PageHeader
-          title="Appointments"
-          description="Pastoral visits, counseling, and newcomer coffees."
-          icon={<Calendar className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
-          actions={
-            <>
-              <TableAddButton>
-                <Download className="size-3.5 text-zinc-500" strokeWidth={1.75} />
-                Sync Calendar
-              </TableAddButton>
-              <TableAddButton onClick={() => setDialogOpen(true)}>
-                <Plus className="size-3.5" strokeWidth={1.75} />
-                Schedule Visit
-              </TableAddButton>
-            </>
-          }
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
-            <span>
-              Scheduled: <span className="text-zinc-800">{appointments.length} visits</span>
-            </span>
-            <Input
-              placeholder="Search appointments…"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setPage(1)
-              }}
-              className="h-8 w-full max-w-sm rounded-lg border-zinc-200 bg-zinc-50 text-xs shadow-xs"
-            />
-          </div>
-        </PageHeader>
+      <SidebarInset className="min-h-screen bg-white">
+        <RequireAbility permission="appointments.read">
+          <PageHeader
+            title="Appointments"
+            description="Pastoral booking windows guests can schedule into."
+            icon={<CalendarClock className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            actions={
+              <Can permission="appointments.write">
+                <Button
+                  className="h-8 gap-1.5 bg-[#22c55e] text-xs font-normal text-white hover:bg-[#16a34a]"
+                  onClick={openCreate}
+                >
+                  <Plus strokeWidth={2} className="size-3.5" />
+                  Create schedule
+                </Button>
+              </Can>
+            }
+          />
 
-        <div className="p-6 md:p-8">
-          <TablePanel>
-            <TableChrome
-              trailing={
-                <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
-              }
-            />
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  {isVisible("when") && <TableHead className="pl-4">When</TableHead>}
-                  {isVisible("title") && <TableHead>Visit</TableHead>}
-                  {isVisible("type") && <TableHead>Type</TableHead>}
-                  {isVisible("location") && <TableHead>Location</TableHead>}
-                  {isVisible("staff") && <TableHead>Shepherd</TableHead>}
-                  {isVisible("status") && <TableHead>Status</TableHead>}
-                  <TableHead className="w-10" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-sm text-zinc-500">
-                      No appointments found.
-                    </TableCell>
-                  </TableRow>
-                )}
-                {pageRows.map((app) => (
-                  <TableRow key={app.id}>
-                    {isVisible("when") && (
-                      <TableCell className="pl-4">
-                        <div className="font-medium text-zinc-900">{app.date}</div>
-                        <div className="text-xs text-zinc-500">
-                          {app.day} · {app.time}
-                        </div>
-                      </TableCell>
-                    )}
-                    {isVisible("title") && (
-                      <TableCell className="max-w-xs whitespace-normal font-medium text-zinc-900">
-                        {app.title}
-                      </TableCell>
-                    )}
-                    {isVisible("type") && (
-                      <TableCell>
-                        <StatusPill>{app.type}</StatusPill>
-                      </TableCell>
-                    )}
-                    {isVisible("location") && (
-                      <TableCell className="max-w-xs whitespace-normal text-zinc-600">
-                        <span className="inline-flex items-start gap-1.5">
-                          <MapPin strokeWidth={1.75} className="mt-0.5 size-3.5 shrink-0 text-zinc-400" />
-                          {app.location}
-                        </span>
-                      </TableCell>
-                    )}
-                    {isVisible("staff") && (
-                      <TableCell className="text-zinc-600">{app.staff}</TableCell>
-                    )}
-                    {isVisible("status") && (
-                      <TableCell>
-                        <StatusPill tone={app.status === "confirmed" ? "success" : "neutral"}>
-                          {app.status === "confirmed" ? "Confirmed" : "Scheduled"}
-                        </StatusPill>
-                      </TableCell>
-                    )}
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={<Button variant="ghost" size="icon" className="size-8" />}
-                        >
-                          <MoreHorizontal className="size-4 text-zinc-400" strokeWidth={1.75} />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            className="text-xs"
-                            onClick={() =>
-                              setAppointments((prev) => prev.filter((a) => a.id !== app.id))
-                            }
-                          >
-                            Cancel visit
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePagination
-              page={page}
-              pageSize={pageSize}
-              total={filtered.length}
-              onPageChange={setPage}
-              onPageSizeChange={(s) => {
-                setPageSize(s)
-                setPage(1)
-              }}
-            />
-          </TablePanel>
-        </div>
-
-        <Sheet
-          open={dialogOpen}
-          onOpenChange={(open) => {
-            setDialogOpen(open)
-            if (!open) resetForm()
-          }}
-        >
-          <SheetContent side="right" inset size="md" className="p-0">
-            <form onSubmit={handleCreate} className="flex h-full flex-col">
-              <SheetHeader className="pr-12">
-                <SheetTitle>Schedule a visit</SheetTitle>
-                <SheetDescription>
-                  Set a time to meet with a guest or member. A reminder can be sent ahead of the visit.
-                </SheetDescription>
-              </SheetHeader>
-
-              <SheetBody>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="appt-title" className="text-xs font-medium text-zinc-700">
-                    Title
-                  </Label>
-                  <Input
-                    id="appt-title"
-                    value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    placeholder="Pastoral coffee with Jane Cooper"
-                    className="h-9 rounded-lg"
-                  />
+          <div className="space-y-6 p-6 md:p-8">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {cards.map((c) => (
+                <div
+                  key={c.label}
+                  className="rounded-lg border border-zinc-200/80 bg-[#f4f6f5] px-4 py-3 shadow-xs"
+                >
+                  <p className="text-[11px] uppercase tracking-wide text-zinc-400">
+                    {c.label}
+                  </p>
+                  <p className="mt-1 text-2xl font-medium text-zinc-900">{c.value}</p>
                 </div>
+              ))}
+            </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-1.5">
-                    <Label className="text-xs font-medium text-zinc-700">Date</Label>
-                    <DatePicker
-                      value={form.date}
-                      onChange={(date) => setForm({ ...form, date })}
-                      disablePast
-                    />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="appt-type" className="text-xs font-medium text-zinc-700">
-                      Type
-                    </Label>
-                    <select
-                      id="appt-type"
-                      value={form.type}
-                      onChange={(e) => setForm({ ...form, type: e.target.value })}
-                      className={selectClass}
-                    >
-                      {APPOINTMENT_TYPES.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
+            {!isLoading && (schedules?.length ?? 0) === 0 ? (
+              <Empty className="rounded-lg border border-zinc-200/80 py-16">
+                <EmptyHeader>
+                  <EmptyTitle>No schedules yet</EmptyTitle>
+                  <EmptyDescription>
+                    Create a booking window for coffee visits, counseling, or care.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <TablePanel>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="pl-4">Schedule</TableHead>
+                      <TableHead>Shepherd</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead>Window</TableHead>
+                      <TableHead>Bookings</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading &&
+                      [0, 1, 2].map((i) => (
+                        <TableRow key={i}>
+                          <TableCell colSpan={6} className="pl-4">
+                            <Skeleton className="h-6 w-full" />
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </select>
-                  </div>
-                </div>
+                    {(schedules ?? []).map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell className="pl-4">
+                          <p className="font-medium text-zinc-900">{s.name}</p>
+                          <p className="text-xs text-zinc-400">/{s.bookingUrlSlug}</p>
+                        </TableCell>
+                        <TableCell>{s.ownerDisplayName || "—"}</TableCell>
+                        <TableCell>{s.durationMinutes} min</TableCell>
+                        <TableCell className="text-xs text-zinc-600">
+                          {format(parseISO(s.windowStart), "MMM d")} –{" "}
+                          {format(parseISO(s.windowEnd), "MMM d")}
+                        </TableCell>
+                        <TableCell>{s.bookingCount}</TableCell>
+                        <TableCell>
+                          <StatusPill
+                            tone={s.status === "open_for_bookings" ? "success" : "neutral"}
+                          >
+                            {s.status === "open_for_bookings" ? "Open" : "Closed"}
+                          </StatusPill>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TablePanel>
+            )}
+          </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-1.5">
-                    <Label className="text-xs font-medium text-zinc-700">Starts</Label>
-                    <TimePicker
-                      value={form.startTime}
-                      onChange={(startTime) =>
-                        setForm({ ...form, startTime, endTime: addMinutes(startTime, 30) })
-                      }
-                    />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label className="text-xs font-medium text-zinc-700">Ends</Label>
-                    <TimePicker
-                      value={form.endTime}
-                      onChange={(endTime) => setForm({ ...form, endTime })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-1.5">
-                  <Label htmlFor="appt-location" className="text-xs font-medium text-zinc-700">
-                    Location
-                  </Label>
-                  <Input
-                    id="appt-location"
-                    value={form.location}
-                    onChange={(e) => setForm({ ...form, location: e.target.value })}
-                    placeholder="Fellowship Hall - Room B"
-                    className="h-9 rounded-lg"
-                  />
-                </div>
-
-                <div className="grid gap-1.5">
-                  <Label htmlFor="appt-notes" className="text-xs font-medium text-zinc-700">
-                    Notes
-                  </Label>
-                  <Textarea
-                    id="appt-notes"
-                    value={form.notes}
-                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                    placeholder="Anything the shepherd should know before the visit"
-                    className="min-h-20 rounded-lg"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between rounded-lg border border-zinc-200/80 bg-[#f8faf9] px-3.5 py-3">
-                  <div>
-                    <p className="text-xs font-medium text-zinc-800">Send a reminder</p>
-                    <p className="text-[11px] text-zinc-500">
-                      Email the guest 24 hours before the visit.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={form.reminder}
-                    onCheckedChange={(reminder) => setForm({ ...form, reminder })}
-                    className="data-checked:bg-emerald-600"
-                  />
-                </div>
-              </SheetBody>
-
-              <SheetFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-9 rounded-lg px-4"
-                  onClick={() => setDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="h-9 rounded-lg bg-[#22c55e] px-4 font-normal text-white hover:bg-[#16a34a]"
-                >
-                  Schedule visit
-                </Button>
-              </SheetFooter>
-            </form>
-          </SheetContent>
-        </Sheet>
-
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetContent side="right" inset size="md" className="p-0">
+              <form onSubmit={submit} className="flex h-full flex-col">
+                <SheetHeader className="pr-12">
+                  <SheetTitle>Create schedule</SheetTitle>
+                  <SheetDescription>
+                    Define who hosts, slot length, and the booking window.
+                  </SheetDescription>
+                </SheetHeader>
+                <SheetBody>
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel>Name</FieldLabel>
+                      <Input
+                        className="h-9"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Shepherd / host</FieldLabel>
+                      <Input
+                        className="h-9"
+                        value={ownerDisplayName}
+                        onChange={(e) => setOwnerDisplayName(e.target.value)}
+                        placeholder="Pastor name"
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Duration (minutes)</FieldLabel>
+                      <Input
+                        type="number"
+                        min={15}
+                        step={15}
+                        className="h-9"
+                        value={durationMinutes}
+                        onChange={(e) => setDurationMinutes(e.target.value)}
+                      />
+                    </Field>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field>
+                        <FieldLabel>Window start</FieldLabel>
+                        <Input
+                          type="datetime-local"
+                          className="h-9"
+                          value={windowStart}
+                          onChange={(e) => setWindowStart(e.target.value)}
+                          required
+                        />
+                      </Field>
+                      <Field>
+                        <FieldLabel>Window end</FieldLabel>
+                        <Input
+                          type="datetime-local"
+                          className="h-9"
+                          value={windowEnd}
+                          onChange={(e) => setWindowEnd(e.target.value)}
+                          required
+                        />
+                      </Field>
+                    </div>
+                    <Field>
+                      <FieldLabel>Status</FieldLabel>
+                      <Select
+                        value={status}
+                        items={SCHEDULE_STATUSES.map((s) => ({
+                          value: s.value,
+                          label: s.label,
+                        }))}
+                        onValueChange={(v) =>
+                          v && setStatus(v as "open_for_bookings" | "closed")
+                        }
+                      >
+                        <SelectTrigger className="h-9 w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SCHEDULE_STATUSES.map((s) => (
+                            <SelectItem key={s.value} value={s.value}>
+                              {s.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </FieldGroup>
+                </SheetBody>
+                <SheetFooter>
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={create.isPending || name.trim().length < 2}
+                    className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                  >
+                    Save schedule
+                  </Button>
+                </SheetFooter>
+              </form>
+            </SheetContent>
+          </Sheet>
+        </RequireAbility>
       </SidebarInset>
     </SidebarProvider>
   )

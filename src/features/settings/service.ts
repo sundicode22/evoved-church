@@ -6,6 +6,13 @@ import { CreateCustomFieldInput, UpdateNomenclatureInput } from "./schemas"
 const DEFAULT_NOM = {
   tenantId: "default",
   churchName: "Grace City Church",
+  churchEmail: "hello@gracecity.church",
+  churchPhone: "",
+  churchAddress: "",
+  churchCity: "",
+  churchState: "",
+  churchZip: "",
+  logoUrl: "",
   memberTermSingular: "Member",
   memberTermPlural: "Members",
   visitorTermSingular: "First-Time Guest",
@@ -17,7 +24,11 @@ const DEFAULT_NOM = {
   pastorTermSingular: "Pastor",
   givingTerm: "Tithes & Offerings",
   currencyCode: "USD",
+  onboardingCompletedAt: null as string | null,
 }
+
+/** Demo/in-memory onboarding completion when DB is unavailable. */
+let demoOnboardingCompletedAt: string | null = null
 
 export const settingsService = {
   async getNomenclature(tenantId: string) {
@@ -93,5 +104,54 @@ export const settingsService = {
     } catch {
       return { id: `cf-${Date.now()}`, tenantId, ...input }
     }
+  },
+
+  async getOnboardingStatus(tenantId: string) {
+    try {
+      const rows = await db
+        .select()
+        .from(tenantNomenclatures)
+        .where(eq(tenantNomenclatures.tenantId, tenantId))
+        .limit(1)
+      if (rows[0]?.onboardingCompletedAt) {
+        return {
+          completed: true,
+          completedAt: rows[0].onboardingCompletedAt.toISOString(),
+        }
+      }
+    } catch {
+      /* demo */
+    }
+    if (demoOnboardingCompletedAt) {
+      return { completed: true, completedAt: demoOnboardingCompletedAt }
+    }
+    return { completed: false, completedAt: null }
+  },
+
+  async completeOnboarding(tenantId: string) {
+    const completedAt = new Date()
+    try {
+      const existing = await db
+        .select()
+        .from(tenantNomenclatures)
+        .where(eq(tenantNomenclatures.tenantId, tenantId))
+        .limit(1)
+      if (existing[0]) {
+        await db
+          .update(tenantNomenclatures)
+          .set({ onboardingCompletedAt: completedAt, updatedAt: completedAt })
+          .where(eq(tenantNomenclatures.tenantId, tenantId))
+      } else {
+        await db.insert(tenantNomenclatures).values({
+          ...DEFAULT_NOM,
+          tenantId,
+          onboardingCompletedAt: completedAt,
+        })
+      }
+    } catch {
+      demoOnboardingCompletedAt = completedAt.toISOString()
+    }
+    demoOnboardingCompletedAt = completedAt.toISOString()
+    return { completed: true, completedAt: completedAt.toISOString() }
   },
 }

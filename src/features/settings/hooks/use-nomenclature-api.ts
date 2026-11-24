@@ -45,7 +45,7 @@ export function useUpdateNomenclature(tenantId = "default") {
     },
     onSuccess: (data) => {
       updateLocal(data)
-      toast.success("Church nomenclature saved")
+      toast.success("Church settings saved")
       queryClient.invalidateQueries({ queryKey: SETTINGS_KEYS.nomenclature(tenantId) })
     },
     onError: (err: Error) => toast.error(err.message),

@@ -167,11 +167,52 @@ export const settingsController = new Elysia({ prefix: "/settings" })
             (e) => typeof e === "string" && e.includes("@")
           ) as string[])
         : []
+
+      if (emails.length > 0 && process.env.RESEND_API_KEY) {
+        try {
+          const { emailService } = await import("@/features/communications/resend")
+          for (const email of emails) {
+            await emailService.sendRawCampaign({
+              to: email,
+              subject: "You're invited to Evolve ChMS",
+              html: `<p>You've been invited to join your church workspace on Evolve.</p>`,
+            })
+          }
+        } catch {
+          /* soft-fail invite send */
+        }
+      }
+
       set.status = 201
       return {
         success: true,
         data: { queued: emails.length, emails },
       }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
+  .get("/onboarding", async ({ query, set }) => {
+    try {
+      const tenantId = (query.tenantId as string) || "default"
+      const data = await settingsService.getOnboardingStatus(tenantId)
+      return { success: true, data }
+    } catch (error) {
+      const { status, body } = formatErrorResponse(error)
+      set.status = status
+      return body
+    }
+  })
+
+  .post("/onboarding/complete", async ({ query, set }) => {
+    try {
+      const tenantId = (query.tenantId as string) || "default"
+      const data = await settingsService.completeOnboarding(tenantId)
+      set.status = 201
+      return { success: true, data }
     } catch (error) {
       const { status, body: errBody } = formatErrorResponse(error)
       set.status = status

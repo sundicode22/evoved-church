@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { FieldGroup } from "@/components/ui/field"
 import { BrandMark } from "@/features/auth/components/brand-mark"
 import { CampusStep } from "@/features/onboarding/components/campus-step"
 import { ChurchStep } from "@/features/onboarding/components/church-step"
@@ -16,14 +17,16 @@ import { NOMENCLATURE_PRESETS, type NomenclaturePresetKey } from "@/features/onb
 import { apiClient } from "@/lib/axios"
 import { useBranchStore } from "@/store/use-branch-store"
 
-const STEPS = ["Church", "Campus", "Terminology", "Team"]
+const STEPS = ["Church", "Location", "Terminology", "Team"]
 
 const STEP_COPY: { title: string; description: string }[] = [
   { title: "Tell us about your church", description: "This personalizes your workspace." },
-  { title: "Set up your first campus", description: "Every church starts with one location." },
+  { title: "Set up your first location", description: "Every church starts with one location." },
   { title: "Choose your terminology", description: "Evolve speaks your church's language." },
   { title: "Invite your team", description: "Bring your leaders on board." },
 ]
+
+const ONBOARDING_COOKIE = "evolve_onboarding_completed"
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -52,6 +55,8 @@ export default function OnboardingPage() {
       const selected = NOMENCLATURE_PRESETS.find((p) => p.key === preset)
       await apiClient.patch("/settings/nomenclature", {
         churchName: churchName.trim(),
+        campusTermSingular: "Location",
+        campusTermPlural: "Locations",
         ...selected?.terms,
       })
 
@@ -84,18 +89,32 @@ export default function OnboardingPage() {
         }
         setAvailableCampuses([normalized])
         setActiveCampus(normalized)
+
+        // Seed General fund so write-to-books works day one
+        await apiClient
+          .post("/accounting/funds", {
+            name: "General Fund",
+            code: "GEN",
+            type: "unrestricted",
+            campusId: campus.id,
+            budgetAmount: 0,
+          })
+          .catch(() => null)
       }
 
       if (invites.length > 0) {
-        await apiClient.post("/settings/invites", { emails: invites }).catch(() => {
-          // Soft-fail: invites are optional in first release
-        })
-        toast.success(`Workspace ready · ${invites.length} invite${invites.length === 1 ? "" : "s"} queued`)
+        await apiClient.post("/settings/invites", { emails: invites }).catch(() => null)
+        toast.success(
+          `Workspace ready · ${invites.length} invite${invites.length === 1 ? "" : "s"} queued`
+        )
       } else {
         toast.success("Church workspace ready")
       }
 
-      router.push("/dashboard")
+      await apiClient.post("/settings/onboarding/complete").catch(() => null)
+      document.cookie = `${ONBOARDING_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
+
+      router.replace("/dashboard")
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Could not finish setup. Please try again."
@@ -112,10 +131,10 @@ export default function OnboardingPage() {
   const copy = STEP_COPY[step]
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center bg-white px-4 py-12 font-sans">
+    <main className="relative flex min-h-screen flex-col items-center bg-[#fbfcfb] px-4 py-12 font-sans">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-emerald-50/70 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-emerald-50/80 to-transparent"
       />
       <div className="relative z-10 flex w-full max-w-xl flex-col gap-8">
         <div className="flex justify-center">
@@ -130,30 +149,32 @@ export default function OnboardingPage() {
             <CardDescription className="text-sm text-zinc-500">{copy.description}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {step === 0 && (
-              <ChurchStep
-                churchName={churchName}
-                denomination={denomination}
-                onChange={(p) => {
-                  if (p.churchName !== undefined) setChurchName(p.churchName)
-                  if (p.denomination !== undefined) setDenomination(p.denomination)
-                }}
-              />
-            )}
-            {step === 1 && (
-              <CampusStep
-                campusName={campusName}
-                city={city}
-                slug={slug}
-                onChange={(p) => {
-                  if (p.campusName !== undefined) setCampusName(p.campusName)
-                  if (p.city !== undefined) setCity(p.city)
-                  if (p.slug !== undefined) setSlug(p.slug)
-                }}
-              />
-            )}
-            {step === 2 && <TerminologyStep value={preset} onChange={setPreset} />}
-            {step === 3 && <InviteStep emails={invites} onChange={setInvites} />}
+            <FieldGroup>
+              {step === 0 && (
+                <ChurchStep
+                  churchName={churchName}
+                  denomination={denomination}
+                  onChange={(p) => {
+                    if (p.churchName !== undefined) setChurchName(p.churchName)
+                    if (p.denomination !== undefined) setDenomination(p.denomination)
+                  }}
+                />
+              )}
+              {step === 1 && (
+                <CampusStep
+                  campusName={campusName}
+                  city={city}
+                  slug={slug}
+                  onChange={(p) => {
+                    if (p.campusName !== undefined) setCampusName(p.campusName)
+                    if (p.city !== undefined) setCity(p.city)
+                    if (p.slug !== undefined) setSlug(p.slug)
+                  }}
+                />
+              )}
+              {step === 2 && <TerminologyStep value={preset} onChange={setPreset} />}
+              {step === 3 && <InviteStep emails={invites} onChange={setInvites} />}
+            </FieldGroup>
 
             <div className="flex items-center justify-between pt-2">
               <Button

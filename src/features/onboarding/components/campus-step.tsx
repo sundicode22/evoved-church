@@ -1,7 +1,7 @@
 "use client"
 
+import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { slugify } from "@/features/onboarding/presets"
 
 interface CampusStepProps {
@@ -14,18 +14,18 @@ interface CampusStepProps {
 export function CampusStep({ campusName, city, slug, onChange }: CampusStepProps) {
   return (
     <div className="space-y-5">
-      <div className="space-y-1.5">
-        <Label htmlFor="campusName" className="text-slate-700">Campus name</Label>
+      <Field>
+        <FieldLabel htmlFor="campusName">Location name</FieldLabel>
         <Input
           id="campusName"
-          placeholder="Main Campus"
+          placeholder="Main Location"
           value={campusName}
           onChange={(e) => onChange({ campusName: e.target.value, slug: slugify(e.target.value) })}
           className="h-10 rounded-lg bg-white"
         />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="city" className="text-slate-700">City</Label>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="city">City</FieldLabel>
         <Input
           id="city"
           placeholder="Lagos"
@@ -33,21 +33,23 @@ export function CampusStep({ campusName, city, slug, onChange }: CampusStepProps
           onChange={(e) => onChange({ city: e.target.value })}
           className="h-10 rounded-lg bg-white"
         />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="slug" className="text-slate-700">Connection card URL</Label>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="slug">Connection card URL</FieldLabel>
         <div className="flex items-center overflow-hidden rounded-lg border border-input bg-white focus-within:ring-2 focus-within:ring-[#22c55e]/30">
-          <span className="border-r border-zinc-200 bg-zinc-50 px-3 py-2.5 text-xs text-zinc-500">/welcome/</span>
+          <span className="border-r border-zinc-200 bg-zinc-50 px-3 py-2.5 text-xs text-zinc-500">
+            /welcome/
+          </span>
           <input
             id="slug"
             value={slug}
             onChange={(e) => onChange({ slug: slugify(e.target.value) })}
-            placeholder="main-campus"
+            placeholder="main-location"
             className="h-10 w-full bg-transparent px-3 text-sm outline-none"
           />
         </div>
         <p className="text-xs text-zinc-400">Visitors scan your QR code to land here.</p>
-      </div>
+      </Field>
     </div>
   )
 }

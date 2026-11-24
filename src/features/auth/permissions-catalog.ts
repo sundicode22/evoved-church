@@ -44,6 +44,22 @@ export const PERMISSION_CATALOG = [
   // Calendar
   { key: "calendar.read", label: "View church calendar", groupName: "Calendar" },
   { key: "calendar.write", label: "Manage programs & assignees", groupName: "Calendar" },
+  // Facilities
+  { key: "facilities.read", label: "View rooms & resources", groupName: "Facilities" },
+  { key: "facilities.write", label: "Manage rooms & resources", groupName: "Facilities" },
+  // Appointments / follow-ups
+  { key: "appointments.read", label: "View appointment schedules", groupName: "Appointments" },
+  { key: "appointments.write", label: "Manage appointment schedules", groupName: "Appointments" },
+  { key: "followups.read", label: "View follow-ups", groupName: "Follow-ups" },
+  { key: "followups.write", label: "Manage follow-ups", groupName: "Follow-ups" },
+  // Attendance
+  { key: "attendance.read", label: "View attendance sessions", groupName: "Attendance" },
+  { key: "attendance.write", label: "Manage check-in sessions", groupName: "Attendance" },
+  // Announcements / forms
+  { key: "announcements.read", label: "View announcements", groupName: "Announcements" },
+  { key: "announcements.write", label: "Create & post announcements", groupName: "Announcements" },
+  { key: "forms.read", label: "View church forms", groupName: "Forms" },
+  { key: "forms.write", label: "Create & publish forms", groupName: "Forms" },
   // Import / migration
   { key: "import.write", label: "Import CSV from other ChMS", groupName: "Settings" },
   // Settings
@@ -57,7 +73,11 @@ export type PermissionKey = (typeof PERMISSION_CATALOG)[number]["key"]
 export const NAV_PERMISSION: Record<string, PermissionKey | PermissionKey[]> = {
   "/dashboard": "visitors.read",
   "/dashboard/visitors": "visitors.read",
-  "/dashboard/appointments": "visitors.read",
+  "/dashboard/appointments": "appointments.read",
+  "/dashboard/follow-ups": "followups.read",
+  "/dashboard/attendance": "attendance.read",
+  "/dashboard/rooms": "facilities.read",
+  "/dashboard/resources": "facilities.read",
   "/dashboard/sunday-services": "services.read",
   "/dashboard/services": "services.read",
   "/dashboard/calendar": "calendar.read",
@@ -65,13 +85,19 @@ export const NAV_PERMISSION: Record<string, PermissionKey | PermissionKey[]> = {
   "/dashboard/projects": "projects.read",
   "/dashboard/organigram": "organigram.read",
   "/dashboard/members": "members.read",
+  "/dashboard/families": "members.read",
   "/dashboard/groups": "groups.read",
   "/dashboard/accounting": "accounting.read",
   "/dashboard/giving": "accounting.read",
+  "/dashboard/batches": "accounting.read",
+  "/dashboard/pledges": "accounting.read",
+  "/dashboard/funds": "accounting.read",
   "/dashboard/documents": "documents.read",
   "/dashboard/policies": "policies.read",
   "/dashboard/communications": "campaigns.read",
   "/dashboard/campaigns": "campaigns.read",
+  "/dashboard/announcements": "announcements.read",
+  "/dashboard/forms": "forms.read",
   "/dashboard/metrics": "reports.read",
   "/dashboard/settings": "settings.read",
 }

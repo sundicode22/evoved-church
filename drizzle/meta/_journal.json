@@ -15,6 +15,13 @@
       "when": 1795481632246,
       "tag": "0001_auth-schema-fix",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795536940928,
+      "tag": "0002_ordinary_sentinel",
+      "breakpoints": true
     }
   ]
 }

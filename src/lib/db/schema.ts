@@ -84,6 +84,13 @@ export const tenantNomenclatures = pgTable("tenant_nomenclatures", {
   id: uuid("id").defaultRandom().primaryKey(),
   tenantId: varchar("tenant_id", { length: 100 }).notNull().unique(), // Church domain / ID
   churchName: varchar("church_name", { length: 255 }).default("Evolve Church").notNull(),
+  churchEmail: varchar("church_email", { length: 255 }),
+  churchPhone: varchar("church_phone", { length: 50 }),
+  churchAddress: text("church_address"),
+  churchCity: varchar("church_city", { length: 100 }),
+  churchState: varchar("church_state", { length: 50 }),
+  churchZip: varchar("church_zip", { length: 20 }),
+  logoUrl: text("logo_url"),
   memberTermSingular: varchar("member_term_singular", { length: 100 }).default("Member").notNull(), // "Partner", "Parishioner", "Disciple"
   memberTermPlural: varchar("member_term_plural", { length: 100 }).default("Members").notNull(),
   visitorTermSingular: varchar("visitor_term_singular", { length: 100 }).default("First-Time Guest").notNull(),
@@ -95,6 +102,7 @@ export const tenantNomenclatures = pgTable("tenant_nomenclatures", {
   pastorTermSingular: varchar("pastor_term_singular", { length: 100 }).default("Pastor").notNull(), // "Minister", "Priest", "Elder"
   givingTerm: varchar("giving_term", { length: 100 }).default("Tithes & Offerings").notNull(), // "Stewardship", "First Fruits"
   currencyCode: varchar("currency_code", { length: 10 }).default("USD").notNull(),
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
@@ -455,6 +463,9 @@ export const chartOfAccounts = pgTable("chart_of_accounts", {
   accountName: varchar("account_name", { length: 255 }).notNull(),
   category: accountCategoryEnum("category").notNull(),
   description: text("description"),
+  openingBalance: decimal("opening_balance", { precision: 14, scale: 2 }).default("0.00").notNull(),
+  openingBalanceDate: timestamp("opening_balance_date"),
+  connectWithFunds: boolean("connect_with_funds").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
@@ -521,17 +532,282 @@ export const journalLines = pgTable("journal_lines", {
   memo: text("memo"),
 })
 
+export const givingFrequencyEnum = pgEnum("giving_frequency", ["one_time", "recurring"])
+export const givingChannelEnum = pgEnum("giving_channel", ["in_person", "online"])
+export const givingStatusEnum = pgEnum("giving_status", ["draft", "recorded", "posted_to_ledger"])
+export const givingBatchStatusEnum = pgEnum("giving_batch_status", ["open", "archived"])
+export const pledgeFrequencyEnum = pgEnum("pledge_frequency", [
+  "weekly",
+  "monthly",
+  "yearly",
+  "one_time",
+])
+export const pledgeStatusEnum = pgEnum("pledge_status", ["active", "completed", "cancelled"])
+export const groupTypeEnum = pgEnum("group_type", ["private", "public", "team"])
+export const groupMemberRoleEnum = pgEnum("group_member_role", ["leader", "member", "guest"])
+export const resourceCategoryEnum = pgEnum("resource_category", ["equipment", "supply", "other"])
+export const bookingStatusEnum = pgEnum("booking_status", [
+  "pending",
+  "approved",
+  "rejected",
+  "cancelled",
+])
+export const appointmentScheduleStatusEnum = pgEnum("appointment_schedule_status", [
+  "open_for_bookings",
+  "closed",
+])
+export const appointmentBookingStatusEnum = pgEnum("appointment_booking_status", [
+  "upcoming",
+  "completed",
+  "cancelled",
+])
+export const announcementStatusEnum = pgEnum("announcement_status", [
+  "draft",
+  "scheduled",
+  "posted",
+])
+export const formFieldTypeEnum = pgEnum("form_field_type", [
+  "short_text",
+  "long_text",
+  "multiple_choice",
+  "checkboxes",
+  "email",
+  "phone",
+  "number",
+  "date",
+  "time",
+])
+
+export const givingBatches = pgTable("giving_batches", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  batchDate: timestamp("batch_date").notNull(),
+  status: givingBatchStatusEnum("status").default("open").notNull(),
+  notes: text("notes"),
+  createdByUserId: text("created_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const givingPledges = pgTable("giving_pledges", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id).notNull(),
+  memberId: uuid("member_id").references(() => members.id).notNull(),
+  fundId: uuid("fund_id").references(() => accountingFunds.id).notNull(),
+  amountTotal: decimal("amount_total", { precision: 12, scale: 2 }).notNull(),
+  amountGiven: decimal("amount_given", { precision: 12, scale: 2 }).default("0.00").notNull(),
+  frequency: pledgeFrequencyEnum("frequency").default("monthly").notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  status: pledgeStatusEnum("status").default("active").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
 export const givingContributions = pgTable("giving_contributions", {
   id: uuid("id").defaultRandom().primaryKey(),
   campusId: uuid("campus_id").references(() => campuses.id).notNull(),
   memberId: uuid("member_id").references(() => members.id),
   fundId: uuid("fund_id").references(() => accountingFunds.id).notNull(),
+  batchId: uuid("batch_id").references(() => givingBatches.id),
+  pledgeId: uuid("pledge_id").references(() => givingPledges.id),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   method: givingMethodEnum("method").notNull(),
+  frequency: givingFrequencyEnum("frequency").default("one_time").notNull(),
+  channel: givingChannelEnum("channel").default("in_person").notNull(),
+  status: givingStatusEnum("status").default("recorded").notNull(),
+  journalEntryId: uuid("journal_entry_id").references(() => journalEntries.id),
+  donorDisplayName: varchar("donor_display_name", { length: 255 }),
+  notes: text("notes"),
   transactionReference: varchar("transaction_reference", { length: 150 }),
   isTaxDeductible: boolean("is_tax_deductible").default(true).notNull(),
   contributionDate: timestamp("contribution_date").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const ministryGroups = pgTable("ministry_groups", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: groupTypeEnum("type").default("public").notNull(),
+  imageUrl: text("image_url"),
+  description: text("description"),
+  leaderMemberId: uuid("leader_member_id").references(() => members.id),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const groupMemberships = pgTable("group_memberships", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  groupId: uuid("group_id")
+    .references(() => ministryGroups.id, { onDelete: "cascade" })
+    .notNull(),
+  memberId: uuid("member_id")
+    .references(() => members.id, { onDelete: "cascade" })
+    .notNull(),
+  role: groupMemberRoleEnum("role").default("member").notNull(),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+})
+
+export const rooms = pgTable("rooms", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  capacity: integer("capacity"),
+  locationNote: text("location_note"),
+  requiresApproval: boolean("requires_approval").default(false).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const resources = pgTable("resources", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  category: resourceCategoryEnum("category").default("equipment").notNull(),
+  description: text("description"),
+  quantity: integer("quantity").default(1).notNull(),
+  requiresApproval: boolean("requires_approval").default(false).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const appointmentSchedules = pgTable("appointment_schedules", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  ownerUserId: text("owner_user_id").references(() => users.id),
+  ownerDisplayName: varchar("owner_display_name", { length: 255 }),
+  durationMinutes: integer("duration_minutes").default(30).notNull(),
+  windowStart: timestamp("window_start").notNull(),
+  windowEnd: timestamp("window_end").notNull(),
+  status: appointmentScheduleStatusEnum("status").default("open_for_bookings").notNull(),
+  bookingUrlSlug: varchar("booking_url_slug", { length: 100 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const appointmentBookings = pgTable("appointment_bookings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  scheduleId: uuid("schedule_id")
+    .references(() => appointmentSchedules.id, { onDelete: "cascade" })
+    .notNull(),
+  guestName: varchar("guest_name", { length: 255 }).notNull(),
+  guestEmail: varchar("guest_email", { length: 255 }),
+  memberId: uuid("member_id").references(() => members.id),
+  startsAt: timestamp("starts_at").notNull(),
+  status: appointmentBookingStatusEnum("status").default("upcoming").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const followUps = pgTable("follow_ups", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  relatedMemberId: uuid("related_member_id").references(() => members.id),
+  relatedLeadId: uuid("related_lead_id").references(() => visitorLeads.id),
+  assignedToUserId: text("assigned_to_user_id").references(() => users.id),
+  dueAt: timestamp("due_at"),
+  status: varchar("status", { length: 50 }).default("open").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const announcements = pgTable("announcements", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  bodyHtml: text("body_html").notNull(),
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  status: announcementStatusEnum("status").default("draft").notNull(),
+  scheduledAt: timestamp("scheduled_at"),
+  postedAt: timestamp("posted_at"),
+  postedByUserId: text("posted_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const dripSequences = pgTable("drip_sequences", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  triggerEvent: varchar("trigger_event", { length: 100 }).default("first_visit").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const dripSteps = pgTable("drip_steps", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sequenceId: uuid("sequence_id")
+    .references(() => dripSequences.id, { onDelete: "cascade" })
+    .notNull(),
+  stepOrder: integer("step_order").default(1).notNull(),
+  delayHours: integer("delay_hours").default(2).notNull(),
+  channel: varchar("channel", { length: 20 }).default("email").notNull(),
+  subject: varchar("subject", { length: 255 }),
+  body: text("body").notNull(),
+})
+
+export const dripEnrollments = pgTable("drip_enrollments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sequenceId: uuid("sequence_id")
+    .references(() => dripSequences.id, { onDelete: "cascade" })
+    .notNull(),
+  leadId: uuid("lead_id").references(() => visitorLeads.id),
+  memberId: uuid("member_id").references(() => members.id),
+  currentStep: integer("current_step").default(0).notNull(),
+  status: varchar("status", { length: 50 }).default("active").notNull(),
+  enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
+})
+
+export const churchForms = pgTable("church_forms", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 120 }).notNull().unique(),
+  description: text("description"),
+  status: varchar("status", { length: 30 }).default("draft").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const churchFormFields = pgTable("church_form_fields", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  formId: uuid("form_id")
+    .references(() => churchForms.id, { onDelete: "cascade" })
+    .notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  fieldType: formFieldTypeEnum("field_type").default("short_text").notNull(),
+  required: boolean("required").default(false).notNull(),
+  options: jsonb("options").$type<string[]>().default([]),
+  orderIndex: integer("order_index").default(0).notNull(),
+})
+
+export const churchFormSubmissions = pgTable("church_form_submissions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  formId: uuid("form_id")
+    .references(() => churchForms.id, { onDelete: "cascade" })
+    .notNull(),
+  answers: jsonb("answers").$type<Record<string, unknown>>().default({}),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+})
+
+export const portalSettings = pgTable("portal_settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id).notNull().unique(),
+  slug: varchar("slug", { length: 120 }).notNull().unique(),
+  publicDirectory: boolean("public_directory").default(false).notNull(),
+  publicGiving: boolean("public_giving").default(true).notNull(),
+  publicEvents: boolean("public_events").default(true).notNull(),
+  publicGroups: boolean("public_groups").default(true).notNull(),
+  stripeConnected: boolean("stripe_connected").default(false).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
 
 // ==========================================
@@ -793,5 +1069,33 @@ export const programAssignees = pgTable("program_assignees", {
   userId: text("user_id").references(() => users.id),
   displayName: varchar("display_name", { length: 255 }).notNull(),
   roleLabel: varchar("role_label", { length: 50 }).default("volunteer").notNull(), // lead | volunteer | speaker
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const roomBookings = pgTable("room_bookings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  roomId: uuid("room_id")
+    .references(() => rooms.id, { onDelete: "cascade" })
+    .notNull(),
+  occurrenceId: uuid("occurrence_id").references(() => programOccurrences.id),
+  startsAt: timestamp("starts_at").notNull(),
+  endsAt: timestamp("ends_at").notNull(),
+  requestedByUserId: text("requested_by_user_id").references(() => users.id),
+  status: bookingStatusEnum("status").default("pending").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const resourceBookings = pgTable("resource_bookings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  resourceId: uuid("resource_id")
+    .references(() => resources.id, { onDelete: "cascade" })
+    .notNull(),
+  occurrenceId: uuid("occurrence_id").references(() => programOccurrences.id),
+  startsAt: timestamp("starts_at").notNull(),
+  endsAt: timestamp("ends_at").notNull(),
+  requestedByUserId: text("requested_by_user_id").references(() => users.id),
+  status: bookingStatusEnum("status").default("pending").notNull(),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })

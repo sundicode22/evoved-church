@@ -2,6 +2,13 @@ import { z } from "zod"
 
 export const updateNomenclatureSchema = z.object({
   churchName: z.string().min(2).optional(),
+  churchEmail: z.string().email().optional().or(z.literal("")),
+  churchPhone: z.string().optional(),
+  churchAddress: z.string().optional(),
+  churchCity: z.string().optional(),
+  churchState: z.string().optional(),
+  churchZip: z.string().optional(),
+  logoUrl: z.string().optional(),
   memberTermSingular: z.string().min(1).optional(),
   memberTermPlural: z.string().min(1).optional(),
   visitorTermSingular: z.string().min(1).optional(),

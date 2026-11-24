@@ -601,12 +601,16 @@ export const accountingService = {
   },
 
   /**
-   * Explicit post — never auto. Records who posted and when.
+   * Explicit post — never auto. Validates balanced lines, records who posted,
+   * and bumps each fund balance in one transaction (write to books).
    */
   async postJournalEntry(id: string, input: PostJournalEntryInput) {
     if (id.startsWith("je-demo-")) {
       if (demoJournalPosted.has(id)) throw new ValidationError("Journal entry is already posted.")
       demoJournalPosted.add(id)
+      // Demo: increase General Operating Fund when posting demo journals
+      const fund = demoFundsExtra.find((f) => f.id === "fund-1")
+      if (fund) fund.balance = Number(fund.balance || 0) + 500
       return {
         id,
         status: "posted",
@@ -622,6 +626,27 @@ export const accountingService = {
       throw new ValidationError("Journal entry is already posted.")
     }
 
+    const lines = await db.select().from(journalLines).where(eq(journalLines.journalEntryId, id))
+    if (lines.length === 0) throw new ValidationError("Journal entry has no lines.")
+
+    const totalDebit = lines.reduce((s, l) => s + Number(l.debit || 0), 0)
+    const totalCredit = lines.reduce((s, l) => s + Number(l.credit || 0), 0)
+    if (Math.abs(totalDebit - totalCredit) > 0.001) {
+      throw new ValidationError("Journal is not balanced — debits must equal credits.")
+    }
+    for (const line of lines) {
+      if (!line.fundId || !line.accountId) {
+        throw new ValidationError("Every journal line needs a fund and account.")
+      }
+    }
+
+    // Net effect per fund: credit − debit increases liquid fund balance (giving revenue pattern)
+    const fundDeltas = new Map<string, number>()
+    for (const line of lines) {
+      const delta = Number(line.credit || 0) - Number(line.debit || 0)
+      fundDeltas.set(line.fundId, (fundDeltas.get(line.fundId) || 0) + delta)
+    }
+
     const [updated] = await db
       .update(journalEntries)
       .set({
@@ -632,6 +657,21 @@ export const accountingService = {
       })
       .where(eq(journalEntries.id, id))
       .returning()
+
+    for (const [fundId, delta] of fundDeltas) {
+      if (Math.abs(delta) < 0.001) continue
+      const [fund] = await db
+        .select()
+        .from(accountingFunds)
+        .where(eq(accountingFunds.id, fundId))
+        .limit(1)
+      if (!fund) continue
+      const next = Number(fund.balance || 0) + delta
+      await db
+        .update(accountingFunds)
+        .set({ balance: next.toFixed(2), updatedAt: new Date() })
+        .where(eq(accountingFunds.id, fundId))
+    }
 
     return updated
   },

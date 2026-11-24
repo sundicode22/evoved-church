@@ -2,6 +2,13 @@ import { create } from "zustand"
 
 export interface NomenclatureSettings {
   churchName: string
+  churchEmail: string
+  churchPhone: string
+  churchAddress: string
+  churchCity: string
+  churchState: string
+  churchZip: string
+  logoUrl: string
   memberTermSingular: string // "Member", "Partner", "Parishioner", "Covenant Member"
   memberTermPlural: string   // "Members", "Partners", "Parishioners"
   visitorTermSingular: string // "First-Time Guest", "Newcomer", "Visitor"
@@ -23,6 +30,13 @@ interface NomenclatureStore {
 
 const defaultNomenclature: NomenclatureSettings = {
   churchName: "Evolve Church",
+  churchEmail: "",
+  churchPhone: "",
+  churchAddress: "",
+  churchCity: "",
+  churchState: "",
+  churchZip: "",
+  logoUrl: "",
   memberTermSingular: "Member",
   memberTermPlural: "Members",
   visitorTermSingular: "First-Time Guest",

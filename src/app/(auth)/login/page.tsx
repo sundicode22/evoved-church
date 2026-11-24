@@ -45,7 +45,24 @@ function LoginForm() {
         return
       }
       toast.success("Signed in")
-      router.push(redirectTo)
+      // Gate incomplete churches to onboarding
+      let next = redirectTo
+      try {
+        const { apiClient } = await import("@/lib/axios")
+        const status = await apiClient.get<{
+          success: boolean
+          data: { completed: boolean }
+        }>("/settings/onboarding")
+        if (!status.data.data?.completed) next = "/onboarding"
+        else if (redirectTo.startsWith("/onboarding")) next = "/dashboard"
+        else {
+          document.cookie =
+            "evolve_onboarding_completed=1; path=/; max-age=31536000; SameSite=Lax"
+        }
+      } catch {
+        /* keep redirectTo */
+      }
+      router.push(next)
       router.refresh()
     } catch {
       toast.error("Something went wrong. Please try again.")

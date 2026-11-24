@@ -314,6 +314,107 @@ export const memberService = {
   },
 
   /**
+   * Household directory for Families page — DB when available, else demo.
+   */
+  async listHouseholds() {
+    try {
+      const rows = await db.select().from(households).orderBy(desc(households.createdAt))
+      if (rows.length > 0) {
+        const result = []
+        for (const hh of rows) {
+          const membersInHh = await db
+            .select()
+            .from(members)
+            .where(eq(members.householdId, hh.id))
+          result.push({
+            id: hh.id,
+            name: hh.name,
+            campusId: hh.campusId,
+            address: hh.address,
+            city: hh.city,
+            state: hh.state,
+            zipCode: hh.zipCode,
+            memberCount: membersInHh.length,
+            members: membersInHh.map((m) => ({
+              id: m.id,
+              firstName: m.firstName,
+              lastName: m.lastName,
+              householdRole: m.householdRole,
+              personType: m.personType,
+            })),
+            createdAt: hh.createdAt.toISOString(),
+          })
+        }
+        return result
+      }
+    } catch (err) {
+      console.error("[memberService.listHouseholds] demo", err)
+    }
+
+    return [
+      {
+        id: DEMO_HOUSEHOLD.id,
+        name: DEMO_HOUSEHOLD.name,
+        campusId: "campus-demo-1",
+        address: "120 Grace Avenue",
+        city: "Springfield",
+        state: "IL",
+        zipCode: "62701",
+        memberCount: DEMO_HOUSEHOLD.members.length,
+        members: DEMO_HOUSEHOLD.members,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "hh-vance",
+        name: "The Vance Household",
+        campusId: "campus-demo-1",
+        address: "88 Oak Street",
+        city: "Springfield",
+        state: "IL",
+        zipCode: "62704",
+        memberCount: 2,
+        members: [
+          {
+            id: "mem-2",
+            firstName: "Marcus",
+            lastName: "Vance",
+            personType: "staff_minister",
+            householdRole: "head",
+          },
+          {
+            id: "mem-vance-spouse",
+            firstName: "Rachel",
+            lastName: "Vance",
+            personType: "covenant_member",
+            householdRole: "spouse",
+          },
+        ],
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "hh-murphy",
+        name: "The Murphy Household",
+        campusId: "campus-demo-1",
+        address: null,
+        city: "Springfield",
+        state: "IL",
+        zipCode: null,
+        memberCount: 1,
+        members: [
+          {
+            id: "mem-3",
+            firstName: "Kathryn",
+            lastName: "Murphy",
+            personType: "leader",
+            householdRole: "head",
+          },
+        ],
+        createdAt: new Date().toISOString(),
+      },
+    ]
+  },
+
+  /**
    * Lifecycle promotion/demotion with actor audit note
    */
   async updatePersonType(id: string, input: UpdatePersonTypeInput) {

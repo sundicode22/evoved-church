@@ -136,4 +136,18 @@ Export CSV from the old tool → Settings → **Import CSV** → download Evolve
 - [x] CSV migration import (members + giving)  
 - [x] First-release smoke (`bun scripts/smoke-first-release.ts` — 11/11)  
 
+## 9. Gracely parity sprint (Sheets + Zod only)
+
+- [x] Gracely-style sidebar IA (People / Finances / Calendar / Communications / Forms / Reports / Portal)  
+- [x] Design consistency — inset Sheets + Field/FieldGroup + Evolve green (no Gracely Dialog creates)  
+- [x] Onboarding redesign (Location wording) + redirect gates (`onboardingCompletedAt` + cookie)  
+- [x] Write-to-books — post journal validates balance, bumps `fund.balance`, ConfirmAction  
+- [x] Giving + Batches + Pledges + Funds pages (live)  
+- [x] Groups + Families  
+- [x] Rooms + Resources + Appointments schedules + Follow Ups + Attendance UI  
+- [x] Drips + Announcements (TipTap Sheet)  
+- [x] Forms builder + public `/f/[slug]` + member `/portal/[slug]`  
+- [x] Settings Custom fields + Locations tabs; Stripe integration stub; invite Resend when keyed  
+- [x] Live Home dashboard widgets  
+
 

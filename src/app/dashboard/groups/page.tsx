@@ -1,12 +1,29 @@
 "use client"
 
 import * as React from "react"
-import { Download, Plus, Search, UserCircle } from "lucide-react"
+import { Plus, Search, UsersRound } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import {
   Table,
   TableBody,
@@ -15,6 +32,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Can, RequireAbility } from "@/components/auth/can"
+import { RowActionsMenu } from "@/components/row-actions-menu"
 import {
   ColumnCustomize,
   StatusPill,
@@ -25,77 +44,64 @@ import {
   useColumnVisibility,
   type ColumnOption,
 } from "@/components/table-panel"
-import { RowActionsMenu } from "@/components/row-actions-menu"
+import { useCreateGroup, useGroups } from "@/features/groups/hooks/use-groups"
+import {
+  GROUP_TYPE_LABELS,
+  GROUP_TYPES,
+  type GroupType,
+} from "@/features/groups/schemas"
+import { cn } from "@/lib/utils"
 
 const COLUMNS: ColumnOption[] = [
   { id: "name", label: "Group" },
-  { id: "category", label: "Category" },
+  { id: "type", label: "Type" },
   { id: "leader", label: "Leader" },
-  { id: "schedule", label: "Schedule" },
-  { id: "location", label: "Location" },
-  { id: "capacity", label: "Capacity" },
-]
-
-const smallGroups = [
-  {
-    id: "grp-1",
-    name: "Downtown Young Professionals",
-    category: "Young Adults",
-    leader: "Kathryn Murphy",
-    day: "Wednesday",
-    time: "7:00 PM",
-    location: "255 Columbus Cir",
-    membersCount: 14,
-    capacity: 15,
-  },
-  {
-    id: "grp-2",
-    name: "North Campus Marriage & Family",
-    category: "Couples & Families",
-    leader: "Marcus & Rachel Vance",
-    day: "Thursday",
-    time: "6:30 PM",
-    location: "1740 Madison Ave",
-    membersCount: 18,
-    capacity: 20,
-  },
-  {
-    id: "grp-3",
-    name: "Iron Sharpens Iron",
-    category: "Men",
-    leader: "Brian Robbin",
-    day: "Saturday",
-    time: "7:30 AM",
-    location: "Sanctuary Cafe",
-    membersCount: 22,
-    capacity: 25,
-  },
-  {
-    id: "grp-4",
-    name: "Women of Grace",
-    category: "Women",
-    leader: "Sarah Miller",
-    day: "Tuesday",
-    time: "10:00 AM",
-    location: "Prayer Chapel",
-    membersCount: 16,
-    capacity: 20,
-  },
+  { id: "members", label: "Members" },
+  { id: "status", label: "Status" },
 ]
 
 export default function GroupsPage() {
+  const { data, isLoading } = useGroups()
+  const create = useCreateGroup()
+
   const [searchQuery, setSearchQuery] = React.useState("")
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(10)
+  const [sheetOpen, setSheetOpen] = React.useState(false)
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
 
-  const filtered = smallGroups.filter(
+  const [name, setName] = React.useState("")
+  const [type, setType] = React.useState<GroupType>("public")
+  const [imageUrl, setImageUrl] = React.useState("")
+
+  const rows = data ?? []
+  const filtered = rows.filter(
     (g) =>
       !searchQuery.trim() ||
       g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      g.leader.toLowerCase().includes(searchQuery.toLowerCase())
+      (g.leaderName || "").toLowerCase().includes(searchQuery.toLowerCase())
   )
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
+  const isEmpty = !isLoading && rows.length === 0
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault()
+    create.mutate(
+      {
+        name,
+        type,
+        imageUrl: imageUrl.trim() || null,
+      },
+      {
+        onSuccess: () => {
+          setSheetOpen(false)
+          setName("")
+          setType("public")
+          setImageUrl("")
+        },
+      }
+    )
+  }
 
   return (
     <SidebarProvider
@@ -108,110 +114,225 @@ export default function GroupsPage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset className="min-h-screen bg-white">
-        <PageHeader
-          title="Groups"
-          description="Small groups and cell ministry."
-          icon={<UserCircle className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
-          actions={
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 gap-1.5 rounded-lg border-zinc-200 text-xs font-normal shadow-xs"
-              >
-                <Download className="size-3.5" strokeWidth={1.75} />
-                Export
-              </Button>
-              <TableAddButton>
-                <Plus className="size-3.5" strokeWidth={1.75} />
-                Add Group
-              </TableAddButton>
-            </>
-          }
-        >
-          <div className="relative max-w-xs">
-            <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
-            <Input
-              placeholder="Search groups…"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setPage(1)
-              }}
-              className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
-            />
-          </div>
-        </PageHeader>
+        <RequireAbility permission="groups.read">
+          <PageHeader
+            title="Groups"
+            description="Small groups, teams, and cell ministry."
+            icon={<UsersRound className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            actions={
+              <Can permission="groups.write">
+                <TableAddButton onClick={() => setSheetOpen(true)}>
+                  <Plus className="size-3.5" strokeWidth={1.75} />
+                  Create group
+                </TableAddButton>
+              </Can>
+            }
+          >
+            <div className="relative max-w-xs">
+              <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
+              <Input
+                placeholder="Search groups…"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setPage(1)
+                }}
+                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
+              />
+            </div>
+          </PageHeader>
 
-        <div className="p-6 md:p-8">
-          <TablePanel>
-            <TableChrome
-              trailing={
-                <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
-              }
-            />
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  {isVisible("name") && <TableHead className="pl-4">Group</TableHead>}
-                  {isVisible("category") && <TableHead>Category</TableHead>}
-                  {isVisible("leader") && <TableHead>Leader</TableHead>}
-                  {isVisible("schedule") && <TableHead>Schedule</TableHead>}
-                  {isVisible("location") && <TableHead>Location</TableHead>}
-                  {isVisible("capacity") && <TableHead>Capacity</TableHead>}
-                  <TableHead className="w-10" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pageRows.map((group) => (
-                  <TableRow key={group.id}>
-                    {isVisible("name") && (
-                      <TableCell className="pl-4 font-medium text-zinc-900">
-                        {group.name}
-                      </TableCell>
-                    )}
-                    {isVisible("category") && (
-                      <TableCell>
-                        <StatusPill>{group.category}</StatusPill>
-                      </TableCell>
-                    )}
-                    {isVisible("leader") && (
-                      <TableCell className="text-zinc-600">{group.leader}</TableCell>
-                    )}
-                    {isVisible("schedule") && (
-                      <TableCell className="text-zinc-600">
-                        {group.day} · {group.time}
-                      </TableCell>
-                    )}
-                    {isVisible("location") && (
-                      <TableCell className="text-zinc-500">{group.location}</TableCell>
-                    )}
-                    {isVisible("capacity") && (
-                      <TableCell className="tabular-nums text-zinc-600">
-                        {group.membersCount}/{group.capacity}
-                      </TableCell>
-                    )}
-                    <TableCell className="pr-3 text-right">
-                      <RowActionsMenu
-                        groups={[{ items: [{ label: "Open", onClick: () => {} }] }]}
+          <div className="p-6 md:p-8">
+            {isEmpty ? (
+              <Empty className="rounded-lg border border-zinc-200/80 py-16">
+                <EmptyHeader>
+                  <EmptyTitle>No groups yet</EmptyTitle>
+                  <EmptyDescription>
+                    Create a public group, private circle, or serving team to get started.
+                  </EmptyDescription>
+                </EmptyHeader>
+                <Can permission="groups.write">
+                  <Button
+                    className="mt-4 h-8 gap-1.5 bg-[#22c55e] text-xs text-white hover:bg-[#16a34a]"
+                    onClick={() => setSheetOpen(true)}
+                  >
+                    <Plus className="size-3.5" strokeWidth={1.75} />
+                    Create group
+                  </Button>
+                </Can>
+              </Empty>
+            ) : (
+              <TablePanel>
+                <TableChrome
+                  trailing={
+                    <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                  }
+                />
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      {isVisible("name") && <TableHead className="pl-4">Group</TableHead>}
+                      {isVisible("type") && <TableHead>Type</TableHead>}
+                      {isVisible("leader") && <TableHead>Leader</TableHead>}
+                      {isVisible("members") && <TableHead>Members</TableHead>}
+                      {isVisible("status") && <TableHead>Status</TableHead>}
+                      <TableHead className="w-10" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading &&
+                      [0, 1, 2].map((i) => (
+                        <TableRow key={i}>
+                          <TableCell colSpan={6} className="pl-4">
+                            <Skeleton className="h-6 w-full" />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    {pageRows.map((group) => (
+                      <TableRow key={group.id}>
+                        {isVisible("name") && (
+                          <TableCell className="pl-4">
+                            <div className="flex items-center gap-3">
+                              {group.imageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={group.imageUrl}
+                                  alt=""
+                                  className="size-8 rounded-md object-cover"
+                                />
+                              ) : (
+                                <div className="flex size-8 items-center justify-center rounded-md bg-[#eaf5ea] text-xs font-medium text-[#1b5e20]">
+                                  {group.name.slice(0, 1)}
+                                </div>
+                              )}
+                              <div>
+                                <div className="font-medium text-zinc-900">{group.name}</div>
+                                {group.description && (
+                                  <div className="mt-0.5 line-clamp-1 text-xs text-zinc-500">
+                                    {group.description}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                        )}
+                        {isVisible("type") && (
+                          <TableCell>
+                            <StatusPill>{GROUP_TYPE_LABELS[group.type]}</StatusPill>
+                          </TableCell>
+                        )}
+                        {isVisible("leader") && (
+                          <TableCell className="text-zinc-600">
+                            {group.leaderName || "—"}
+                          </TableCell>
+                        )}
+                        {isVisible("members") && (
+                          <TableCell className="tabular-nums text-zinc-600">
+                            {group.memberCount}
+                          </TableCell>
+                        )}
+                        {isVisible("status") && (
+                          <TableCell>
+                            <StatusPill tone={group.isActive ? "success" : "neutral"}>
+                              {group.isActive ? "Active" : "Inactive"}
+                            </StatusPill>
+                          </TableCell>
+                        )}
+                        <TableCell className="pr-3 text-right">
+                          <RowActionsMenu
+                            groups={[{ items: [{ label: "Open", onClick: () => {} }] }]}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <TablePagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={filtered.length}
+                  onPageChange={setPage}
+                  onPageSizeChange={(s) => {
+                    setPageSize(s)
+                    setPage(1)
+                  }}
+                />
+              </TablePanel>
+            )}
+          </div>
+
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetContent side="right" inset size="sm" className="p-0">
+              <form onSubmit={submit} className="flex h-full flex-col">
+                <SheetHeader className="pr-12">
+                  <SheetTitle className="font-medium">Create group</SheetTitle>
+                  <SheetDescription>
+                    Name the group, pick a type, and optionally add an image URL.
+                  </SheetDescription>
+                </SheetHeader>
+                <SheetBody>
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel>Name</FieldLabel>
+                      <Input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="h-9 text-sm"
+                        required
                       />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePagination
-              page={page}
-              pageSize={pageSize}
-              total={filtered.length}
-              onPageChange={setPage}
-              onPageSizeChange={(s) => {
-                setPageSize(s)
-                setPage(1)
-              }}
-            />
-          </TablePanel>
-        </div>
+                    </Field>
+                    <Field>
+                      <FieldLabel>Type</FieldLabel>
+                      <div className="flex gap-1.5">
+                        {GROUP_TYPES.map((t) => (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => setType(t)}
+                            className={cn(
+                              "h-8 rounded-md border px-3 text-xs capitalize transition-colors",
+                              type === t
+                                ? "border-[#16a34a] bg-[#eaf5ea] text-[#1b5e20]"
+                                : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
+                            )}
+                          >
+                            {GROUP_TYPE_LABELS[t]}
+                          </button>
+                        ))}
+                      </div>
+                    </Field>
+                    <Field>
+                      <FieldLabel>Image URL (optional)</FieldLabel>
+                      <Input
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        placeholder="https://"
+                        className="h-9 text-sm"
+                      />
+                    </Field>
+                  </FieldGroup>
+                </SheetBody>
+                <SheetFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9"
+                    onClick={() => setSheetOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={create.isPending}
+                    className="h-9 bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                  >
+                    {create.isPending ? "Saving…" : "Create group"}
+                  </Button>
+                </SheetFooter>
+              </form>
+            </SheetContent>
+          </Sheet>
+        </RequireAbility>
       </SidebarInset>
     </SidebarProvider>
   )

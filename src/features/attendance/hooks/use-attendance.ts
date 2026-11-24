@@ -3,12 +3,30 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { apiClient, ApiResponse } from "@/lib/axios"
-import { SundayCheckinInput, ChildKioskCheckinInput } from "../schemas"
+import {
+  SundayCheckinInput,
+  ChildKioskCheckinInput,
+  type AttendanceSession,
+} from "../schemas"
 import { VISITOR_KEYS } from "@/features/visitors/hooks/use-visitor-leads"
 
 export const ATTENDANCE_KEYS = {
   all: ["attendance"] as const,
-  qrCode: (campusSlug?: string) => [...ATTENDANCE_KEYS.all, "qr-code", campusSlug || "main-campus"] as const,
+  sessions: () => [...ATTENDANCE_KEYS.all, "sessions"] as const,
+  qrCode: (campusSlug?: string) =>
+    [...ATTENDANCE_KEYS.all, "qr-code", campusSlug || "main-campus"] as const,
+}
+
+export function useAttendanceSessions() {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.sessions(),
+    queryFn: async () => {
+      const response = await apiClient.get<ApiResponse<AttendanceSession[]>>(
+        "/attendance/sessions"
+      )
+      return response.data.data || []
+    },
+  })
 }
 
 /**
