@@ -125,7 +125,7 @@ export function ChartOfAccountsAccordion({ accounts }: { accounts: CoaAccount[] 
                         render={
                           <button
                             type="button"
-                            className="text-sm font-semibold capitalize text-zinc-900 outline-none"
+                            className="text-sm font-normal capitalize text-zinc-900 outline-none"
                             onClick={(e) => e.stopPropagation()}
                           />
                         }

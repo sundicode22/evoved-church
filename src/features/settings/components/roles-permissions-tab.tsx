@@ -216,7 +216,7 @@ export function RolesPermissionsTab() {
           <div className="space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-sm font-bold text-zinc-900">{selected.name}</h3>
+                <h3 className="text-sm font-semibold text-zinc-900">{selected.name}</h3>
                 <p className="mt-1 text-xs text-zinc-400">
                   {selected.isAdmin
                     ? "Administrators always have every permission."
@@ -239,7 +239,7 @@ export function RolesPermissionsTab() {
                       }
                     )
                   }
-                  className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#16a34a]"
+                  className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-normal text-white shadow-xs hover:bg-[#16a34a]"
                 >
                   <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2.5} className="size-3.5" />
                   Save permissions

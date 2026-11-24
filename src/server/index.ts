@@ -10,6 +10,9 @@ import { documentsController } from "@/features/documents/controller"
 import { campaignsController } from "@/features/campaigns/controller"
 import { projectsController } from "@/features/projects/controller"
 import { policiesController } from "@/features/policies/controller"
+import { servicesController } from "@/features/services/controller"
+import { calendarController } from "@/features/calendar/controller"
+import { importController } from "@/features/import/controller"
 import { formatErrorResponse } from "@/lib/errors"
 
 export const app = new Elysia({ prefix: "/api" })
@@ -36,5 +39,8 @@ export const app = new Elysia({ prefix: "/api" })
   .use(campaignsController)
   .use(projectsController)
   .use(policiesController)
+  .use(servicesController)
+  .use(calendarController)
+  .use(importController)
 
 export type App = typeof app

@@ -97,7 +97,7 @@ export default function ProjectsPage() {
           <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                   <HugeiconsIcon icon={Task01Icon} strokeWidth={2} className="size-6 text-emerald-600" />
                   <span>Projects</span>
                 </h1>
@@ -108,7 +108,7 @@ export default function ProjectsPage() {
               <Can permission="projects.write">
                 <Button
                   onClick={() => setOpen(true)}
-                  className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#16a34a]"
+                  className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-normal text-white shadow-xs hover:bg-[#16a34a]"
                 >
                   <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
                   <span>Add Card</span>
@@ -123,7 +123,7 @@ export default function ProjectsPage() {
                 </span>
                 <span className="mx-2 text-zinc-300">·</span>
                 <span>
-                  Done: <strong className="font-bold text-emerald-700">{doneCount} cards</strong>
+                  Done: <strong className="font-semibold text-emerald-700">{doneCount} cards</strong>
                 </span>
               </div>
               <div className="relative w-56">

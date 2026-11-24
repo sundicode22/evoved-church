@@ -95,7 +95,7 @@ export default function GroupsPage() {
         <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                 <HugeiconsIcon icon={UserCircle02Icon} strokeWidth={2} className="size-6 text-emerald-600" />
                 <span>Small Groups & Cell Ministry</span>
               </h1>
@@ -112,12 +112,12 @@ export default function GroupsPage() {
                 <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} className="size-4" />
               </button>
 
-              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-semibold gap-1.5 shadow-2xs">
+              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-normal gap-1.5 shadow-2xs">
                 <HugeiconsIcon icon={Download01Icon} strokeWidth={2} className="size-3.5 text-zinc-600" />
                 <span>Export Groups</span>
               </Button>
 
-              <Button className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-semibold gap-1.5 shadow-xs">
+              <Button className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-normal gap-1.5 shadow-xs">
                 <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
                 <span>New Small Group</span>
               </Button>
@@ -128,7 +128,7 @@ export default function GroupsPage() {
             <div>
               <span>Active Groups: <strong className="text-zinc-800 dark:text-zinc-200">4 circles</strong></span>
               <span className="mx-2 text-zinc-300">·</span>
-              <span>Total Disciples in Community: <strong className="text-emerald-700 dark:text-emerald-400 font-bold">70 believers (88% capacity)</strong></span>
+              <span>Total Disciples in Community: <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">70 believers (88% capacity)</strong></span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -171,10 +171,10 @@ export default function GroupsPage() {
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold uppercase">
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-semibold uppercase">
                       {group.category}
                     </Badge>
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-2">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-2">
                       {group.name}
                     </h3>
                   </div>
@@ -195,21 +195,21 @@ export default function GroupsPage() {
                 </div>
 
                 <div className="rounded-xl bg-zinc-50 p-3 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 text-xs">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Current Study Guide</span>
+                  <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">Current Study Guide</span>
                   <p className="font-semibold text-zinc-800 dark:text-zinc-200 mt-0.5">{group.activeStudy}</p>
                 </div>
 
                 {/* Capacity & Leader */}
                 <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="flex size-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-bold text-[9px]">
+                    <div className="flex size-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[9px]">
                       {group.leaderAvatar}
                     </div>
                     <span className="text-zinc-600 dark:text-zinc-300 font-medium">Leader: {group.leader}</span>
                   </div>
 
                   <div className="text-right">
-                    <span className="font-bold text-zinc-800 dark:text-zinc-200">{group.membersCount} / {group.capacity}</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200">{group.membersCount} / {group.capacity}</span>
                     <span className="text-[10px] text-zinc-400 ml-1">({fillPercent}%)</span>
                   </div>
                 </div>

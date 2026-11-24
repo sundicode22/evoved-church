@@ -39,8 +39,13 @@ export const PERMISSION_CATALOG = [
   // Organigram / services
   { key: "organigram.read", label: "View organigram", groupName: "Structure" },
   { key: "organigram.write", label: "Edit organigram", groupName: "Structure" },
-  { key: "services.read", label: "View Sunday services", groupName: "Services" },
-  { key: "services.write", label: "Edit run of service", groupName: "Services" },
+  { key: "services.read", label: "View church services", groupName: "Services" },
+  { key: "services.write", label: "Edit services & run sheets", groupName: "Services" },
+  // Calendar
+  { key: "calendar.read", label: "View church calendar", groupName: "Calendar" },
+  { key: "calendar.write", label: "Manage programs & assignees", groupName: "Calendar" },
+  // Import / migration
+  { key: "import.write", label: "Import CSV from other ChMS", groupName: "Settings" },
   // Settings
   { key: "settings.read", label: "View settings", groupName: "Settings" },
   { key: "settings.write", label: "Edit nomenclature & integrations", groupName: "Settings" },
@@ -54,6 +59,8 @@ export const NAV_PERMISSION: Record<string, PermissionKey | PermissionKey[]> = {
   "/dashboard/visitors": "visitors.read",
   "/dashboard/appointments": "visitors.read",
   "/dashboard/sunday-services": "services.read",
+  "/dashboard/services": "services.read",
+  "/dashboard/calendar": "calendar.read",
   "/dashboard/tasks": "projects.read",
   "/dashboard/projects": "projects.read",
   "/dashboard/organigram": "organigram.read",

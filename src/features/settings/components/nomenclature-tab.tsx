@@ -33,7 +33,7 @@ export function NomenclatureTab({ canEdit }: { canEdit: boolean }) {
       className="max-w-3xl rounded-2xl border border-zinc-200/80 bg-white p-8 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 space-y-6"
     >
       <div>
-        <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+        <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
           Ecclesiastical Nomenclature Dictionary
         </h3>
         <p className="text-xs text-zinc-400 mt-1">
@@ -171,7 +171,7 @@ export function NomenclatureTab({ canEdit }: { canEdit: boolean }) {
         <Button
           type="submit"
           disabled={!canEdit || saveMutation.isPending}
-          className="h-9 px-5 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-semibold gap-1.5 shadow-xs"
+          className="h-9 px-5 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-normal gap-1.5 shadow-xs"
         >
           <HugeiconsIcon
             icon={CheckmarkCircle02Icon}

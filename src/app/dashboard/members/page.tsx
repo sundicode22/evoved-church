@@ -54,7 +54,7 @@ export default function MembersPage() {
         <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                 Church Members Directory
               </h1>
               <p className="text-xs text-zinc-400 mt-0.5">
@@ -70,12 +70,12 @@ export default function MembersPage() {
                 <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} className="size-4" />
               </button>
 
-              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-semibold gap-1.5 shadow-2xs">
+              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-normal gap-1.5 shadow-2xs">
                 <HugeiconsIcon icon={Download01Icon} strokeWidth={2} className="size-3.5 text-zinc-600" />
                 <span>Export Directory</span>
               </Button>
 
-              <Button className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-semibold gap-1.5 shadow-xs">
+              <Button className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-normal gap-1.5 shadow-xs">
                 <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
                 <span>Add Person</span>
               </Button>
@@ -98,7 +98,7 @@ export default function MembersPage() {
                     onClick={() => setActiveTab(t.id)}
                     className={`relative pb-2 transition-colors ${
                       activeTab === t.id
-                        ? "text-[#16a34a] font-bold after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-[#16a34a]"
+                        ? "text-[#16a34a] font-semibold after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-[#16a34a]"
                         : "text-zinc-500 hover:text-zinc-800"
                     }`}
                   >
@@ -174,11 +174,11 @@ export default function MembersPage() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex size-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs">
+                          <div className="flex size-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs">
                             {person.firstName.charAt(0)}{person.lastName.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">
+                            <p className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
                               {person.firstName} {person.lastName}
                             </p>
                             {person.recordedTitle ? (
@@ -193,7 +193,7 @@ export default function MembersPage() {
                       </td>
 
                       <td className="px-6 py-4">
-                        <span className="inline-block rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200 uppercase">
+                        <span className="inline-block rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200 uppercase">
                           {person.personType.replace("_", " ")}
                         </span>
                       </td>

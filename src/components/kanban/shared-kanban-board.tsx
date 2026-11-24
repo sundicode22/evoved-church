@@ -78,7 +78,7 @@ function CardView({
     >
       <div className="flex items-start justify-between gap-2">
         {card.label ? (
-          <span className="truncate rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+          <span className="truncate rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
             {card.label}
           </span>
         ) : (
@@ -113,7 +113,7 @@ function CardView({
           )}
         </div>
         {card.assignee && (
-          <span className="flex size-6 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-bold text-white">
+          <span className="flex size-6 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-semibold text-white">
             {card.assignee}
           </span>
         )}

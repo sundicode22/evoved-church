@@ -26,6 +26,9 @@ Premium all-in-one ChMS: multi-location ops, visitor CRM, church members with ho
 - **Members** = church members; household roles: father, mother, spouse, son, daughter, guardian, head, other.
 - **Kanban**: visitors (lead stages) + projects (`backlog`→`done`) via shared board.
 - **Campaigns**: `/dashboard/campaigns`. **Email = Resend only** (`features/communications/resend.ts`). **SMS = separate provider** (`features/communications/sms.ts`, Twilio adapter by default — never Resend). Drips under communications.
+- **Services**: `/dashboard/services` — multi-type (sunday_worship, midweek, prayer, youth, kids, special, other); not Sunday-only. Legacy `/dashboard/sunday-services` redirects.
+- **Calendar**: `/dashboard/calendar` — programs, occurrences, assignees (lead/volunteer/speaker).
+- **Migration**: Settings → Import CSV (`/api/import/members`, `/api/import/giving`) with dry-run then apply.
 - **Ledger**: never silent auto-post; always record who created / who posted.
 
 ## 6. UI

@@ -235,7 +235,7 @@ export default function DocumentsPage() {
         <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                 <HugeiconsIcon icon={SecurityCheckIcon} strokeWidth={2} className="size-6 text-emerald-600" />
                 <span>Documents</span>
               </h1>
@@ -254,14 +254,14 @@ export default function DocumentsPage() {
               <Button
                 variant="outline"
                 onClick={() => setFolderDialog(true)}
-                className="h-9 gap-1.5 rounded-lg border-zinc-200 px-3.5 text-xs font-semibold shadow-2xs"
+                className="h-9 gap-1.5 rounded-lg border-zinc-200 px-3.5 text-xs font-normal shadow-2xs"
               >
                 <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-3.5 text-zinc-600" />
                 <span>New Folder</span>
               </Button>
               <Button
                 onClick={() => setUploadDialog(true)}
-                className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#16a34a]"
+                className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-normal text-white shadow-xs hover:bg-[#16a34a]"
               >
                 <HugeiconsIcon icon={Upload01Icon} strokeWidth={2.5} className="size-3.5" />
                 <span>Upload</span>
@@ -301,7 +301,7 @@ export default function DocumentsPage() {
           ) : (
             <>
               <section className="space-y-3">
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Folders</h3>
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Folders</h3>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {visibleFolders.map((folder) => {
                     const active = folder.id === selectedFolderId
@@ -347,7 +347,7 @@ export default function DocumentsPage() {
 
               <section className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                     {selectedFolder ? selectedFolder.name : "All files"}
                   </h3>
                   {selectedFolder && (
@@ -464,7 +464,7 @@ export default function DocumentsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="h-9 rounded-lg bg-[#22c55e] px-4 font-semibold text-white hover:bg-[#16a34a]"
+                  className="h-9 rounded-lg bg-[#22c55e] px-4 font-normal text-white hover:bg-[#16a34a]"
                 >
                   Create folder
                 </Button>
@@ -542,7 +542,7 @@ export default function DocumentsPage() {
                 <Button
                   type="submit"
                   disabled={uploading}
-                  className="h-9 rounded-lg bg-[#22c55e] px-4 font-semibold text-white hover:bg-[#16a34a]"
+                  className="h-9 rounded-lg bg-[#22c55e] px-4 font-normal text-white hover:bg-[#16a34a]"
                 >
                   {uploading ? "Uploading…" : "Upload"}
                 </Button>

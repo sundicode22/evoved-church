@@ -147,7 +147,7 @@ export default function CampaignDetailPage() {
             </Link>
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                   <HugeiconsIcon
                     icon={Mail01Icon}
                     strokeWidth={2}
@@ -179,7 +179,7 @@ export default function CampaignDetailPage() {
                   <Button
                     onClick={() => setConfirmSend(true)}
                     disabled={!data || locked || send.isPending}
-                    className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#16a34a]"
+                    className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-normal text-white shadow-xs hover:bg-[#16a34a]"
                   >
                     <HugeiconsIcon
                       icon={CheckmarkCircle02Icon}
@@ -366,7 +366,7 @@ export default function CampaignDetailPage() {
                           className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-xs"
                         >
                           <p className="text-xs text-zinc-500">{label}</p>
-                          <p className="mt-1 text-2xl font-bold text-zinc-900">
+                          <p className="mt-1 text-2xl font-semibold text-zinc-900">
                             {value}
                           </p>
                         </div>

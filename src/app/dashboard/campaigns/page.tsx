@@ -78,7 +78,7 @@ export default function CampaignsPage() {
           <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                   <HugeiconsIcon icon={Mail01Icon} strokeWidth={2} className="size-6 text-emerald-600" />
                   <span>Campaigns</span>
                 </h1>
@@ -89,7 +89,7 @@ export default function CampaignsPage() {
               <Can permission="campaigns.write">
                 <Button
                   onClick={() => setOpen(true)}
-                  className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#16a34a]"
+                  className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-normal text-white shadow-xs hover:bg-[#16a34a]"
                 >
                   <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
                   <span>New Campaign</span>

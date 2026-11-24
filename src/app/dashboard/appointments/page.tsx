@@ -194,7 +194,7 @@ export default function AppointmentsPage() {
         <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                 <HugeiconsIcon icon={Calendar03Icon} strokeWidth={2} className="size-6 text-emerald-600" />
                 <span>Appointments & Pastoral Care Visits</span>
               </h1>
@@ -211,14 +211,14 @@ export default function AppointmentsPage() {
                 <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} className="size-4" />
               </button>
 
-              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-semibold gap-1.5 shadow-2xs">
+              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-normal gap-1.5 shadow-2xs">
                 <HugeiconsIcon icon={Download01Icon} strokeWidth={2} className="size-3.5 text-zinc-600" />
                 <span>Sync Calendar</span>
               </Button>
 
               <Button
                 onClick={() => setDialogOpen(true)}
-                className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-semibold gap-1.5 shadow-xs"
+                className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-normal gap-1.5 shadow-xs"
               >
                 <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
                 <span>Schedule Visit</span>
@@ -230,7 +230,7 @@ export default function AppointmentsPage() {
             <div>
               <span>Scheduled: <strong className="text-zinc-800 dark:text-zinc-200">{appointments.length} visits</strong></span>
               <span className="mx-2 text-zinc-300">·</span>
-              <span>Lead Shepherd: <strong className="text-emerald-700 dark:text-emerald-400 font-bold">Pastor Ahmad Fawaid</strong></span>
+              <span>Lead Shepherd: <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">Pastor Ahmad Fawaid</strong></span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -272,8 +272,8 @@ export default function AppointmentsPage() {
             >
               <div className="flex items-start justify-between">
                 <div className="w-48 shrink-0">
-                  <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">{app.day}</p>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{app.date}</p>
+                  <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{app.day}</p>
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{app.date}</p>
                   <p className="text-xs text-zinc-400 mt-0.5">{app.time}</p>
                   <span className="inline-block mt-2 rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200">
                     {app.type}
@@ -283,7 +283,7 @@ export default function AppointmentsPage() {
                 <div className="flex-1 pl-6">
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-emerald-500" />
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                       {app.title}
                     </h3>
                   </div>
@@ -294,7 +294,7 @@ export default function AppointmentsPage() {
                   </p>
 
                   <div className="flex items-center gap-2 text-xs text-zinc-500 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
-                    <div className="size-5 rounded-full bg-emerald-600 flex items-center justify-center text-[9px] font-bold text-white shadow-2xs">
+                    <div className="size-5 rounded-full bg-emerald-600 flex items-center justify-center text-[9px] font-semibold text-white shadow-2xs">
                       AF
                     </div>
                     <span>Assigned Shepherd: <strong className="text-zinc-700 dark:text-zinc-300">{app.staff}</strong></span>
@@ -440,7 +440,7 @@ export default function AppointmentsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="h-9 rounded-lg bg-[#22c55e] px-4 font-semibold text-white hover:bg-[#16a34a]"
+                  className="h-9 rounded-lg bg-[#22c55e] px-4 font-normal text-white hover:bg-[#16a34a]"
                 >
                   Schedule visit
                 </Button>

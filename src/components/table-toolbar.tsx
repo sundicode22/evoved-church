@@ -70,7 +70,7 @@ export function TableToolbar({
         {icon}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-bold text-zinc-900">{title}</h3>
+            <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>
             {typeof count === "number" && (
               <Badge variant="outline" className="text-[10px] tabular-nums">
                 {count}

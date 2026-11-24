@@ -65,9 +65,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Calendar03Icon,
     },
     {
-      title: "Sunday Services",
-      url: "/dashboard/sunday-services",
+      title: "Services",
+      url: "/dashboard/services",
       icon: ChurchIcon,
+    },
+    {
+      title: "Church calendar",
+      url: "/dashboard/calendar",
+      icon: Calendar03Icon,
     },
     {
       title: "Projects",

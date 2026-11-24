@@ -9,6 +9,7 @@ import { useAbility } from "@/features/auth/ability-context"
 import { NomenclatureTab } from "@/features/settings/components/nomenclature-tab"
 import { RolesPermissionsTab } from "@/features/settings/components/roles-permissions-tab"
 import { IntegrationsTab } from "@/features/settings/components/integrations-tab"
+import { ImportTab } from "@/features/settings/components/import-tab"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Settings05Icon } from "@hugeicons/core-free-icons"
 
@@ -23,7 +24,7 @@ export default function SettingsPage() {
       <SidebarInset className="min-h-screen bg-[#fbfcfb] dark:bg-zinc-950">
         <RequireAbility permission="settings.read">
           <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
-            <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
               <HugeiconsIcon icon={Settings05Icon} strokeWidth={2} className="size-6 text-emerald-600" />
               <span>Settings & Access Control</span>
             </h1>
@@ -40,6 +41,9 @@ export default function SettingsPage() {
                   <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
                 </Can>
                 <TabsTrigger value="integrations">Integrations</TabsTrigger>
+                <Can permission="import.write">
+                  <TabsTrigger value="import">Import CSV</TabsTrigger>
+                </Can>
               </TabsList>
 
               <TabsContent value="nomenclature" className="pt-4">
@@ -53,6 +57,11 @@ export default function SettingsPage() {
               <TabsContent value="integrations" className="pt-4">
                 <IntegrationsTab canEdit={can("settings.write")} />
               </TabsContent>
+              <Can permission="import.write">
+                <TabsContent value="import" className="pt-4">
+                  <ImportTab canEdit={can("import.write") || can("settings.write")} />
+                </TabsContent>
+              </Can>
             </Tabs>
           </div>
         </RequireAbility>

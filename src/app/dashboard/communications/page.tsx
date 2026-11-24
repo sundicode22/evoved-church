@@ -73,7 +73,7 @@ export default function SequencesPage() {
         <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                 <HugeiconsIcon icon={DropletIcon} strokeWidth={2} className="size-6 text-emerald-600" />
                 <span>Automated Visitor Drip Sequences</span>
               </h1>
@@ -90,12 +90,12 @@ export default function SequencesPage() {
                 <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} className="size-4" />
               </button>
 
-              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-semibold gap-1.5 shadow-2xs">
+              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-normal gap-1.5 shadow-2xs">
                 <HugeiconsIcon icon={Download01Icon} strokeWidth={2} className="size-3.5 text-zinc-600" />
                 <span>Sequence Analytics</span>
               </Button>
 
-              <Button className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-semibold gap-1.5 shadow-xs">
+              <Button className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-normal gap-1.5 shadow-xs">
                 <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
                 <span>Add Drip Step</span>
               </Button>
@@ -106,7 +106,7 @@ export default function SequencesPage() {
             <div>
               <span>Active Sequence: <strong className="text-zinc-800 dark:text-zinc-200">New Guest Follow-Up (4 Steps)</strong></span>
               <span className="mx-2 text-zinc-300">·</span>
-              <span>Overall Conversion to Member: <strong className="text-emerald-700 dark:text-emerald-400 font-bold">34.2%</strong></span>
+              <span>Overall Conversion to Member: <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">34.2%</strong></span>
             </div>
             <span className="text-[11px] text-zinc-400">Triggered automatically when guest checks in on Sunday</span>
           </div>
@@ -121,14 +121,14 @@ export default function SequencesPage() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs">
+                  <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 font-semibold text-xs">
                     #{st.step}
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 uppercase">
+                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 uppercase">
                       {st.trigger}
                     </span>
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-1">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1">
                       {st.subject}
                     </h3>
                   </div>
@@ -136,7 +136,7 @@ export default function SequencesPage() {
 
                 <div className="text-right">
                   <span className="text-[10px] text-zinc-400">Open / Engagement</span>
-                  <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{st.openRate}</p>
+                  <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">{st.openRate}</p>
                 </div>
               </div>
 

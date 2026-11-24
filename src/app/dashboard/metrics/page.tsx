@@ -93,7 +93,7 @@ export default function MetricsPage() {
       <SidebarInset className="bg-[#fbfcfb] min-h-screen">
         <RequireAbility permission="reports.read">
           <div className="border-b border-zinc-200/80 bg-white px-8 py-5">
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
               Financial Performance & Reports
             </h1>
             <p className="text-xs text-zinc-400 mt-0.5">
@@ -114,7 +114,7 @@ export default function MetricsPage() {
                   </div>
                   <div>
                     <p className="text-xs text-zinc-400 font-medium">{c.title}</p>
-                    <p className="text-2xl font-bold text-zinc-900 mt-1">{c.val}</p>
+                    <p className="text-2xl font-semibold text-zinc-900 mt-1">{c.val}</p>
                     <p className="text-[11px] text-zinc-400 mt-1">{c.sub}</p>
                   </div>
                 </div>

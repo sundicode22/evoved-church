@@ -48,7 +48,7 @@ export default function GivingPage() {
         <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                 <HugeiconsIcon icon={Coins01Icon} strokeWidth={2} className="size-6 text-emerald-600" />
                 <span>Tithes, Offerings & Stewardship</span>
               </h1>
@@ -65,12 +65,12 @@ export default function GivingPage() {
                 <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} className="size-4" />
               </button>
 
-              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-semibold gap-1.5 shadow-2xs">
+              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-normal gap-1.5 shadow-2xs">
                 <HugeiconsIcon icon={File01Icon} strokeWidth={2} className="size-3.5 text-zinc-600" />
                 <span>Batch Tax Statements</span>
               </Button>
 
-              <Button className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-semibold gap-1.5 shadow-xs">
+              <Button className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-normal gap-1.5 shadow-xs">
                 <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
                 <span>Record Sunday Batch</span>
               </Button>
@@ -80,9 +80,9 @@ export default function GivingPage() {
           {/* SUB-HEADER METRICS */}
           <div className="mt-4 flex items-center justify-between">
             <div className="flex items-center gap-4 text-xs text-zinc-500">
-              <span>Total Giving YTD: <strong className="text-emerald-700 dark:text-emerald-400 font-bold">$295,400.00</strong></span>
+              <span>Total Giving YTD: <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">$295,400.00</strong></span>
               <span className="text-zinc-300">·</span>
-              <span>Building Pledges: <strong className="text-zinc-800 dark:text-zinc-200 font-bold">$145,000.00</strong></span>
+              <span>Building Pledges: <strong className="text-zinc-800 dark:text-zinc-200 font-semibold">$145,000.00</strong></span>
               <span className="text-zinc-300">·</span>
               <span>Online vs Envelope: <strong className="text-zinc-700 dark:text-zinc-300">68% Digital</strong></span>
             </div>
@@ -135,7 +135,7 @@ export default function GivingPage() {
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                   {contributions.map((tx) => (
                     <tr key={tx.id} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40 transition-colors">
-                      <td className="px-6 py-4 font-bold text-zinc-900 dark:text-zinc-100">
+                      <td className="px-6 py-4 font-semibold text-zinc-900 dark:text-zinc-100">
                         {tx.donor}
                       </td>
                       <td className="px-6 py-4">
@@ -152,16 +152,16 @@ export default function GivingPage() {
                       <td className="px-6 py-4 text-zinc-500 font-mono">
                         {tx.envelope}
                       </td>
-                      <td className="px-6 py-4 font-bold text-zinc-900 dark:text-zinc-100 text-sm">
+                      <td className="px-6 py-4 font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
                         ${tx.amount.toFixed(2)}
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant="outline" className="bg-zinc-100 text-zinc-700 border-zinc-200 text-[10px] font-bold">
+                        <Badge variant="outline" className="bg-zinc-100 text-zinc-700 border-zinc-200 text-[10px] font-semibold">
                           501(c)(3) Deductible
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button variant="ghost" size="sm" className="h-7 text-xs text-emerald-600 hover:text-emerald-700 font-semibold gap-1">
+                        <Button variant="ghost" size="sm" className="h-7 text-xs text-emerald-600 hover:text-emerald-700 font-normal gap-1">
                           <HugeiconsIcon icon={Mail01Icon} strokeWidth={2} className="size-3" />
                           <span>Resend Email</span>
                         </Button>

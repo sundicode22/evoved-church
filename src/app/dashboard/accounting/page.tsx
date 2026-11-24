@@ -324,7 +324,7 @@ export default function AccountingPage() {
           <div className="border-b border-zinc-200/80 bg-white px-8 py-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+                <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
                   Fund Accounting
                 </h1>
                 <p className="mt-0.5 text-xs text-zinc-400">
@@ -391,7 +391,7 @@ export default function AccountingPage() {
                 <Can permission="accounting.budgets">
                   <Button
                     variant="outline"
-                    className="h-8 rounded-lg px-3 text-xs font-semibold"
+                    className="h-8 rounded-lg px-3 text-xs font-normal"
                     onClick={() => setFundDialogOpen(true)}
                   >
                     New fund
@@ -399,7 +399,7 @@ export default function AccountingPage() {
                 </Can>
                 <Can permission="accounting.requisitions">
                   <Button
-                    className="h-8 gap-1.5 rounded-lg bg-[#22c55e] px-3.5 text-xs font-semibold text-white hover:bg-[#16a34a]"
+                    className="h-8 gap-1.5 rounded-lg bg-[#22c55e] px-3.5 text-xs font-normal text-white hover:bg-[#16a34a]"
                     onClick={() => setReqSheetOpen(true)}
                   >
                     <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
@@ -424,7 +424,7 @@ export default function AccountingPage() {
               <span className="text-zinc-300">·</span>
               <span>
                 Available:{" "}
-                <strong className="font-bold text-emerald-700 tabular-nums">
+                <strong className="font-semibold text-emerald-700 tabular-nums">
                   ${money(totalAvailable)}
                 </strong>
               </span>
@@ -434,7 +434,7 @@ export default function AccountingPage() {
                   render={<button type="button" className="outline-none" />}
                 >
                   Encumbered:{" "}
-                  <strong className="font-bold text-amber-700 tabular-nums">
+                  <strong className="font-semibold text-amber-700 tabular-nums">
                     ${money(totalEncumbered)}
                   </strong>
                 </HoverCardTrigger>
@@ -493,7 +493,7 @@ export default function AccountingPage() {
                             <div>
                               <Badge
                                 variant="outline"
-                                className={`text-[10px] font-bold tracking-wider uppercase ${
+                                className={`text-[10px] font-semibold tracking-wider uppercase ${
                                   fund.type === "unrestricted"
                                     ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                                     : "border-amber-200 bg-amber-50 text-amber-800"
@@ -501,7 +501,7 @@ export default function AccountingPage() {
                               >
                                 {String(fund.type).replace(/_/g, " ")}
                               </Badge>
-                              <h3 className="mt-2 text-sm font-bold text-zinc-900">{fund.name}</h3>
+                              <h3 className="mt-2 text-sm font-semibold text-zinc-900">{fund.name}</h3>
                               <HoverCard>
                                 <HoverCardTrigger
                                   render={
@@ -524,7 +524,7 @@ export default function AccountingPage() {
                           </div>
                           <div>
                             <p className="text-[11px] text-zinc-400">Available</p>
-                            <p className="text-xl font-bold tabular-nums text-zinc-900">
+                            <p className="text-xl font-semibold tabular-nums text-zinc-900">
                               ${money(net)}
                             </p>
                           </div>

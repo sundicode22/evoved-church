@@ -129,7 +129,7 @@ export default function PoliciesPage() {
           <div className="border-b border-zinc-200/80 bg-white px-8 py-5">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-zinc-900">
+                <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900">
                   <HugeiconsIcon
                     icon={FileValidationIcon}
                     strokeWidth={2}
@@ -145,7 +145,7 @@ export default function PoliciesPage() {
               <Can permission="policies.write">
                 <Button
                   onClick={openCreate}
-                  className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-semibold text-white hover:bg-[#16a34a]"
+                  className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-normal text-white hover:bg-[#16a34a]"
                 >
                   <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
                   New policy
@@ -209,7 +209,7 @@ export default function PoliciesPage() {
                           </Badge>
                           <span className="text-[10px] text-zinc-400">v{p.version}</span>
                         </div>
-                        <h2 className="text-sm font-bold text-zinc-900">{p.title}</h2>
+                        <h2 className="text-sm font-semibold text-zinc-900">{p.title}</h2>
                         <p className="line-clamp-2 text-xs text-zinc-500">
                           {p.summary || "No summary"}
                         </p>

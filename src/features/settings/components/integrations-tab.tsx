@@ -51,7 +51,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
       {PROVIDERS.map((p) => (
         <Card key={p.id} className="rounded-2xl border-zinc-200/80 bg-white shadow-xs">
           <CardHeader>
-            <CardTitle className="text-sm font-bold text-zinc-900">{p.name}</CardTitle>
+            <CardTitle className="text-sm font-semibold text-zinc-900">{p.name}</CardTitle>
             <CardDescription className="text-xs">{p.description}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -71,7 +71,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
             <Button
               disabled={!canEdit}
               onClick={() => toast.success(`${p.name} settings saved locally (demo)`)}
-              className="mt-2 h-9 w-full rounded-lg bg-[#22c55e] text-xs font-semibold text-white hover:bg-[#16a34a]"
+              className="mt-2 h-9 w-full rounded-lg bg-[#22c55e] text-xs font-normal text-white hover:bg-[#16a34a]"
             >
               Save {p.name}
             </Button>

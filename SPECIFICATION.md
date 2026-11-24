@@ -105,12 +105,16 @@ Routes: `/dashboard/campaigns`, `/dashboard/campaigns/[id]`.
 | `/dashboard/documents` | Media vault |
 | `/dashboard/metrics` | FP reports |
 | `/dashboard/settings` | Nomenclature + dynamic RBAC |
-| `/dashboard/sunday-services` | Run of service |
+| `/dashboard/services` | Multi-type services + run sheets (`/sunday-services` redirects) |
+| `/dashboard/calendar` | Church calendar — programs, dates, assignees |
 | `/dashboard/organigram` | Org tree |
 | `/dashboard/giving` | Tithes & pledges |
 
 ### API prefixes
-`/api/visitors`, `/members`, `/projects`, `/campaigns`, `/accounting`, `/settings/roles`, `/settings/abilities`, `/settings/permissions`, `/campuses`, `/organigram`, `/attendance`, `/documents`.
+`/api/visitors`, `/members`, `/projects`, `/campaigns`, `/accounting`, `/services`, `/calendar`, `/import`, `/settings/roles`, `/settings/abilities`, `/settings/permissions`, `/campuses`, `/organigram`, `/attendance`, `/documents`.
+
+### Leaving another ChMS
+Export CSV from the old tool → Settings → **Import CSV** → download Evolve template → dry-run → apply. Members/households and giving supported in v0.1 (generic CSV, not vendor APIs).
 
 ---
 
@@ -127,3 +131,7 @@ Routes: `/dashboard/campaigns`, `/dashboard/campaigns/[id]`.
 - [x] Budgets / expenses UX (funds, budget lines, requisition Sheet, confirm approve/post)  
 - [x] Policies CMS with TipTap editor + module binding  
 - [x] ConfirmAction alerts + Dialog modals where appropriate  
+- [x] Multi-service (not Sunday-only)  
+- [x] Church calendar programs + assignees  
+- [x] CSV migration import (members + giving)  
+

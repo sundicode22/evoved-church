@@ -128,7 +128,7 @@ function NodeCard({
               {node.department}
             </Badge>
           )}
-          <h3 className="mt-2 text-sm font-bold leading-snug text-zinc-900 dark:text-zinc-100">
+          <h3 className="mt-2 text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
             {node.title}
           </h3>
           {showName && (
@@ -138,7 +138,7 @@ function NodeCard({
           )}
         </div>
         <div
-          className={`flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+          className={`flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
             isRoot ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700"
           }`}
         >
@@ -151,7 +151,7 @@ function NodeCard({
           <HugeiconsIcon icon={UserGroupIcon} strokeWidth={1.8} className="size-3.5 text-zinc-400" />
           Span of care
         </span>
-        <span className="font-bold text-zinc-800 dark:text-zinc-200">
+        <span className="font-semibold text-zinc-800 dark:text-zinc-200">
           {node.spanOfCare.toLocaleString()}
         </span>
       </div>
@@ -315,7 +315,7 @@ export default function OrganigramPage() {
         <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                 <HugeiconsIcon icon={HierarchySquare02Icon} strokeWidth={2} className="size-6 text-emerald-600" />
                 <span>Leadership Organigram</span>
               </h1>
@@ -331,7 +331,7 @@ export default function OrganigramPage() {
               <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} className="size-4" />
               </button>
-              <Button className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#16a34a]">
+              <Button className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-normal text-white shadow-xs hover:bg-[#16a34a]">
                 <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
                 <span>Add Role</span>
               </Button>
@@ -350,7 +350,7 @@ export default function OrganigramPage() {
               <span className="mx-2 text-zinc-300">·</span>
               <span>
                 Span of care:{" "}
-                <strong className="font-bold text-emerald-700 dark:text-emerald-400">
+                <strong className="font-semibold text-emerald-700 dark:text-emerald-400">
                   {totalSpan.toLocaleString()} people
                 </strong>
               </span>

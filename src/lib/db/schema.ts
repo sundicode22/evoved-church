@@ -696,3 +696,96 @@ export const projectCards = pgTable("project_cards", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
+
+// ==========================================
+// MULTI-SERVICE DEFINITIONS (not Sunday-only)
+// ==========================================
+export const serviceTypeEnum = pgEnum("service_type", [
+  "sunday_worship",
+  "midweek",
+  "prayer",
+  "youth",
+  "kids",
+  "special",
+  "other",
+])
+
+export const serviceDefinitions = pgTable("service_definitions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: serviceTypeEnum("type").default("sunday_worship").notNull(),
+  locationLabel: varchar("location_label", { length: 255 }),
+  defaultDayOfWeek: integer("default_day_of_week"), // 0=Sun … 6=Sat
+  defaultStartTime: varchar("default_start_time", { length: 10 }), // HH:mm
+  recurrence: varchar("recurrence", { length: 50 }).default("weekly").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const serviceSegments = pgTable("service_segments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  serviceId: uuid("service_id")
+    .references(() => serviceDefinitions.id, { onDelete: "cascade" })
+    .notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  leader: varchar("leader", { length: 255 }),
+  durationMinutes: integer("duration_minutes").default(10).notNull(),
+  details: text("details"),
+  orderIndex: integer("order_index").default(0).notNull(),
+})
+
+export const serviceVolunteerSlots = pgTable("service_volunteer_slots", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  serviceId: uuid("service_id")
+    .references(() => serviceDefinitions.id, { onDelete: "cascade" })
+    .notNull(),
+  role: varchar("role", { length: 255 }).notNull(),
+  assigneeName: varchar("assignee_name", { length: 255 }),
+  status: varchar("status", { length: 50 }).default("needed").notNull(),
+  orderIndex: integer("order_index").default(0).notNull(),
+})
+
+// ==========================================
+// CHURCH CALENDAR — programs / occurrences / assignees
+// ==========================================
+export const churchPrograms = pgTable("church_programs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).default("ministry").notNull(),
+  description: text("description"),
+  locationLabel: varchar("location_label", { length: 255 }),
+  serviceId: uuid("service_id").references(() => serviceDefinitions.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const programOccurrences = pgTable("program_occurrences", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  programId: uuid("program_id")
+    .references(() => churchPrograms.id, { onDelete: "cascade" })
+    .notNull(),
+  campusId: uuid("campus_id").references(() => campuses.id),
+  startsAt: timestamp("starts_at").notNull(),
+  endsAt: timestamp("ends_at"),
+  allDay: boolean("all_day").default(false).notNull(),
+  status: varchar("status", { length: 30 }).default("scheduled").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const programAssignees = pgTable("program_assignees", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  occurrenceId: uuid("occurrence_id")
+    .references(() => programOccurrences.id, { onDelete: "cascade" })
+    .notNull(),
+  memberId: uuid("member_id").references(() => members.id),
+  userId: text("user_id").references(() => users.id),
+  displayName: varchar("display_name", { length: 255 }).notNull(),
+  roleLabel: varchar("role_label", { length: 50 }).default("volunteer").notNull(), // lead | volunteer | speaker
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
