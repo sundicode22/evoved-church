@@ -2,23 +2,24 @@ import { z } from "zod"
 
 export const importModeSchema = z.enum(["dry_run", "apply"])
 
+/** Permissive parse — row-level errors collected in importService (dry-run friendly). */
 export const memberCsvRowSchema = z.object({
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().optional(),
-  householdName: z.string().optional(),
-  householdRole: z.string().optional(),
+  firstName: z.string().optional().default(""),
+  lastName: z.string().optional().default(""),
+  email: z.string().optional().default(""),
+  phone: z.string().optional().default(""),
+  householdName: z.string().optional().default(""),
+  householdRole: z.string().optional().default(""),
 })
 
 export const givingCsvRowSchema = z.object({
-  email: z.string().optional(),
-  memberName: z.string().optional(),
-  amount: z.coerce.number().positive(),
-  fundCode: z.string().optional(),
-  contributionDate: z.string().min(8),
-  method: z.string().optional(),
-  reference: z.string().optional(),
+  email: z.string().optional().default(""),
+  memberName: z.string().optional().default(""),
+  amount: z.coerce.number().optional().default(0),
+  fundCode: z.string().optional().default(""),
+  contributionDate: z.string().optional().default(""),
+  method: z.string().optional().default(""),
+  reference: z.string().optional().default(""),
 })
 
 export const importMembersBodySchema = z.object({

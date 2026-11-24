@@ -134,4 +134,6 @@ Export CSV from the old tool → Settings → **Import CSV** → download Evolve
 - [x] Multi-service (not Sunday-only)  
 - [x] Church calendar programs + assignees  
 - [x] CSV migration import (members + giving)  
+- [x] First-release smoke (`bun scripts/smoke-first-release.ts` — 11/11)  
+
 
