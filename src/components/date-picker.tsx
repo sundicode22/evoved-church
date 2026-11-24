@@ -6,8 +6,7 @@ import { cn } from "cn"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Calendar03Icon } from "@hugeicons/core-free-icons"
+import { Calendar as CalendarIcon } from "lucide-react"
 
 interface DatePickerProps {
   value?: Date
@@ -44,7 +43,7 @@ function DatePicker({
           />
         }
       >
-        <HugeiconsIcon icon={Calendar03Icon} strokeWidth={1.8} className="size-3.5 text-emerald-600" />
+        <CalendarIcon strokeWidth={1.8} className="size-3.5 text-emerald-600" />
         {value ? format(value, "PPP") : <span>{placeholder}</span>}
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-0">

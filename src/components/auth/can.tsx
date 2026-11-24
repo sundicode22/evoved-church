@@ -12,8 +12,7 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { SecurityLockIcon } from "@hugeicons/core-free-icons"
+import { Lock } from "lucide-react"
 
 type CanProps = {
   permission?: PermissionKey | string
@@ -96,7 +95,7 @@ export function RequireAbility({
         <Empty className="border border-dashed border-zinc-200 bg-white max-w-md">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <HugeiconsIcon icon={SecurityLockIcon} className="size-4" />
+              <Lock className="size-4" />
             </EmptyMedia>
             <EmptyTitle>You don’t have access</EmptyTitle>
             <EmptyDescription>

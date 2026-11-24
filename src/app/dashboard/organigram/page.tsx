@@ -16,18 +16,12 @@ import {
 import { toast } from "sonner"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { apiClient, type ApiResponse } from "@/lib/axios"
 import { useBranchStore } from "@/store/use-branch-store"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  Notification03Icon,
-  HelpCircleIcon,
-  PlusSignIcon,
-  HierarchySquare02Icon,
-  UserGroupIcon,
-} from "@hugeicons/core-free-icons"
+import { Network, Plus, Users } from "lucide-react"
+import { PageHeader } from "@/components/page-header"
+import { TableAddButton } from "@/components/table-panel"
 
 interface OrgNode {
   id: string
@@ -108,7 +102,7 @@ function NodeCard({
       {...(overlay ? {} : drag.listeners)}
       {...(overlay ? {} : drag.attributes)}
       className={[
-        "w-64 touch-none select-none rounded-2xl border bg-white p-4 text-left shadow-xs transition-all dark:bg-zinc-900",
+        "w-64 touch-none select-none rounded-lg border bg-white p-4 text-left shadow-xs transition-all dark:bg-zinc-900",
         overlay ? "cursor-grabbing shadow-xl rotate-1" : "cursor-grab active:cursor-grabbing",
         drag.isDragging ? "opacity-40" : "",
         drop.isOver && !blocked
@@ -123,22 +117,22 @@ function NodeCard({
           {node.department && (
             <Badge
               variant="outline"
-              className="border-emerald-200 bg-emerald-50 text-[10px] font-semibold uppercase tracking-wider text-emerald-700"
+              className="border-emerald-200 bg-emerald-50 text-[10px] font-medium uppercase tracking-wider text-emerald-700"
             >
               {node.department}
             </Badge>
           )}
-          <h3 className="mt-2 text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
+          <h3 className="mt-2 text-sm font-medium leading-snug text-zinc-900 dark:text-zinc-100">
             {node.title}
           </h3>
           {showName && (
-            <p className="mt-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+            <p className="mt-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
               {node.name}
             </p>
           )}
         </div>
         <div
-          className={`flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+          className={`flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
             isRoot ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700"
           }`}
         >
@@ -148,10 +142,10 @@ function NodeCard({
 
       <div className="mt-3.5 flex items-center justify-between border-t border-zinc-100 pt-3 text-xs text-zinc-500 dark:border-zinc-800">
         <span className="flex items-center gap-1.5">
-          <HugeiconsIcon icon={UserGroupIcon} strokeWidth={1.8} className="size-3.5 text-zinc-400" />
+          <Users strokeWidth={1.8} className="size-3.5 text-zinc-400" />
           Span of care
         </span>
-        <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+        <span className="font-medium text-zinc-800 dark:text-zinc-200">
           {node.spanOfCare.toLocaleString()}
         </span>
       </div>
@@ -311,61 +305,40 @@ export default function OrganigramPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-[#fbfcfb] dark:bg-zinc-950">
-        <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-                <HugeiconsIcon icon={HierarchySquare02Icon} strokeWidth={2} className="size-6 text-emerald-600" />
-                <span>Leadership Organigram</span>
-              </h1>
-              <p className="mt-0.5 text-xs text-zinc-400">
-                Reporting lines across your ministry, with the number of people each role cares for.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <HugeiconsIcon icon={Notification03Icon} strokeWidth={2} className="size-4" />
-              </button>
-              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} className="size-4" />
-              </button>
-              <Button className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-normal text-white shadow-xs hover:bg-[#16a34a]">
-                <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
-                <span>Add Role</span>
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between text-xs text-zinc-500">
-            <div>
-              <span>
-                Viewing: <strong className="text-zinc-800 dark:text-zinc-200">{activeCampus.name}</strong>
-              </span>
+      <SidebarInset className="min-h-screen bg-white dark:bg-zinc-950">
+        <PageHeader
+          title="Organigram"
+          description="Reporting lines across your ministry."
+          icon={<Network className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+          actions={
+            <TableAddButton>
+              <Plus className="size-3.5" strokeWidth={1.75} />
+              Add Role
+            </TableAddButton>
+          }
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
+            <span>
+              Viewing: <span className="text-zinc-800">{activeCampus.name}</span>
               <span className="mx-2 text-zinc-300">·</span>
-              <span>
-                Roles: <strong className="text-zinc-800 dark:text-zinc-200">{nodes.length}</strong>
-              </span>
+              Roles: <span className="text-zinc-800">{nodes.length}</span>
               <span className="mx-2 text-zinc-300">·</span>
-              <span>
-                Span of care:{" "}
-                <strong className="font-semibold text-emerald-700 dark:text-emerald-400">
-                  {totalSpan.toLocaleString()} people
-                </strong>
+              Span of care:{" "}
+              <span className="font-medium text-emerald-700">
+                {totalSpan.toLocaleString()} people
               </span>
-            </div>
+            </span>
             <span className="text-[11px] text-zinc-400">
               Drag a role onto another to change who it reports to
             </span>
           </div>
-        </div>
+        </PageHeader>
 
         <div className="overflow-auto p-8">
           {loading ? (
             <p className="text-sm text-zinc-500">Loading organigram…</p>
           ) : error ? (
-            <div className="max-w-md rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            <div className="max-w-md rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
               Couldn&apos;t load the organigram: {error}
             </div>
           ) : roots.length === 0 ? (

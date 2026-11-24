@@ -9,7 +9,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  // Regular / Medium / Semibold only — never load Bold (700)
   weight: ["400", "500", "600"],
   display: "swap",
 });
@@ -23,9 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={cn(inter.variable, "h-full antialiased font-sans")}
+      className={cn(inter.variable, inter.className, "h-full antialiased font-sans")}
     >
-      <body className="min-h-full flex flex-col bg-[#fbfcfb] font-normal text-zinc-900 antialiased">
+      <body className={cn(inter.className, "min-h-full flex flex-col bg-white font-sans font-normal text-zinc-900 antialiased")}>
         <TooltipProvider>
           <QueryProvider>{children}</QueryProvider>
           <Toaster richColors position="top-right" />

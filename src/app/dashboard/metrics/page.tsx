@@ -13,18 +13,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  ChartHistogramIcon,
-  Coins01Icon,
-  UserGroupIcon,
-  ChurchIcon,
-} from "@hugeicons/core-free-icons"
 import { RequireAbility } from "@/components/auth/can"
 import { useFunds, useJournalEntries, useRequisitions } from "@/features/accounting/hooks/use-funds"
 import { useVisitorBoard } from "@/features/visitors/hooks/use-visitor-leads"
 import { useBranchStore } from "@/store/use-branch-store"
 import { useNomenclatureStore } from "@/features/settings/use-nomenclature"
+import { PageHeader } from "@/components/page-header"
+import { TablePanel } from "@/components/table-panel"
+import { BarChart3, Church, Coins, Users } from "lucide-react"
 
 export default function MetricsPage() {
   const locationLabel = useNomenclatureStore((s) => s.nomenclature.campusTermSingular)
@@ -50,21 +46,21 @@ export default function MetricsPage() {
       title: "Weekly attendance (demo)",
       val: "1,420",
       sub: `${locationLabel}: ${activeCampus.name}`,
-      icon: ChurchIcon,
+      icon: Church,
       color: "text-emerald-700 bg-emerald-50",
     },
     {
       title: "Unencumbered funds",
       val: `$${totalAvailable.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
       sub: `${fundList.length} active funds`,
-      icon: Coins01Icon,
+      icon: Coins,
       color: "text-blue-700 bg-blue-50",
     },
     {
       title: "Visitor pipeline",
       val: String(totalLeads),
       sub: `${stages.length} stages`,
-      icon: UserGroupIcon,
+      icon: Users,
       color: "text-purple-700 bg-purple-50",
     },
     {
@@ -75,7 +71,7 @@ export default function MetricsPage() {
           )}%`
         : "—",
       sub: `of $${totalBudget.toLocaleString()} total budget`,
-      icon: ChartHistogramIcon,
+      icon: BarChart3,
       color: "text-amber-700 bg-amber-50",
     },
   ]
@@ -90,31 +86,27 @@ export default function MetricsPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="bg-[#fbfcfb] min-h-screen">
+      <SidebarInset className="min-h-screen bg-white">
         <RequireAbility permission="reports.read">
-          <div className="border-b border-zinc-200/80 bg-white px-8 py-5">
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-              Financial Performance & Reports
-            </h1>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Live metrics scoped to the active {locationLabel.toLowerCase()}. Ledger rows show who
-              drafted and who posted.
-            </p>
-          </div>
+          <PageHeader
+            title="Reports"
+            description={`Live metrics for the active ${locationLabel.toLowerCase()}.`}
+            icon={<BarChart3 className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+          />
 
           <div className="p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {statCards.map((c) => (
                 <div
                   key={c.title}
-                  className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs space-y-3"
+                  className="rounded-lg border border-zinc-200/80 bg-white p-5 shadow-xs space-y-3"
                 >
                   <div className={`inline-flex size-9 items-center justify-center rounded-lg ${c.color}`}>
-                    <HugeiconsIcon icon={c.icon} className="size-4" />
+                    <c.icon className="size-4" />
                   </div>
                   <div>
                     <p className="text-xs text-zinc-400 font-medium">{c.title}</p>
-                    <p className="text-2xl font-semibold text-zinc-900 mt-1">{c.val}</p>
+                    <p className="text-xl font-medium text-zinc-900 mt-1">{c.val}</p>
                     <p className="text-[11px] text-zinc-400 mt-1">{c.sub}</p>
                   </div>
                 </div>
@@ -130,7 +122,7 @@ export default function MetricsPage() {
               </TabsList>
 
               <TabsContent value="funds" className="mt-4">
-                <div className="rounded-2xl border border-zinc-200/80 bg-white overflow-hidden">
+                <TablePanel>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -155,7 +147,7 @@ export default function MetricsPage() {
                             <TableCell>${budget.toLocaleString()}</TableCell>
                             <TableCell>${expended.toLocaleString()}</TableCell>
                             <TableCell className="text-amber-700">${enc.toLocaleString()}</TableCell>
-                            <TableCell className="font-semibold text-emerald-700">
+                            <TableCell className="font-medium text-emerald-700">
                               ${avail.toLocaleString()}
                             </TableCell>
                             <TableCell>{pct}%</TableCell>
@@ -164,11 +156,11 @@ export default function MetricsPage() {
                       })}
                     </TableBody>
                   </Table>
-                </div>
+                </TablePanel>
               </TabsContent>
 
               <TabsContent value="funnel" className="mt-4">
-                <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 space-y-3">
+                <TablePanel className="space-y-3 rounded-lg border bg-background p-5">
                   {stages.map((s: any) => {
                     const count = s.leadCount || s.leads?.length || 0
                     const width = totalLeads ? Math.max(8, Math.round((count / totalLeads) * 100)) : 8
@@ -190,11 +182,11 @@ export default function MetricsPage() {
                   {!stages.length && (
                     <p className="text-sm text-zinc-500">No visitor board data yet.</p>
                   )}
-                </div>
+                </TablePanel>
               </TabsContent>
 
               <TabsContent value="expenses" className="mt-4">
-                <div className="rounded-2xl border border-zinc-200/80 bg-white overflow-hidden">
+                <TablePanel>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -208,7 +200,7 @@ export default function MetricsPage() {
                     <TableBody>
                       {requisitions.map((r: any) => (
                         <TableRow key={r.id}>
-                          <TableCell className="font-semibold text-emerald-700">
+                          <TableCell className="font-medium text-emerald-700">
                             {r.requisitionNumber}
                           </TableCell>
                           <TableCell>{r.vendorName}</TableCell>
@@ -223,11 +215,11 @@ export default function MetricsPage() {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
+                </TablePanel>
               </TabsContent>
 
               <TabsContent value="ledger" className="mt-4">
-                <div className="rounded-2xl border border-zinc-200/80 bg-white overflow-hidden">
+                <TablePanel>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -241,7 +233,7 @@ export default function MetricsPage() {
                     <TableBody>
                       {journals.map((je: any) => (
                         <TableRow key={je.id}>
-                          <TableCell className="font-semibold text-emerald-700">
+                          <TableCell className="font-medium text-emerald-700">
                             {je.entryNumber}
                           </TableCell>
                           <TableCell>{je.memo}</TableCell>
@@ -267,7 +259,7 @@ export default function MetricsPage() {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
+                </TablePanel>
               </TabsContent>
             </Tabs>
           </div>

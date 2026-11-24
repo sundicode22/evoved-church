@@ -34,15 +34,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty"
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ConfirmAction } from "@/components/confirm-action"
 import { RichTextEditor } from "@/components/rich-text-editor"
+import { RowActionsMenu } from "@/components/row-actions-menu"
+import { StatusPill, TablePagination, TablePanel } from "@/components/table-panel"
 import { Can, RequireAbility } from "@/components/auth/can"
 import {
   usePolicies,
@@ -52,14 +56,21 @@ import {
   useDeletePolicy,
 } from "@/features/policies/hooks/use-policies"
 import { POLICY_MODULES, type ChurchPolicy, type PolicyModule } from "@/features/policies/schemas"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { FileValidationIcon, PlusSignIcon } from "@hugeicons/core-free-icons"
+import { PageHeader } from "@/components/page-header"
+import { FileCheck, Plus } from "lucide-react"
 
-const STATUS_STYLE: Record<string, string> = {
-  draft: "border-zinc-200 bg-zinc-50 text-zinc-600",
-  published: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  archived: "border-amber-200 bg-amber-50 text-amber-700",
-}
+const INVOLVED_ROLE_OPTIONS = [
+  "Pastor",
+  "Executive Pastor",
+  "Campus Pastor",
+  "Finance Director",
+  "Treasurer",
+  "Connections Lead",
+  "Children's Ministry",
+  "Volunteer",
+  "Staff",
+  "Administrator",
+]
 
 export default function PoliciesPage() {
   const [moduleFilter, setModuleFilter] = React.useState<string>("all")
@@ -78,6 +89,9 @@ export default function PoliciesPage() {
   const [module, setModule] = React.useState<PolicyModule>("general")
   const [summary, setSummary] = React.useState("")
   const [bodyHtml, setBodyHtml] = React.useState("<p></p>")
+  const [involvedRoles, setInvolvedRoles] = React.useState<string[]>([])
+  const [page, setPage] = React.useState(1)
+  const [pageSize, setPageSize] = React.useState(10)
 
   const update = useUpdatePolicy(editing?.id || "")
 
@@ -87,6 +101,7 @@ export default function PoliciesPage() {
     setModule("general")
     setSummary("")
     setBodyHtml("<p></p>")
+    setInvolvedRoles([])
     setEditorOpen(true)
   }
 
@@ -96,6 +111,7 @@ export default function PoliciesPage() {
     setModule(p.module)
     setSummary(p.summary || "")
     setBodyHtml(p.bodyHtml || "<p></p>")
+    setInvolvedRoles(p.involvedRoles ?? [])
     setEditorOpen(true)
   }
 
@@ -103,12 +119,12 @@ export default function PoliciesPage() {
     e.preventDefault()
     if (editing) {
       update.mutate(
-        { title, module, summary, bodyHtml },
+        { title, module, summary, bodyHtml, involvedRoles },
         { onSuccess: () => setEditorOpen(false) }
       )
     } else {
       create.mutate(
-        { title, module, summary, bodyHtml, status: "draft" },
+        { title, module, summary, bodyHtml, involvedRoles, status: "draft" },
         { onSuccess: () => setEditorOpen(false) }
       )
     }
@@ -124,143 +140,163 @@ export default function PoliciesPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-[#fbfcfb] dark:bg-zinc-950">
+      <SidebarInset className="min-h-screen bg-white dark:bg-zinc-950">
         <RequireAbility permission="policies.read">
-          <div className="border-b border-zinc-200/80 bg-white px-8 py-5">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900">
-                  <HugeiconsIcon
-                    icon={FileValidationIcon}
-                    strokeWidth={2}
-                    className="size-6 text-emerald-600"
-                  />
-                  Church Policies
-                </h1>
-                <p className="mt-0.5 text-xs text-zinc-400">
-                  Module-scoped policies for accounting, safety, visitors, and more — authored in a rich
-                  editor.
-                </p>
-              </div>
+          <PageHeader
+            title="Policies"
+            description="Module-scoped policies for your teams."
+            icon={<FileCheck className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            actions={
               <Can permission="policies.write">
                 <Button
                   onClick={openCreate}
-                  className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-normal text-white hover:bg-[#16a34a]"
+                  className="h-8 gap-1.5 bg-[#22c55e] text-xs font-normal text-white hover:bg-[#16a34a]"
                 >
-                  <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
+                  <Plus strokeWidth={2} className="size-3.5" />
                   New policy
                 </Button>
               </Can>
-            </div>
-          </div>
+            }
+          />
 
-          <div className="space-y-6 p-8">
-            <div className="flex items-center gap-3">
-              <Label className="text-xs font-semibold text-zinc-500">Module</Label>
-              <Select
-                value={moduleFilter}
-                items={moduleItems}
-                onValueChange={(v) => v && setModuleFilter(v)}
-              >
-                <SelectTrigger className="h-9 w-72">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {moduleItems.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              {isLoading &&
-                [0, 1, 2].map((i) => <Skeleton key={i} className="h-36 w-full rounded-2xl" />)}
-
-              {!isLoading && (data?.length ?? 0) === 0 && (
-                <Empty className="col-span-full border border-dashed border-zinc-200 py-12">
-                  <EmptyHeader>
-                    <EmptyTitle>No policies yet</EmptyTitle>
-                    <EmptyDescription>
-                      Create the first policy for a module your teams need to follow.
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              )}
-
-              {data?.map((p) => {
-                const moduleLabel =
-                  POLICY_MODULES.find((m) => m.value === p.module)?.label || p.module
-                return (
-                  <article
-                    key={p.id}
-                    className="flex flex-col rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 space-y-1">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <Badge variant="outline" className={`text-[10px] ${STATUS_STYLE[p.status]}`}>
-                            {p.status}
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px]">
-                            {moduleLabel}
-                          </Badge>
-                          <span className="text-[10px] text-zinc-400">v{p.version}</span>
-                        </div>
-                        <h2 className="text-sm font-semibold text-zinc-900">{p.title}</h2>
-                        <p className="line-clamp-2 text-xs text-zinc-500">
-                          {p.summary || "No summary"}
-                        </p>
-                      </div>
-                    </div>
-                    <Separator className="my-4" />
-                    <div className="mt-auto flex flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs"
-                        onClick={() => setPreview(p)}
-                      >
-                        Preview
-                      </Button>
-                      <Can permission="policies.write">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 text-xs"
-                          onClick={() => openEdit(p)}
-                        >
-                          Edit
-                        </Button>
-                      </Can>
-                      {p.status !== "published" && (
-                        <Can permission="policies.publish">
-                          <Button
-                            size="sm"
-                            className="h-8 bg-[#16a34a] text-xs text-white hover:bg-[#15803d]"
-                            onClick={() => setConfirmPublish(p)}
-                          >
-                            Publish
-                          </Button>
-                        </Can>
-                      )}
-                      <Can permission="policies.write">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 text-xs text-rose-600"
-                          onClick={() => setConfirmDelete(p)}
-                        >
-                          Delete
-                        </Button>
-                      </Can>
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
+          <div className="p-6 md:p-8">
+            <TablePanel>
+              <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                <Select
+                  value={moduleFilter}
+                  items={moduleItems}
+                  onValueChange={(v) => {
+                    if (!v) return
+                    setModuleFilter(v)
+                    setPage(1)
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-56">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {moduleItems.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-4">Policy</TableHead>
+                    <TableHead>Applies to</TableHead>
+                    <TableHead>Roles involved</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-10" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-8">
+                        <Skeleton className="h-8 w-full" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!isLoading && (data?.length ?? 0) === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
+                        No policies yet.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {(data ?? [])
+                    .slice((page - 1) * pageSize, page * pageSize)
+                    .map((p) => {
+                      const moduleLabel =
+                        POLICY_MODULES.find((m) => m.value === p.module)?.label || p.module
+                      return (
+                        <TableRow key={p.id}>
+                          <TableCell className="pl-4">
+                            <p className="text-foreground">{p.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {p.summary || "No summary"} · v{p.version}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="font-normal text-muted-foreground">
+                              {moduleLabel}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex max-w-xs flex-wrap gap-1">
+                              {(p.involvedRoles ?? []).length === 0 ? (
+                                <span className="text-muted-foreground">—</span>
+                              ) : (
+                                p.involvedRoles.map((role) => (
+                                  <Badge
+                                    key={role}
+                                    variant="outline"
+                                    className="font-normal text-muted-foreground"
+                                  >
+                                    {role}
+                                  </Badge>
+                                ))
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <StatusPill
+                              tone={
+                                p.status === "published"
+                                  ? "success"
+                                  : p.status === "archived"
+                                    ? "warning"
+                                    : "neutral"
+                              }
+                            >
+                              {p.status}
+                            </StatusPill>
+                          </TableCell>
+                          <TableCell className="pr-3 text-right">
+                            <RowActionsMenu
+                              label="Policy"
+                              groups={[
+                                {
+                                  items: [
+                                    { label: "Preview", onClick: () => setPreview(p) },
+                                    { label: "Edit", onClick: () => openEdit(p) },
+                                  ],
+                                },
+                                {
+                                  items: [
+                                    ...(p.status !== "published"
+                                      ? [{ label: "Publish", onClick: () => setConfirmPublish(p) }]
+                                      : []),
+                                    {
+                                      label: "Delete",
+                                      destructive: true,
+                                      onClick: () => setConfirmDelete(p),
+                                    },
+                                  ],
+                                },
+                              ]}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                </TableBody>
+              </Table>
+              <TablePagination
+                page={page}
+                pageSize={pageSize}
+                total={data?.length ?? 0}
+                onPageChange={setPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size)
+                  setPage(1)
+                }}
+              />
+            </TablePanel>
           </div>
 
           {/* Create / edit — inset Sheet + TipTap */}
@@ -276,7 +312,7 @@ export default function PoliciesPage() {
                 <SheetBody>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-semibold">Title</Label>
+                      <Label className="text-xs font-medium">Title</Label>
                       <Input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -285,7 +321,7 @@ export default function PoliciesPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold">Module</Label>
+                      <Label className="text-xs font-medium">Module</Label>
                       <Select
                         value={module}
                         items={POLICY_MODULES.map((m) => ({ value: m.value, label: m.label }))}
@@ -303,8 +339,26 @@ export default function PoliciesPage() {
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label className="text-xs font-medium">Roles involved</Label>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {INVOLVED_ROLE_OPTIONS.map((role) => (
+                          <label key={role} className="flex items-center gap-2 text-sm">
+                            <Checkbox
+                              checked={involvedRoles.includes(role)}
+                              onCheckedChange={(on) =>
+                                setInvolvedRoles((prev) =>
+                                  on ? [...prev, role] : prev.filter((item) => item !== role)
+                                )
+                              }
+                            />
+                            {role}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-semibold">Summary</Label>
+                      <Label className="text-xs font-medium">Summary</Label>
                       <Textarea
                         value={summary}
                         onChange={(e) => setSummary(e.target.value)}
@@ -314,7 +368,7 @@ export default function PoliciesPage() {
                       />
                     </div>
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-semibold">Body</Label>
+                      <Label className="text-xs font-medium">Body</Label>
                       <RichTextEditor value={bodyHtml} onChange={setBodyHtml} minHeight="280px" />
                     </div>
                   </div>

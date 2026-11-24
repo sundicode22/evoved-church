@@ -1,42 +1,68 @@
 "use client"
 
 import * as React from "react"
+import { Download, Plus, Search, ShieldCheck } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
+import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  Notification03Icon,
-  HelpCircleIcon,
-  Download01Icon,
-  PlusSignIcon,
-  SearchIcon,
-  FilterIcon,
-  ArrowUpDownIcon,
-  MoreHorizontalIcon,
-  UserGroupIcon,
-  CheckmarkCircle02Icon,
-  SecurityCheckIcon,
-} from "@hugeicons/core-free-icons"
-import { useMembers, useUserCategories } from "@/features/members/hooks/use-members"
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { useMembers } from "@/features/members/hooks/use-members"
 import { MemberDrawer } from "@/components/members/member-drawer"
 import { RequireAbility } from "@/components/auth/can"
 import { HOUSEHOLD_ROLE_LABELS, type HouseholdRole } from "@/features/members/schemas"
+import {
+  ColumnCustomize,
+  StatusPill,
+  TableAddButton,
+  TableChrome,
+  TablePagination,
+  TablePanel,
+  TableTabs,
+  useColumnVisibility,
+  type ColumnOption,
+} from "@/components/table-panel"
+import { RowActionsMenu } from "@/components/row-actions-menu"
+
+const COLUMNS: ColumnOption[] = [
+  { id: "name", label: "Name" },
+  { id: "lifecycle", label: "Lifecycle" },
+  { id: "household", label: "Household role" },
+  { id: "ministries", label: "Ministries" },
+  { id: "safety", label: "Child safety" },
+]
+
+const TABS = [
+  { id: "all", label: "All People" },
+  { id: "covenant_member", label: "Covenant" },
+  { id: "staff_minister", label: "Pastors & Elders" },
+  { id: "leader", label: "Leaders" },
+  { id: "prospect", label: "Guests" },
+]
 
 export default function MembersPage() {
-  const [activeTab, setActiveTab] = React.useState<string>("all")
+  const [activeTab, setActiveTab] = React.useState("all")
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
+  const [page, setPage] = React.useState(1)
+  const [pageSize, setPageSize] = React.useState(10)
+  const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
   const { data: membersResponse, isLoading } = useMembers({
     personType: activeTab === "all" ? undefined : activeTab,
     search: searchQuery,
   })
-  const { data: categories } = useUserCategories()
 
   const members = membersResponse?.data || []
-  const pagination = membersResponse?.pagination
+  const pageRows = members.slice((page - 1) * pageSize, page * pageSize)
 
   return (
     <SidebarProvider
@@ -48,219 +74,209 @@ export default function MembersPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="bg-[#fbfcfb] dark:bg-zinc-950 min-h-screen">
+      <SidebarInset className="min-h-screen bg-white">
         <RequireAbility permission="members.read">
-        {/* TOP HEADER */}
-        <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-                Church Members Directory
-              </h1>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Church members with household roles (Father, Mother, …), lifecycle stages, and safety clearances.
-              </p>
+          <PageHeader
+            title="Members"
+            description="Church members, household roles, and safety clearances."
+            actions={
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 rounded-lg border-zinc-200 text-xs font-normal shadow-xs"
+                >
+                  <Download className="size-3.5" strokeWidth={1.75} />
+                  Export
+                </Button>
+                <TableAddButton>
+                  <Plus className="size-3.5" strokeWidth={1.75} />
+                  Add Person
+                </TableAddButton>
+              </>
+            }
+          >
+            <div className="relative max-w-xs">
+              <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
+              <Input
+                placeholder="Search people…"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setPage(1)
+                }}
+                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
+              />
             </div>
+          </PageHeader>
 
-            <div className="flex items-center gap-3">
-              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                <HugeiconsIcon icon={Notification03Icon} strokeWidth={2} className="size-4" />
-              </button>
-              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} className="size-4" />
-              </button>
-
-              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-normal gap-1.5 shadow-2xs">
-                <HugeiconsIcon icon={Download01Icon} strokeWidth={2} className="size-3.5 text-zinc-600" />
-                <span>Export Directory</span>
-              </Button>
-
-              <Button className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-normal gap-1.5 shadow-xs">
-                <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
-                <span>Add Person</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* SUB-HEADER: TABS & FILTER TOOLBAR */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-4 text-xs font-semibold">
-                {[
-                  { id: "all", label: "All People" },
-                  { id: "covenant_member", label: "Covenant Members" },
-                  { id: "staff_minister", label: "Pastors & Elders" },
-                  { id: "leader", label: "Group Leaders" },
-                  { id: "prospect", label: "New Guests" },
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveTab(t.id)}
-                    className={`relative pb-2 transition-colors ${
-                      activeTab === t.id
-                        ? "text-[#16a34a] font-semibold after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-[#16a34a]"
-                        : "text-zinc-500 hover:text-zinc-800"
-                    }`}
-                  >
-                    <span>{t.label}</span>
-                  </button>
-                ))}
+          <div className="space-y-4 p-6 md:p-8">
+            {members.some(
+              (p: any) =>
+                p.backgroundCheckStatus === "expired" ||
+                (p.backgroundCheckExpiresAt &&
+                  new Date(p.backgroundCheckExpiresAt) <
+                    new Date(Date.now() + 30 * 86400000))
+            ) && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <span className="font-medium">Background check alert:</span> One or more members
+                have expired or soon-to-expire child-safety clearances.
               </div>
+            )}
 
-              <div className="text-xs text-zinc-400 pl-2 border-l border-zinc-200">
-                <span>Total Active Records: <strong className="text-zinc-700 dark:text-zinc-300">{members.length}</strong></span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="relative w-56">
-                <HugeiconsIcon
-                  icon={SearchIcon}
-                  strokeWidth={2}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400"
-                />
-                <Input
-                  placeholder="Search people..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 pl-8 text-xs bg-zinc-50 border-zinc-200 rounded-lg focus-visible:ring-emerald-500"
-                />
-              </div>
-
-              <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs text-zinc-600 border-zinc-200 rounded-lg gap-1.5">
-                <HugeiconsIcon icon={FilterIcon} strokeWidth={2} className="size-3 text-zinc-500" />
-                <span>Filter</span>
-              </Button>
-
-              <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs text-zinc-600 border-zinc-200 rounded-lg gap-1.5">
-                <HugeiconsIcon icon={ArrowUpDownIcon} strokeWidth={2} className="size-3 text-zinc-500" />
-                <span>Sort</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-8 space-y-4">
-          {members.some(
-            (p: any) =>
-              p.backgroundCheckStatus === "expired" ||
-              (p.backgroundCheckExpiresAt &&
-                new Date(p.backgroundCheckExpiresAt) < new Date(Date.now() + 30 * 86400000))
-          ) && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <strong>Background check alert:</strong> One or more members have expired or soon-to-expire
-              child-safety clearances. Review the Child Safety Clearance column.
-            </div>
-          )}
-          <div className="rounded-2xl border border-zinc-200/80 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-zinc-50/70 border-b border-zinc-200/70 text-zinc-400 font-semibold uppercase tracking-wider text-[11px] dark:bg-zinc-900/40">
-                  <tr>
-                    <th className="px-6 py-3.5">Name & Title</th>
-                    <th className="px-6 py-3.5">Lifecycle</th>
-                    <th className="px-6 py-3.5">Household role</th>
-                    <th className="px-6 py-3.5">Serving Ministries</th>
-                    <th className="px-6 py-3.5">Child Safety</th>
-                    <th className="px-6 py-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {members.map((person: any) => (
-                    <tr
+            <TablePanel>
+              <TableChrome
+                tabs={
+                  <TableTabs
+                    tabs={TABS.map((t) => ({
+                      ...t,
+                      count: t.id === "all" ? members.length : undefined,
+                    }))}
+                    value={activeTab}
+                    onChange={(id) => {
+                      setActiveTab(id)
+                      setPage(1)
+                    }}
+                  />
+                }
+                trailing={
+                  <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                }
+              />
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    {isVisible("name") && <TableHead className="pl-4">Name</TableHead>}
+                    {isVisible("lifecycle") && <TableHead>Lifecycle</TableHead>}
+                    {isVisible("household") && <TableHead>Household role</TableHead>}
+                    {isVisible("ministries") && <TableHead>Ministries</TableHead>}
+                    {isVisible("safety") && <TableHead>Child safety</TableHead>}
+                    <TableHead className="w-10" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="py-10 text-center text-sm text-zinc-500">
+                        Loading…
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!isLoading && members.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="py-10 text-center text-sm text-zinc-500">
+                        No members found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {pageRows.map((person: any) => (
+                    <TableRow
                       key={person.id}
-                      className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer"
+                      className="cursor-pointer"
                       onClick={() => setSelectedId(person.id)}
                     >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs">
-                            {person.firstName.charAt(0)}{person.lastName.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
-                              {person.firstName} {person.lastName}
-                            </p>
-                            {person.recordedTitle ? (
-                              <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-                                {person.recordedTitle}
+                      {isVisible("name") && (
+                        <TableCell className="pl-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-medium text-emerald-800">
+                              {person.firstName.charAt(0)}
+                              {person.lastName.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-medium text-zinc-900">
+                                {person.firstName} {person.lastName}
                               </p>
+                              <p className="text-xs text-zinc-500">
+                                {person.recordedTitle || "Main Location"}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                      )}
+                      {isVisible("lifecycle") && (
+                        <TableCell>
+                          <StatusPill tone="success">
+                            {String(person.personType).replaceAll("_", " ")}
+                          </StatusPill>
+                        </TableCell>
+                      )}
+                      {isVisible("household") && (
+                        <TableCell>
+                          {person.householdRole ? (
+                            <Badge
+                              variant="outline"
+                              className="px-1.5 font-normal text-zinc-600"
+                            >
+                              {HOUSEHOLD_ROLE_LABELS[person.householdRole as HouseholdRole] ||
+                                person.householdRole}
+                            </Badge>
+                          ) : (
+                            <span className="text-zinc-400">—</span>
+                          )}
+                        </TableCell>
+                      )}
+                      {isVisible("ministries") && (
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {person.ministryRoles?.length ? (
+                              person.ministryRoles.map((role: string) => (
+                                <span
+                                  key={role}
+                                  className="rounded-md border border-zinc-200 bg-white px-1.5 py-0.5 text-[11px] text-zinc-600"
+                                >
+                                  {role}
+                                </span>
+                              ))
                             ) : (
-                              <p className="text-[11px] text-zinc-400">Main Location</p>
+                              <span className="text-zinc-400">None</span>
                             )}
                           </div>
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <span className="inline-block rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200 uppercase">
-                          {person.personType.replace("_", " ")}
-                        </span>
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {person.householdRole ? (
-                          <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200">
-                            {HOUSEHOLD_ROLE_LABELS[person.householdRole as HouseholdRole] ||
-                              person.householdRole}
-                          </Badge>
-                        ) : (
-                          <span className="text-[11px] text-zinc-400">—</span>
-                        )}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-1">
-                          {person.ministryRoles && person.ministryRoles.length > 0 ? (
-                            person.ministryRoles.map((role: string) => (
-                              <span
-                                key={role}
-                                className="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
-                              >
-                                {role}
-                              </span>
-                            ))
+                        </TableCell>
+                      )}
+                      {isVisible("safety") && (
+                        <TableCell>
+                          {person.backgroundCheckStatus === "cleared" ? (
+                            <StatusPill tone="success">
+                              <ShieldCheck className="size-3 text-emerald-600" />
+                              Cleared
+                            </StatusPill>
+                          ) : person.backgroundCheckStatus === "expired" ? (
+                            <StatusPill tone="warning">Expired</StatusPill>
                           ) : (
-                            <span className="text-[11px] text-zinc-400 italic">None assigned</span>
+                            <span className="text-zinc-400">Not required</span>
                           )}
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {person.backgroundCheckStatus === "cleared" ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                            <HugeiconsIcon icon={SecurityCheckIcon} strokeWidth={2} className="size-3 text-emerald-600" />
-                            <span>Cleared</span>
-                          </span>
-                        ) : person.backgroundCheckStatus === "expired" ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                            Expired
-                          </span>
-                        ) : (
-                          <span className="text-[11px] text-zinc-400">Not required</span>
-                        )}
-                      </td>
-
-                      <td className="px-6 py-4 text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setSelectedId(person.id)
-                          }}
-                        >
-                          <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} className="size-4 text-zinc-400" />
-                        </Button>
-                      </td>
-                    </tr>
+                        </TableCell>
+                      )}
+                      <TableCell className="pr-3 text-right" onClick={(e) => e.stopPropagation()}>
+                        <RowActionsMenu
+                          groups={[
+                            {
+                              items: [
+                                {
+                                  label: "Open",
+                                  onClick: () => setSelectedId(person.id),
+                                },
+                              ],
+                            },
+                          ]}
+                        />
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+              <TablePagination
+                page={page}
+                pageSize={pageSize}
+                total={members.length}
+                onPageChange={setPage}
+                onPageSizeChange={(s) => {
+                  setPageSize(s)
+                  setPage(1)
+                }}
+              />
+            </TablePanel>
           </div>
-        </div>
         </RequireAbility>
 
         <MemberDrawer

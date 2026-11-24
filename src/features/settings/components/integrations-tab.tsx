@@ -49,7 +49,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
       {PROVIDERS.map((p) => (
-        <Card key={p.id} className="rounded-2xl border-zinc-200/80 bg-white shadow-xs">
+        <Card key={p.id} className="rounded-lg border-zinc-200/80 bg-white shadow-xs">
           <CardHeader>
             <CardTitle className="text-sm font-semibold text-zinc-900">{p.name}</CardTitle>
             <CardDescription className="text-xs">{p.description}</CardDescription>

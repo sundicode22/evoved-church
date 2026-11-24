@@ -32,15 +32,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { useVisitorDetail } from "@/features/visitors/hooks/use-visitor-leads"
 import { VISITOR_STAGE_LABELS } from "@/features/visitors/schemas"
 import { useKanbanStore } from "@/store/use-kanban-store"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  Calendar03Icon,
-  Mail01Icon,
-  NoteIcon,
-  SmartPhone01Icon,
-  Task01Icon,
-  UserIcon,
-} from "@hugeicons/core-free-icons"
+import { Calendar, ListTodo, Mail, Smartphone, StickyNote, User } from "lucide-react"
 
 export function VisitorDrawer() {
   const { isDrawerOpen, selectedLeadId, closeLeadDrawer } = useKanbanStore()
@@ -157,7 +149,7 @@ export function VisitorDrawer() {
                         <Empty className="border border-dashed border-zinc-200 py-10">
                           <EmptyHeader>
                             <EmptyMedia variant="icon">
-                              <HugeiconsIcon icon={Mail01Icon} strokeWidth={2} />
+                              <Mail />
                             </EmptyMedia>
                             <EmptyTitle>No activity yet</EmptyTitle>
                             <EmptyDescription>
@@ -199,7 +191,7 @@ export function VisitorDrawer() {
                       <Empty className="border border-dashed border-zinc-200 py-10">
                         <EmptyHeader>
                           <EmptyMedia variant="icon">
-                            <HugeiconsIcon icon={Calendar03Icon} strokeWidth={2} />
+                            <Calendar />
                           </EmptyMedia>
                           <EmptyTitle>No appointments</EmptyTitle>
                           <EmptyDescription>
@@ -224,7 +216,7 @@ export function VisitorDrawer() {
                       <Empty className="border border-dashed border-zinc-200 py-10">
                         <EmptyHeader>
                           <EmptyMedia variant="icon">
-                            <HugeiconsIcon icon={NoteIcon} strokeWidth={2} />
+                            <StickyNote />
                           </EmptyMedia>
                           <EmptyTitle>No pastoral notes</EmptyTitle>
                           <EmptyDescription>Private care notes stay with this record.</EmptyDescription>
@@ -236,7 +228,7 @@ export function VisitorDrawer() {
                       <Empty className="border border-dashed border-zinc-200 py-10">
                         <EmptyHeader>
                           <EmptyMedia variant="icon">
-                            <HugeiconsIcon icon={Task01Icon} strokeWidth={2} />
+                            <ListTodo />
                           </EmptyMedia>
                           <EmptyTitle>No follow-up tasks</EmptyTitle>
                           <EmptyDescription>Assign a next step for the welcome team.</EmptyDescription>
@@ -292,21 +284,17 @@ export function VisitorDrawer() {
 
                   <ul className="space-y-2.5 text-xs text-zinc-600">
                     <li className="flex items-center gap-2">
-                      <HugeiconsIcon icon={Mail01Icon} strokeWidth={2} className="size-3.5 text-zinc-400" />
+                      <Mail className="size-3.5 text-zinc-400" />
                       <span className="truncate">
                         {lead.contact?.email || lead.contactEmail || "—"}
                       </span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <HugeiconsIcon
-                        icon={SmartPhone01Icon}
-                        strokeWidth={2}
-                        className="size-3.5 text-zinc-400"
-                      />
+                      <Smartphone className="size-3.5 text-zinc-400" />
                       <span>{lead.contact?.phone || lead.contactPhone || "—"}</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <HugeiconsIcon icon={UserIcon} strokeWidth={2} className="size-3.5 text-zinc-400" />
+                      <User className="size-3.5 text-zinc-400" />
                       <span>{lead.contact?.source || lead.source || "Walk-in"}</span>
                     </li>
                   </ul>

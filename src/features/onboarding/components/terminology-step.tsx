@@ -1,9 +1,8 @@
 "use client"
 
-import { HugeiconsIcon } from "@hugeicons/react"
-import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 import { NOMENCLATURE_PRESETS, type NomenclaturePresetKey } from "@/features/onboarding/presets"
+import { CheckCircle2 } from "lucide-react"
 
 interface TerminologyStepProps {
   value: NomenclaturePresetKey
@@ -36,7 +35,7 @@ export function TerminologyStep({ value, onChange }: TerminologyStepProps) {
                 <span className="block text-xs text-zinc-500">{preset.description}</span>
               </span>
               {selected && (
-                <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-5 text-[#16a34a]" />
+                <CheckCircle2 className="size-5 text-[#16a34a]" />
               )}
             </button>
           )

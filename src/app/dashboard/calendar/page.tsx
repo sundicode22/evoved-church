@@ -48,8 +48,8 @@ import {
 } from "@/features/calendar/hooks/use-calendar"
 import { ASSIGNEE_ROLES, PROGRAM_TYPES } from "@/features/calendar/schemas"
 import type { CalendarOccurrence } from "@/features/calendar/schemas"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Calendar03Icon, PlusSignIcon } from "@hugeicons/core-free-icons"
+import { PageHeader } from "@/components/page-header"
+import { Calendar as CalendarIcon, Plus } from "lucide-react"
 
 export default function ChurchCalendarPage() {
   const [month, setMonth] = React.useState<Date>(new Date())
@@ -138,37 +138,27 @@ export default function ChurchCalendarPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-[#fbfcfb]">
+      <SidebarInset className="min-h-screen bg-white">
         <RequireAbility permission="calendar.read">
-          <div className="border-b border-zinc-200/80 bg-white px-8 py-5">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-zinc-900">
-                  <HugeiconsIcon
-                    icon={Calendar03Icon}
-                    strokeWidth={2}
-                    className="size-6 text-emerald-600"
-                  />
-                  Church calendar
-                </h1>
-                <p className="mt-0.5 text-xs text-zinc-400">
-                  Programs, worship services, outreach dates, and who is responsible.
-                </p>
-              </div>
+          <PageHeader
+            title="Calendar"
+            description="Programs, services, and who is responsible."
+            icon={<CalendarIcon className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            actions={
               <Can permission="calendar.write">
                 <Button
-                  className="h-9 gap-1.5 bg-[#22c55e] text-xs text-white hover:bg-[#16a34a]"
+                  className="h-8 gap-1.5 bg-[#22c55e] text-xs font-normal text-white hover:bg-[#16a34a]"
                   onClick={openCreate}
                 >
-                  <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
+                  <Plus strokeWidth={2} className="size-3.5" />
                   Add event
                 </Button>
               </Can>
-            </div>
-          </div>
+            }
+          />
 
           <div className="grid gap-6 p-8 lg:grid-cols-[340px_1fr]">
-            <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-xs">
+            <div className="rounded-lg border border-zinc-200/80 bg-white p-4 shadow-xs">
               <Calendar
                 mode="single"
                 month={month}
@@ -185,9 +175,9 @@ export default function ChurchCalendarPage() {
               />
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xs">
+            <div className="overflow-hidden rounded-lg border border-zinc-200/80 bg-white shadow-xs">
               <div className="border-b border-zinc-100 px-5 py-4">
-                <h2 className="text-sm font-bold text-zinc-900">
+                <h2 className="text-sm font-medium text-zinc-900">
                   {format(selectedDay, "EEEE, MMM d, yyyy")}
                 </h2>
                 <p className="text-xs text-zinc-400">
@@ -212,7 +202,7 @@ export default function ChurchCalendarPage() {
                   {dayEvents.map((o) => (
                     <li
                       key={o.id}
-                      className="rounded-xl border border-zinc-200/80 bg-[#fbfcfb] p-4"
+                      className="rounded-lg border border-zinc-200/80 bg-[#f4f6f5] p-4"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -231,7 +221,7 @@ export default function ChurchCalendarPage() {
                               {o.status}
                             </Badge>
                           </div>
-                          <h3 className="mt-1.5 text-sm font-bold text-zinc-900">
+                          <h3 className="mt-1.5 text-sm font-medium text-zinc-900">
                             {o.programTitle}
                           </h3>
                           <p className="mt-0.5 text-xs text-zinc-500">

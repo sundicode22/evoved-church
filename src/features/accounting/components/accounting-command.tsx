@@ -14,8 +14,7 @@ import {
 } from "@/components/ui/command"
 import { Button } from "@/components/ui/button"
 import { Kbd } from "@/components/ui/kbd"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { SearchIcon } from "@hugeicons/core-free-icons"
+import { Search as Search } from "lucide-react"
 
 type JumpItem = { id: string; label: string; hint?: string }
 
@@ -61,7 +60,7 @@ export function AccountingCommand({
         className="h-8 gap-2 text-xs text-zinc-500"
         onClick={() => setOpen(true)}
       >
-        <HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-3.5" />
+        <Search className="size-3.5" />
         Jump…
         <Kbd className="ml-1">⌘K</Kbd>
       </Button>

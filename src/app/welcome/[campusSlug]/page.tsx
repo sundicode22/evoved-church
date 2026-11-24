@@ -2,13 +2,12 @@
 
 import * as React from "react"
 import { useParams } from "next/navigation"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { BrandMark } from "@/features/auth/components/brand-mark"
+import { CheckCircle2 } from "lucide-react"
 
 function titleCase(slug: string): string {
   return slug
@@ -72,7 +71,7 @@ export default function WelcomePage() {
           {submitted ? (
             <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
               <span className="flex size-14 items-center justify-center rounded-full bg-emerald-50">
-                <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-8 text-[#16a34a]" />
+                <CheckCircle2 className="size-8 text-[#16a34a]" />
               </span>
               <h1 className="text-xl font-semibold tracking-tight text-slate-900">
                 Thank you, {name.trim().split(" ")[0]}!

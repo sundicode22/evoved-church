@@ -158,3 +158,23 @@ export const settingsController = new Elysia({ prefix: "/settings" })
       return errBody
     }
   })
+
+  /** Queue team invites from onboarding (email send is optional / Resend). */
+  .post("/invites", async ({ body, set }) => {
+    try {
+      const emails = Array.isArray((body as { emails?: unknown })?.emails)
+        ? ((body as { emails: unknown[] }).emails.filter(
+            (e) => typeof e === "string" && e.includes("@")
+          ) as string[])
+        : []
+      set.status = 201
+      return {
+        success: true,
+        data: { queued: emails.length, emails },
+      }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })

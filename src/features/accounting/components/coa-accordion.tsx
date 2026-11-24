@@ -152,11 +152,11 @@ export function ChartOfAccountsAccordion({ accounts }: { accounts: CoaAccount[] 
               <AccordionContent className="px-0 pb-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-[#f8faf9] hover:bg-[#f8faf9]">
-                      <TableHead className="px-5 text-xs">Account #</TableHead>
-                      <TableHead className="text-xs">Name</TableHead>
-                      <TableHead className="text-xs">Class</TableHead>
-                      <TableHead className="text-right text-xs">Balance</TableHead>
+                    <TableRow>
+                      <TableHead className="px-5">Account #</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Class</TableHead>
+                      <TableHead className="text-right">Balance</TableHead>
                       <TableHead className="w-10" />
                     </TableRow>
                   </TableHeader>

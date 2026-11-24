@@ -9,12 +9,7 @@ import {
   InputGroupButton,
 } from "@/components/ui/input-group"
 import { cn } from "cn"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  AttachmentIcon,
-  Cancel01Icon,
-  Upload01Icon,
-} from "@hugeicons/core-free-icons"
+import { Paperclip, Upload, X } from "lucide-react"
 
 export type AttachmentFile = {
   id: string
@@ -94,7 +89,7 @@ export function FileAttachment({
 
       <InputGroup className="h-auto min-h-9 border-dashed bg-[#f8faf9]">
         <InputGroupAddon align="inline-start">
-          <HugeiconsIcon icon={AttachmentIcon} strokeWidth={2} className="size-3.5" />
+          <Paperclip className="size-3.5" />
         </InputGroupAddon>
         <button
           type="button"
@@ -113,7 +108,7 @@ export function FileAttachment({
             disabled={disabled || value.length >= maxFiles}
             onClick={() => inputRef.current?.click()}
           >
-            <HugeiconsIcon icon={Upload01Icon} strokeWidth={2} className="size-3.5" />
+            <Upload className="size-3.5" />
             Browse
           </InputGroupButton>
         </InputGroupAddon>
@@ -154,7 +149,7 @@ export function FileAttachment({
                 onClick={() => remove(f.id)}
                 aria-label={`Remove ${f.name}`}
               >
-                <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-3.5" />
+                <X className="size-3.5" />
               </Button>
             </li>
           ))}

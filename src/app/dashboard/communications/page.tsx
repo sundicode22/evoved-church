@@ -3,19 +3,9 @@
 import * as React from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  Notification03Icon,
-  HelpCircleIcon,
-  Download01Icon,
-  PlusSignIcon,
-  Mail01Icon,
-  DropletIcon,
-  Time02Icon,
-  CheckmarkCircle02Icon,
-} from "@hugeicons/core-free-icons"
+import { CheckCircle2, Download, Droplet, Plus } from "lucide-react"
+import { PageHeader } from "@/components/page-header"
+import { TableAddButton } from "@/components/table-panel"
 
 export default function SequencesPage() {
   const steps = [
@@ -67,68 +57,54 @@ export default function SequencesPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="bg-[#fbfcfb] dark:bg-zinc-950 min-h-screen">
+      <SidebarInset className="min-h-screen bg-white dark:bg-zinc-950">
         
-        {/* TOP HEADER */}
-        <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                <HugeiconsIcon icon={DropletIcon} strokeWidth={2} className="size-6 text-emerald-600" />
-                <span>Automated Visitor Drip Sequences</span>
-              </h1>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Automated multi-touch nurture sequence transforming first-time guests into connected members.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                <HugeiconsIcon icon={Notification03Icon} strokeWidth={2} className="size-4" />
-              </button>
-              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} className="size-4" />
-              </button>
-
-              <Button variant="outline" className="h-9 px-3.5 rounded-lg border-zinc-200 text-xs font-normal gap-1.5 shadow-2xs">
-                <HugeiconsIcon icon={Download01Icon} strokeWidth={2} className="size-3.5 text-zinc-600" />
-                <span>Sequence Analytics</span>
-              </Button>
-
-              <Button className="h-9 px-4 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-normal gap-1.5 shadow-xs">
-                <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
-                <span>Add Drip Step</span>
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between text-xs text-zinc-500">
-            <div>
-              <span>Active Sequence: <strong className="text-zinc-800 dark:text-zinc-200">New Guest Follow-Up (4 Steps)</strong></span>
+        <PageHeader
+          title="Communications"
+          description="Automated follow-up sequences for first-time guests."
+          icon={<Droplet className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+          actions={
+            <>
+              <TableAddButton>
+                <Download className="size-3.5 text-zinc-500" strokeWidth={1.75} />
+                Sequence Analytics
+              </TableAddButton>
+              <TableAddButton>
+                <Plus className="size-3.5" strokeWidth={1.75} />
+                Add Drip Step
+              </TableAddButton>
+            </>
+          }
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
+            <span>
+              Active: <span className="text-zinc-800">New Guest Follow-Up (4 steps)</span>
               <span className="mx-2 text-zinc-300">·</span>
-              <span>Overall Conversion to Member: <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">34.2%</strong></span>
-            </div>
-            <span className="text-[11px] text-zinc-400">Triggered automatically when guest checks in on Sunday</span>
+              Conversion to member: <span className="font-medium text-emerald-700">34.2%</span>
+            </span>
+            <span className="text-[11px] text-zinc-400">
+              Triggered automatically when a guest checks in on Sunday
+            </span>
           </div>
-        </div>
+        </PageHeader>
 
         {/* SEQUENCE TIMELINE */}
         <div className="p-8 max-w-4xl space-y-6">
           {steps.map((st) => (
             <div
               key={st.step}
-              className="rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 space-y-3 hover:border-emerald-400 transition-colors"
+              className="rounded-lg border border-zinc-200/80 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 space-y-3 hover:border-emerald-400 transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 font-semibold text-xs">
+                  <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 font-medium text-xs">
                     #{st.step}
                   </div>
                   <div>
-                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 uppercase">
+                    <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 uppercase">
                       {st.trigger}
                     </span>
-                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1">
+                    <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mt-1">
                       {st.subject}
                     </h3>
                   </div>
@@ -136,7 +112,7 @@ export default function SequencesPage() {
 
                 <div className="text-right">
                   <span className="text-[10px] text-zinc-400">Open / Engagement</span>
-                  <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">{st.openRate}</p>
+                  <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">{st.openRate}</p>
                 </div>
               </div>
 
@@ -144,8 +120,8 @@ export default function SequencesPage() {
 
               <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 pl-11 flex items-center justify-between text-xs text-zinc-400">
                 <span>Channel: <strong className="text-zinc-700 dark:text-zinc-300">{st.channel}</strong></span>
-                <span className="flex items-center gap-1 text-emerald-600 font-semibold text-[11px]">
-                  <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-3.5" />
+                <span className="flex items-center gap-1 text-emerald-600 font-medium text-[11px]">
+                  <CheckCircle2 className="size-3.5" />
                   <span>Active & Firing</span>
                 </span>
               </div>

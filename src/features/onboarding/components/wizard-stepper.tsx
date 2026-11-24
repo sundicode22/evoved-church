@@ -1,6 +1,5 @@
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Tick02Icon } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
+import { Check } from "lucide-react"
 
 interface WizardStepperProps {
   steps: string[]
@@ -23,7 +22,7 @@ export function WizardStepper({ steps, current }: WizardStepperProps) {
                 !done && !active && "border-zinc-200 bg-white text-zinc-400"
               )}
             >
-              {done ? <HugeiconsIcon icon={Tick02Icon} strokeWidth={3} className="size-3" /> : i + 1}
+              {done ? <Check strokeWidth={3} className="size-3" /> : i + 1}
             </span>
             <span className={cn("hidden text-xs font-medium sm:block", active ? "text-slate-900" : "text-zinc-400")}>
               {label}

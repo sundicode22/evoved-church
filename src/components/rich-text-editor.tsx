@@ -8,16 +8,7 @@ import Link from "@tiptap/extension-link"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "cn"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  TextBoldIcon,
-  TextItalicIcon,
-  LeftToRightListBulletIcon,
-  LeftToRightListNumberIcon,
-  Link01Icon,
-  QuoteDownIcon,
-  Heading02Icon,
-} from "@hugeicons/core-free-icons"
+import { Bold as BoldIcon, Heading2, Italic as ItalicIcon, Link as LinkIcon, List, ListOrdered, Quote as QuoteIcon } from "lucide-react"
 
 type RichTextEditorProps = {
   value: string
@@ -105,43 +96,43 @@ export function RichTextEditor({
   const tools = [
     {
       label: "Bold",
-      icon: TextBoldIcon,
+      icon: BoldIcon,
       active: editor.isActive("bold"),
       action: () => editor.chain().focus().toggleBold().run(),
     },
     {
       label: "Italic",
-      icon: TextItalicIcon,
+      icon: ItalicIcon,
       active: editor.isActive("italic"),
       action: () => editor.chain().focus().toggleItalic().run(),
     },
     {
       label: "Heading",
-      icon: Heading02Icon,
+      icon: Heading2,
       active: editor.isActive("heading", { level: 2 }),
       action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
     },
     {
       label: "Bullets",
-      icon: LeftToRightListBulletIcon,
+      icon: List,
       active: editor.isActive("bulletList"),
       action: () => editor.chain().focus().toggleBulletList().run(),
     },
     {
       label: "Numbered",
-      icon: LeftToRightListNumberIcon,
+      icon: ListOrdered,
       active: editor.isActive("orderedList"),
       action: () => editor.chain().focus().toggleOrderedList().run(),
     },
     {
       label: "Quote",
-      icon: QuoteDownIcon,
+      icon: QuoteIcon,
       active: editor.isActive("blockquote"),
       action: () => editor.chain().focus().toggleBlockquote().run(),
     },
     {
       label: "Link",
-      icon: Link01Icon,
+      icon: LinkIcon,
       active: editor.isActive("link"),
       action: setLink,
     },
@@ -176,7 +167,7 @@ export function RichTextEditor({
                 t.action()
               }}
             >
-              <HugeiconsIcon icon={t.icon} strokeWidth={2} className="size-3.5" />
+              <t.icon className="size-3.5" />
             </Button>
           </React.Fragment>
         ))}

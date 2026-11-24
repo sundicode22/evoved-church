@@ -31,6 +31,7 @@ export const createPolicySchema = z.object({
   ]),
   summary: z.string().max(280).optional(),
   bodyHtml: z.string().min(1, "Policy body is required"),
+  involvedRoles: z.array(z.string()).optional(),
   status: policyStatusSchema.default("draft"),
 })
 
@@ -45,6 +46,7 @@ export type ChurchPolicy = {
   module: PolicyModule
   summary: string
   bodyHtml: string
+  involvedRoles: string[]
   status: "draft" | "published" | "archived"
   version: number
   updatedByName?: string

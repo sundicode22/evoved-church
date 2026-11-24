@@ -1,5 +1,6 @@
 "use client"
 
+import { Bell, ChevronsUpDown, CreditCard, LogOut, UserCircle } from "lucide-react"
 import {
   Avatar,
   AvatarFallback,
@@ -20,8 +21,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { MoreVerticalCircle01Icon, UserCircle02Icon, CreditCardIcon, Notification03Icon, Logout01Icon } from "@hugeicons/core-free-icons"
 
 export function NavUser({
   user,
@@ -33,29 +32,38 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              />
             }
           >
-            <Avatar className="size-8 rounded-lg grayscale">
+            <Avatar className="size-8 rounded-lg">
               <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+              <AvatarFallback className="rounded-lg bg-[#eaf5ea] text-[#1b5e20]">
+                {user.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs text-foreground/70">
-                {user.email}
-              </span>
+              <span className="truncate text-xs text-zinc-500">{user.email}</span>
             </div>
-            <HugeiconsIcon icon={MoreVerticalCircle01Icon} strokeWidth={2} className="ml-auto size-4" />
+            <ChevronsUpDown className="ml-auto size-4 text-zinc-400" strokeWidth={1.75} />
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="min-w-56"
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl shadow-xs"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
@@ -63,15 +71,13 @@ export function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="size-8">
+                  <Avatar className="size-8 rounded-lg">
                     <AvatarImage src={user.avatar} alt={user.name} />
                     <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">{user.name}</span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {user.email}
-                    </span>
+                    <span className="truncate text-xs text-zinc-500">{user.email}</span>
                   </div>
                 </div>
               </DropdownMenuLabel>
@@ -79,21 +85,21 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <HugeiconsIcon icon={UserCircle02Icon} strokeWidth={2} />
+                <UserCircle className="size-4" strokeWidth={1.75} />
                 Account
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <HugeiconsIcon icon={CreditCardIcon} strokeWidth={2} />
+                <CreditCard className="size-4" strokeWidth={1.75} />
                 Billing
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <HugeiconsIcon icon={Notification03Icon} strokeWidth={2} />
+                <Bell className="size-4" strokeWidth={1.75} />
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />
+              <LogOut className="size-4" strokeWidth={1.75} />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

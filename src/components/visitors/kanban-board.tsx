@@ -25,16 +25,7 @@ import {
   useUpdateLeadStage,
 } from "@/features/visitors/hooks/use-visitor-leads"
 import type { VisitorStage } from "@/features/visitors/schemas"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  PlusSignIcon,
-  SearchIcon,
-  MoreHorizontalIcon,
-  Calendar03Icon,
-  Task01Icon,
-  Folder01Icon,
-  NoteIcon,
-} from "@hugeicons/core-free-icons"
+import { Calendar, Folder, ListTodo, MoreHorizontal, Plus, Search as Search, StickyNote } from "lucide-react"
 
 const AVATAR_COLORS = [
   "bg-blue-100 text-blue-700",
@@ -86,7 +77,7 @@ function SortableCard({
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <Card
         onClick={() => onOpen(lead.id)}
-        className="cursor-grab active:cursor-grabbing rounded-xl border-zinc-200/60 shadow-sm hover:shadow-md transition-shadow p-3.5 space-y-2.5 bg-white"
+        className="cursor-grab active:cursor-grabbing rounded-xl border-zinc-200/60 shadow-xs hover:border-zinc-300 transition-colors p-3.5 space-y-2.5 bg-white"
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -112,19 +103,19 @@ function SortableCard({
         </div>
         <div className="flex items-center gap-3 text-zinc-400 pt-1 border-t border-zinc-100">
           <span className="flex items-center gap-1 text-[11px]">
-            <HugeiconsIcon icon={Calendar03Icon} className="size-3.5" />
+            <Calendar className="size-3.5" />
             {lead.metrics?.calendar ?? 0}
           </span>
           <span className="flex items-center gap-1 text-[11px]">
-            <HugeiconsIcon icon={Task01Icon} className="size-3.5" />
+            <ListTodo className="size-3.5" />
             {lead.metrics?.checklist ?? 0}
           </span>
           <span className="flex items-center gap-1 text-[11px]">
-            <HugeiconsIcon icon={Folder01Icon} className="size-3.5" />
+            <Folder className="size-3.5" />
             {lead.metrics?.files ?? 0}
           </span>
           <span className="flex items-center gap-1 text-[11px]">
-            <HugeiconsIcon icon={NoteIcon} className="size-3.5" />
+            <StickyNote className="size-3.5" />
             {lead.metrics?.notes ?? 0}
           </span>
         </div>
@@ -151,7 +142,7 @@ function Column({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col w-[300px] shrink-0 rounded-2xl border ${
+      className={`flex flex-col w-[300px] shrink-0 rounded-lg border ${
         isOver ? "border-emerald-300 bg-emerald-50/40" : "border-zinc-200/70 bg-[#f8faf9]"
       }`}
     >
@@ -163,7 +154,7 @@ function Column({
           </span>
         </div>
         <Button variant="ghost" size="icon-sm" className="text-zinc-400">
-          <HugeiconsIcon icon={MoreHorizontalIcon} className="size-4" />
+          <MoreHorizontal className="size-4" />
         </Button>
       </div>
       <SortableContext items={leads.map((l) => l.id)} strategy={verticalListSortingStrategy}>
@@ -177,7 +168,7 @@ function Column({
   )
 }
 
-export function KanbanBoard() {
+export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
   const { searchQuery, setSearchQuery, activeView, setActiveView, openLeadDrawer } = useKanbanStore()
   const { data, isLoading } = useVisitorBoard(searchQuery || undefined)
   const updateStage = useUpdateLeadStage()
@@ -229,34 +220,72 @@ export function KanbanBoard() {
     })
   }
 
+  const board = (
+    <>
+      {isLoading ? (
+        <div className="px-2 text-sm text-zinc-500">Loading visitor board…</div>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+        >
+          <div className="flex min-w-max items-start gap-4">
+            {stages.map((col: any) => (
+              <Column
+                key={col.id}
+                id={col.id}
+                title={col.title}
+                count={col.leadCount || col.leads?.length || 0}
+                leads={col.leads || []}
+                onOpen={openLeadDrawer}
+              />
+            ))}
+          </div>
+          <DragOverlay>
+            {activeLead ? (
+              <Card className="w-[280px] rotate-1 rounded-xl border-zinc-200 bg-white p-3.5 shadow-xs">
+                <p className="text-sm font-semibold">{activeLead.title}</p>
+                <p className="text-xs text-zinc-500">{activeLead.contactName}</p>
+              </Card>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      )}
+      <VisitorDrawer />
+    </>
+  )
+
+  if (embedded) {
+    return <div className="overflow-x-auto">{board}</div>
+  }
+
   return (
-    <div className="flex flex-col h-full bg-[#fbfcfb]">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-zinc-200/70 bg-white">
+    <div className="flex h-full flex-col bg-white">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200/70 bg-white px-6 py-4">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900 tracking-tight">Visitor Pipeline</h1>
+          <h1 className="text-xl font-medium tracking-tight text-zinc-900">Visitor Pipeline</h1>
           <p className="text-sm text-zinc-500">
             {data?.totalLeads ?? 0} guests across {stages.length} stages
           </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <HugeiconsIcon
-              icon={SearchIcon}
-              className="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400"
-            />
+            <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-zinc-400" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search visitors..."
-              className="pl-8 w-56 h-9 bg-white"
+              className="h-9 w-56 bg-white pl-8"
             />
           </div>
-          <div className="flex rounded-lg border border-zinc-200 p-0.5 bg-zinc-50">
+          <div className="flex rounded-lg border border-zinc-200 bg-zinc-50 p-0.5">
             <button
               type="button"
               onClick={() => setActiveView("board")}
-              className={`px-3 py-1.5 text-xs rounded-md font-medium ${
-                activeView === "board" ? "bg-white shadow-sm text-zinc-900" : "text-zinc-500"
+              className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+                activeView === "board" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"
               }`}
             >
               Board
@@ -264,55 +293,21 @@ export function KanbanBoard() {
             <button
               type="button"
               onClick={() => setActiveView("list")}
-              className={`px-3 py-1.5 text-xs rounded-md font-medium ${
-                activeView === "list" ? "bg-white shadow-sm text-zinc-900" : "text-zinc-500"
+              className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+                activeView === "list" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"
               }`}
             >
               List
             </button>
           </div>
-          <Button className="h-9 bg-[#16a34a] hover:bg-[#15803d] text-white">
-            <HugeiconsIcon icon={PlusSignIcon} className="size-4" />
+          <Button className="h-9 bg-[#16a34a] text-white hover:bg-[#15803d]">
+            <Plus className="size-4" />
             Add visitor
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto p-5">
-        {isLoading ? (
-          <div className="text-sm text-zinc-500 px-2">Loading visitor board…</div>
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
-          >
-            <div className="flex gap-4 items-start min-w-max">
-              {stages.map((col: any) => (
-                <Column
-                  key={col.id}
-                  id={col.id}
-                  title={col.title}
-                  count={col.leadCount || col.leads?.length || 0}
-                  leads={col.leads || []}
-                  onOpen={openLeadDrawer}
-                />
-              ))}
-            </div>
-            <DragOverlay>
-              {activeLead ? (
-                <Card className="rounded-xl border-zinc-200 shadow-lg p-3.5 w-[280px] bg-white rotate-1">
-                  <p className="text-sm font-semibold">{activeLead.title}</p>
-                  <p className="text-xs text-zinc-500">{activeLead.contactName}</p>
-                </Card>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-        )}
-      </div>
-
-      <VisitorDrawer />
+      <div className="flex-1 overflow-x-auto p-5">{board}</div>
     </div>
   )
 }

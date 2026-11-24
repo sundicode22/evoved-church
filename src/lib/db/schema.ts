@@ -154,6 +154,8 @@ export const users = pgTable("users", {
   image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Better Auth two-factor plugin
+  twoFactorEnabled: boolean("two_factor_enabled").default(false).notNull(),
   // Extended ChMS fields
   campusId: uuid("campus_id"),
   role: text("role").default("member").notNull(),
@@ -232,6 +234,7 @@ export const invitations = pgTable("invitations", {
   inviterId: text("inviter_id")
     .references(() => users.id)
     .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
 export const twoFactors = pgTable("two_factors", {
@@ -241,6 +244,9 @@ export const twoFactors = pgTable("two_factors", {
   userId: text("user_id")
     .references(() => users.id)
     .notNull(),
+  verified: boolean("verified").default(false),
+  failedVerificationCount: integer("failed_verification_count").default(0),
+  lockedUntil: timestamp("locked_until"),
 })
 
 // ==========================================

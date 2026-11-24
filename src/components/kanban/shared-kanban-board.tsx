@@ -17,8 +17,7 @@ import { CSS } from "@dnd-kit/utilities"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Calendar03Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons"
+import { Calendar, MoreHorizontal } from "lucide-react"
 
 export interface KanbanCardData {
   id: string
@@ -107,7 +106,7 @@ function CardView({
           ))}
           {card.dueLabel && (
             <span className="flex items-center gap-1">
-              <HugeiconsIcon icon={Calendar03Icon} strokeWidth={1.8} className="size-3" />
+              <Calendar strokeWidth={1.8} className="size-3" />
               {card.dueLabel}
             </span>
           )}
@@ -160,7 +159,7 @@ function Column({
   return (
     <div
       ref={setNodeRef}
-      className={`flex w-[300px] shrink-0 flex-col rounded-2xl border transition-colors ${
+      className={`flex w-[300px] shrink-0 flex-col rounded-lg border transition-colors ${
         isOver ? "border-emerald-300 bg-emerald-50/40" : "border-zinc-200/70 bg-[#f8faf9]"
       }`}
     >
@@ -172,7 +171,7 @@ function Column({
           </span>
         </div>
         <Button variant="ghost" size="icon-sm" className="text-zinc-400">
-          <HugeiconsIcon icon={MoreHorizontalIcon} className="size-4" />
+          <MoreHorizontal className="size-4" />
         </Button>
       </div>
       <SortableContext items={column.cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
@@ -231,7 +230,7 @@ export function SharedKanbanBoard({ columns, onMove, onCardClick, isLoading }: S
     return (
       <div className="flex gap-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-64 w-[300px] shrink-0 animate-pulse rounded-2xl bg-zinc-100" />
+          <div key={i} className="h-64 w-[300px] shrink-0 animate-pulse rounded-lg bg-zinc-100" />
         ))}
       </div>
     )

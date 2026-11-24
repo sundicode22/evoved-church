@@ -1,7 +1,10 @@
 "use client"
 
 import * as React from "react"
+import { formatDistanceToNow } from "date-fns"
+import { ListTodo, Plus, Search } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
+import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,19 +18,52 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { Can, RequireAbility } from "@/components/auth/can"
 import {
   SharedKanbanBoard,
   type KanbanColumnData,
 } from "@/components/kanban/shared-kanban-board"
 import {
+  ColumnCustomize,
+  StatusPill,
+  TableAddButton,
+  TableChrome,
+  TablePagination,
+  TablePanel,
+  ViewToggle,
+  useColumnVisibility,
+  type ColumnOption,
+} from "@/components/table-panel"
+import {
   useCreateProjectCard,
   useProjects,
   useUpdateProjectStage,
 } from "@/features/projects/hooks/use-projects"
 import type { ProjectStage } from "@/features/projects/schemas"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { PlusSignIcon, SearchIcon, Task01Icon } from "@hugeicons/core-free-icons"
+
+const COLUMNS: ColumnOption[] = [
+  { id: "title", label: "Task" },
+  { id: "project", label: "Project" },
+  { id: "stage", label: "Stage" },
+  { id: "priority", label: "Priority" },
+  { id: "assignee", label: "Assignee" },
+  { id: "due", label: "Due" },
+  { id: "updated", label: "Updated" },
+]
+
+const PRIORITY_TONE = {
+  high: "danger",
+  normal: "success",
+  low: "neutral",
+} as const
 
 const PRIORITY_STYLES = {
   high: "border-rose-200 bg-rose-50 text-rose-700",
@@ -39,12 +75,30 @@ export default function ProjectsPage() {
   const { data, isLoading } = useProjects()
   const updateStage = useUpdateProjectStage()
   const createCard = useCreateProjectCard()
+  const [view, setView] = React.useState<"table" | "board">("table")
   const [search, setSearch] = React.useState("")
   const [open, setOpen] = React.useState(false)
   const [title, setTitle] = React.useState("")
   const [projectName, setProjectName] = React.useState("")
+  const [page, setPage] = React.useState(1)
+  const [pageSize, setPageSize] = React.useState(10)
+  const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
 
   const query = search.trim().toLowerCase()
+  const flatCards = React.useMemo(() => {
+    const cards = (data?.columns ?? []).flatMap((col) =>
+      col.cards.map((c) => ({ ...c, stageLabel: col.title }))
+    )
+    if (!query) return cards
+    return cards.filter(
+      (c) =>
+        c.title.toLowerCase().includes(query) ||
+        c.projectName.toLowerCase().includes(query)
+    )
+  }, [data, query])
+
+  const pageRows = flatCards.slice((page - 1) * pageSize, page * pageSize)
+
   const columns = React.useMemo<KanbanColumnData[]>(
     () =>
       (data?.columns ?? []).map((col) => ({
@@ -92,88 +146,169 @@ export default function ProjectsPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-[#fbfcfb] dark:bg-zinc-950">
+      <SidebarInset className="min-h-screen bg-white">
         <RequireAbility permission="projects.read">
-          <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-                  <HugeiconsIcon icon={Task01Icon} strokeWidth={2} className="size-6 text-emerald-600" />
-                  <span>Projects</span>
-                </h1>
-                <p className="mt-0.5 text-xs text-zinc-400">
-                  Event logistics, facility upkeep, and follow-ups. Drag cards between columns as work progresses.
-                </p>
-              </div>
-              <Can permission="projects.write">
-                <Button
-                  onClick={() => setOpen(true)}
-                  className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-normal text-white shadow-xs hover:bg-[#16a34a]"
-                >
-                  <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
-                  <span>Add Card</span>
-                </Button>
-              </Can>
+          <PageHeader
+            title="Projects"
+            description={`Open ${total - doneCount} · Done ${doneCount}. List first; board is optional.`}
+            icon={<ListTodo className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            actions={<ViewToggle value={view} onChange={setView} />}
+          >
+            <div className="relative max-w-xs">
+              <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
+              <Input
+                placeholder="Search projects…"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setPage(1)
+                }}
+                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
+              />
             </div>
+          </PageHeader>
 
-            <div className="mt-4 flex items-center justify-between text-xs text-zinc-500">
-              <div>
-                <span>
-                  Open: <strong className="text-zinc-800">{total - doneCount} cards</strong>
-                </span>
-                <span className="mx-2 text-zinc-300">·</span>
-                <span>
-                  Done: <strong className="font-semibold text-emerald-700">{doneCount} cards</strong>
-                </span>
-              </div>
-              <div className="relative w-56">
-                <HugeiconsIcon
-                  icon={SearchIcon}
-                  strokeWidth={2}
-                  className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-zinc-400"
+          <div className="p-6 md:p-8">
+            {view === "board" ? (
+              <TablePanel className="overflow-x-auto rounded-lg border bg-background p-4">
+                <SharedKanbanBoard
+                  columns={columns}
+                  isLoading={isLoading}
+                  onMove={(id, stage) =>
+                    updateStage.mutate({ id, stage: stage as ProjectStage })
+                  }
                 />
-                <Input
-                  placeholder="Search projects..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs"
+              </TablePanel>
+            ) : (
+              <TablePanel>
+                <TableChrome
+                  trailing={
+                    <>
+                      <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                      <Can permission="projects.write">
+                        <TableAddButton onClick={() => setOpen(true)}>
+                          <Plus className="size-3.5" strokeWidth={1.75} />
+                          Add Task
+                        </TableAddButton>
+                      </Can>
+                    </>
+                  }
                 />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-x-auto p-6">
-            <SharedKanbanBoard
-              columns={columns}
-              isLoading={isLoading}
-              onMove={(id, stage) => updateStage.mutate({ id, stage: stage as ProjectStage })}
-            />
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      {isVisible("title") && <TableHead className="pl-4">Task</TableHead>}
+                      {isVisible("project") && <TableHead>Project</TableHead>}
+                      {isVisible("stage") && <TableHead>Stage</TableHead>}
+                      {isVisible("priority") && <TableHead>Priority</TableHead>}
+                      {isVisible("assignee") && <TableHead>Assignee</TableHead>}
+                      {isVisible("due") && <TableHead>Due</TableHead>}
+                      {isVisible("updated") && <TableHead>Updated</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="py-10 text-center text-sm text-zinc-500">
+                          Loading…
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {!isLoading && flatCards.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="py-10 text-center text-sm text-zinc-500">
+                          No project tasks yet.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {pageRows.map((card) => (
+                      <TableRow key={card.id}>
+                        {isVisible("title") && (
+                          <TableCell className="pl-4 font-medium text-zinc-900">
+                            {card.title}
+                          </TableCell>
+                        )}
+                        {isVisible("project") && (
+                          <TableCell>
+                            <StatusPill tone="success">{card.projectName}</StatusPill>
+                          </TableCell>
+                        )}
+                        {isVisible("stage") && (
+                          <TableCell className="text-zinc-600">{card.stageLabel}</TableCell>
+                        )}
+                        {isVisible("priority") && (
+                          <TableCell>
+                            <StatusPill tone={PRIORITY_TONE[card.priority]}>
+                              {card.priority}
+                            </StatusPill>
+                          </TableCell>
+                        )}
+                        {isVisible("assignee") && (
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="flex size-6 items-center justify-center rounded-full bg-sky-500 text-[10px] font-medium text-white">
+                                {(card.assigneeName || "?").slice(0, 2)}
+                              </span>
+                              <span className="text-sm text-zinc-600">
+                                {card.assigneeName || "Unassigned"}
+                              </span>
+                            </div>
+                          </TableCell>
+                        )}
+                        {isVisible("due") && (
+                          <TableCell className="text-zinc-500">{card.dueLabel || "—"}</TableCell>
+                        )}
+                        {isVisible("updated") && (
+                          <TableCell className="text-zinc-500">
+                            {card.stageChangedAt
+                              ? formatDistanceToNow(new Date(card.stageChangedAt), {
+                                  addSuffix: true,
+                                })
+                              : "—"}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <TablePagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={flatCards.length}
+                  onPageChange={setPage}
+                  onPageSizeChange={(s) => {
+                    setPageSize(s)
+                    setPage(1)
+                  }}
+                />
+              </TablePanel>
+            )}
           </div>
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
               <form onSubmit={submit} className="flex h-full flex-col">
                 <SheetHeader className="pr-12">
-                  <SheetTitle>Add project card</SheetTitle>
-                  <SheetDescription>New cards start in the Backlog column.</SheetDescription>
+                  <SheetTitle className="font-medium">Add project task</SheetTitle>
+                  <SheetDescription>New tasks start in Backlog.</SheetDescription>
                 </SheetHeader>
                 <SheetBody>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Title</Label>
+                    <Label className="text-xs font-medium">Title</Label>
                     <Input
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="h-9 text-xs"
+                      className="h-9 text-sm"
                       required
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Project</Label>
+                    <Label className="text-xs font-medium">Project</Label>
                     <Input
                       value={projectName}
                       onChange={(e) => setProjectName(e.target.value)}
                       placeholder="e.g. Easter Outreach"
-                      className="h-9 text-xs"
+                      className="h-9 text-sm"
                     />
                   </div>
                 </SheetBody>
@@ -186,7 +321,7 @@ export default function ProjectsPage() {
                     disabled={createCard.isPending || title.trim().length < 2}
                     className="h-9 bg-[#22c55e] text-white hover:bg-[#16a34a]"
                   >
-                    Add card
+                    Add task
                   </Button>
                 </SheetFooter>
               </form>

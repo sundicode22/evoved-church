@@ -1,11 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Add01Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Plus, X } from "lucide-react"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -51,7 +50,7 @@ export function InviteStep({ emails, onChange }: InviteStepProps) {
             className="h-10 rounded-lg bg-white"
           />
           <Button type="button" variant="outline" onClick={add} className="h-10 gap-1 rounded-lg px-3">
-            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
+            <Plus className="size-4" />
             Add
           </Button>
         </div>
@@ -71,7 +70,7 @@ export function InviteStep({ emails, onChange }: InviteStepProps) {
                 onClick={() => onChange(emails.filter((e) => e !== email))}
                 className="rounded-full p-0.5 hover:bg-emerald-100"
               >
-                <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-3" />
+                <X className="size-3" />
               </button>
             </li>
           ))}

@@ -14,8 +14,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons"
+import { MoreHorizontal } from "lucide-react"
 
 export type RowActionItem = {
   label: string
@@ -63,7 +62,7 @@ export function RowActionsMenu({
           />
         }
       >
-        <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} className="size-4" />
+        <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-44">
         <DropdownMenuGroup>

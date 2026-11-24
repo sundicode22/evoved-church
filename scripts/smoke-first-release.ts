@@ -67,8 +67,22 @@ await check("import.members dry_run", async () => {
   const r = await importService.importMembers({
     mode: "dry_run",
     rows: [
-      { firstName: "Ada", lastName: "Lovelace", email: "ada@example.org" },
-      { firstName: "", lastName: "Bad", email: "x" },
+      {
+        firstName: "Ada",
+        lastName: "Lovelace",
+        email: "ada@example.org",
+        phone: "",
+        householdName: "Lovelace",
+        householdRole: "head",
+      },
+      {
+        firstName: "",
+        lastName: "Bad",
+        email: "x",
+        phone: "",
+        householdName: "",
+        householdRole: "",
+      },
     ],
   })
   if (r.valid !== 1) throw new Error(`expected 1 valid, got ${r.valid}`)
@@ -78,7 +92,16 @@ await check("import.members dry_run", async () => {
 await check("import.members apply", async () => {
   const r = await importService.importMembers({
     mode: "apply",
-    rows: [{ firstName: "Grace", lastName: "Hopper", email: "grace@example.org" }],
+    rows: [
+      {
+        firstName: "Grace",
+        lastName: "Hopper",
+        email: "grace@example.org",
+        phone: "",
+        householdName: "Hopper",
+        householdRole: "head",
+      },
+    ],
   })
   if (r.imported !== 1) throw new Error("apply did not import")
 })
@@ -89,9 +112,12 @@ await check("import.giving dry_run", async () => {
     rows: [
       {
         email: "ada@example.org",
+        memberName: "Ada Lovelace",
         amount: 25,
         contributionDate: "2024-06-01",
         fundCode: "GEN-100",
+        method: "cash",
+        reference: "",
       },
     ],
   })

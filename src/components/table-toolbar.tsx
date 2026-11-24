@@ -15,14 +15,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  ArrowDown01Icon,
-  Download01Icon,
-  FilterIcon,
-  MoreHorizontalIcon,
-  SearchIcon,
-} from "@hugeicons/core-free-icons"
+import { ChevronDown, Download, Filter as Filter, MoreHorizontal, Search as Search } from "lucide-react"
 
 export type TableToolbarAction = {
   label: string
@@ -84,11 +77,7 @@ export function TableToolbar({
       <div className="flex flex-wrap items-center gap-2">
         {onSearchChange && (
           <div className="relative w-44 sm:w-56">
-            <HugeiconsIcon
-              icon={SearchIcon}
-              strokeWidth={2}
-              className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400"
-            />
+            <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
             <Input
               value={search ?? ""}
               onChange={(e) => onSearchChange(e.target.value)}
@@ -109,7 +98,7 @@ export function TableToolbar({
               className="h-8 gap-1.5 text-xs"
               onClick={onFilter}
             >
-              <HugeiconsIcon icon={FilterIcon} strokeWidth={2} className="size-3.5" />
+              <Filter className="size-3.5" />
               Filter
             </Button>
           )}
@@ -121,7 +110,7 @@ export function TableToolbar({
               className="h-8 gap-1.5 text-xs"
               onClick={onExport}
             >
-              <HugeiconsIcon icon={Download01Icon} strokeWidth={2} className="size-3.5" />
+              <Download className="size-3.5" />
               Export
             </Button>
           )}
@@ -132,8 +121,8 @@ export function TableToolbar({
                   <Button variant="outline" size="sm" className="h-8 px-2 text-xs" />
                 }
               >
-                <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} className="size-3.5" />
-                <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-3 opacity-50" />
+                <MoreHorizontal className="size-3.5" />
+                <ChevronDown className="size-3 opacity-50" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-48">
                 <DropdownMenuGroup>

@@ -16,8 +16,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { MoreHorizontalCircle01Icon, Folder01Icon, Share01Icon, Delete02Icon } from "@hugeicons/core-free-icons"
+import { Folder, MoreHorizontal, Share2, Trash2 } from "lucide-react"
 
 export function NavDocuments({
   items,
@@ -48,7 +47,7 @@ export function NavDocuments({
                   />
                 }
               >
-                <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
+                <MoreHorizontal />
                 <span className="sr-only">More</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -57,16 +56,16 @@ export function NavDocuments({
                 align={isMobile ? "end" : "start"}
               >
                 <DropdownMenuItem>
-                  <HugeiconsIcon icon={Folder01Icon} strokeWidth={2} />
+                  <Folder />
                   <span>Open</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <HugeiconsIcon icon={Share01Icon} strokeWidth={2} />
+                  <Share2 />
                   <span>Share</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive">
-                  <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
+                  <Trash2 />
                   <span>Delete</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -75,7 +74,7 @@ export function NavDocuments({
         ))}
         <SidebarMenuItem>
           <SidebarMenuButton className="text-sidebar-foreground/70">
-            <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} className="text-sidebar-foreground/70" />
+            <MoreHorizontal className="text-sidebar-foreground/70" />
             <span>More</span>
           </SidebarMenuButton>
         </SidebarMenuItem>

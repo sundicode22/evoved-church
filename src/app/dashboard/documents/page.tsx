@@ -34,17 +34,9 @@ import {
   type ChurchDocumentDto,
   type DocumentFolderDto,
 } from "@/features/documents/schemas"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  Notification03Icon,
-  HelpCircleIcon,
-  PlusSignIcon,
-  SearchIcon,
-  Folder01Icon,
-  File01Icon,
-  SecurityCheckIcon,
-  Upload01Icon,
-} from "@hugeicons/core-free-icons"
+import { PageHeader } from "@/components/page-header"
+import { TableAddButton, TablePanel } from "@/components/table-panel"
+import { File as File, Folder as Folder, Plus, Search as Search, ShieldCheck, Upload as Upload } from "lucide-react"
 
 const ROLE_LABELS: Record<string, string> = {
   public: "Public",
@@ -68,7 +60,7 @@ function RoleBadge({ role }: { role: string }) {
   return (
     <Badge
       variant="outline"
-      className={`text-[10px] font-semibold ${ROLE_STYLES[role] ?? ROLE_STYLES.member}`}
+      className={`text-[10px] font-medium ${ROLE_STYLES[role] ?? ROLE_STYLES.member}`}
     >
       {ROLE_LABELS[role] ?? role}
     </Badge>
@@ -231,69 +223,41 @@ export default function DocumentsPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-[#fbfcfb] dark:bg-zinc-950">
-        <div className="border-b border-zinc-200/80 bg-white px-8 py-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-                <HugeiconsIcon icon={SecurityCheckIcon} strokeWidth={2} className="size-6 text-emerald-600" />
-                <span>Documents</span>
-              </h1>
-              <p className="mt-0.5 text-xs text-zinc-400">
-                Bylaws, minutes, handbooks, and sermon files, with access limited by role.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <HugeiconsIcon icon={Notification03Icon} strokeWidth={2} className="size-4" />
-              </button>
-              <button className="flex size-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} className="size-4" />
-              </button>
-              <Button
-                variant="outline"
-                onClick={() => setFolderDialog(true)}
-                className="h-9 gap-1.5 rounded-lg border-zinc-200 px-3.5 text-xs font-normal shadow-2xs"
-              >
-                <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-3.5 text-zinc-600" />
-                <span>New Folder</span>
-              </Button>
-              <Button
-                onClick={() => setUploadDialog(true)}
-                className="h-9 gap-1.5 rounded-lg bg-[#22c55e] px-4 text-xs font-normal text-white shadow-xs hover:bg-[#16a34a]"
-              >
-                <HugeiconsIcon icon={Upload01Icon} strokeWidth={2.5} className="size-3.5" />
-                <span>Upload</span>
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between text-xs text-zinc-500">
-            <div>
-              <span>
-                Folders: <strong className="text-zinc-800 dark:text-zinc-200">{folders.length}</strong>
-              </span>
+      <SidebarInset className="min-h-screen bg-white dark:bg-zinc-950">
+                <PageHeader
+          title="Documents"
+          description="Bylaws, minutes, and handbooks with role-based access."
+          icon={<ShieldCheck className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+          actions={
+            <>
+              <TableAddButton onClick={() => setFolderDialog(true)}>
+                <Plus className="size-3.5 text-zinc-500" strokeWidth={1.75} />
+                New Folder
+              </TableAddButton>
+              <TableAddButton onClick={() => setUploadDialog(true)}>
+                <Upload className="size-3.5 text-zinc-500" strokeWidth={1.75} />
+                Upload
+              </TableAddButton>
+            </>
+          }
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
+            <span>
+              Folders: <span className="text-zinc-800">{folders.length}</span>
               <span className="mx-2 text-zinc-300">·</span>
-              <span>
-                Files: <strong className="text-zinc-800 dark:text-zinc-200">{documents.length}</strong>
-              </span>
-            </div>
-            <div className="relative w-56">
-              <HugeiconsIcon
-                icon={SearchIcon}
-                strokeWidth={2}
-                className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-zinc-400"
-              />
+              Files: <span className="text-zinc-800">{documents.length}</span>
+            </span>
+            <div className="relative w-full max-w-xs">
+              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-zinc-400" />
               <Input
-                placeholder="Search documents..."
+                placeholder="Search documents…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs focus-visible:ring-emerald-500"
+                className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
               />
             </div>
           </div>
-        </div>
+        </PageHeader>
 
         <div className="space-y-8 p-8">
           {loading ? (
@@ -301,7 +265,7 @@ export default function DocumentsPage() {
           ) : (
             <>
               <section className="space-y-3">
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Folders</h3>
+                <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Folders</h3>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {visibleFolders.map((folder) => {
                     const active = folder.id === selectedFolderId
@@ -317,16 +281,16 @@ export default function DocumentsPage() {
                             setSelectedFolderId(active ? null : folder.id)
                           }
                         }}
-                        className={`cursor-pointer rounded-xl border p-4 shadow-sm transition-all hover:shadow-md ${
+                        className={`cursor-pointer rounded-lg border p-4 shadow-sm transition-all hover:shadow-md ${
                           active ? "border-emerald-400 ring-2 ring-emerald-100" : "border-zinc-200/60 hover:border-emerald-300"
                         }`}
                       >
                         <div className="flex items-start gap-3">
                           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                            <HugeiconsIcon icon={Folder01Icon} strokeWidth={1.8} className="size-5" />
+                            <Folder strokeWidth={1.8} className="size-5" />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-zinc-900">{folder.name}</p>
+                            <p className="truncate text-sm font-medium text-zinc-900">{folder.name}</p>
                             <p className="mt-0.5 text-xs text-zinc-500">
                               {folder.itemCount} {folder.itemCount === 1 ? "file" : "files"}
                             </p>
@@ -347,7 +311,7 @@ export default function DocumentsPage() {
 
               <section className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                     {selectedFolder ? selectedFolder.name : "All files"}
                   </h3>
                   {selectedFolder && (
@@ -360,31 +324,31 @@ export default function DocumentsPage() {
                   )}
                 </div>
 
-                <Card className="overflow-hidden rounded-2xl border-zinc-200/80 p-0 shadow-xs">
+                <TablePanel>
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-zinc-50/60">
-                        <TableHead className="px-5 text-[11px] uppercase tracking-wider">Name</TableHead>
-                        <TableHead className="text-[11px] uppercase tracking-wider">Folder</TableHead>
-                        <TableHead className="text-[11px] uppercase tracking-wider">Size</TableHead>
-                        <TableHead className="text-[11px] uppercase tracking-wider">Added</TableHead>
-                        <TableHead className="text-[11px] uppercase tracking-wider">Access</TableHead>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="pl-4">Name</TableHead>
+                        <TableHead>Folder</TableHead>
+                        <TableHead>Size</TableHead>
+                        <TableHead>Added</TableHead>
+                        <TableHead>Access</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {visibleDocs.map((doc) => (
                         <TableRow key={doc.id}>
-                          <TableCell className="px-5">
+                          <TableCell className="pl-4">
                             <a
                               href={doc.cloudinaryUrl}
                               target="_blank"
                               rel="noreferrer"
                               className="flex items-center gap-2.5 font-medium text-zinc-900 hover:text-emerald-700"
                             >
-                              <HugeiconsIcon icon={File01Icon} strokeWidth={1.8} className="size-4 text-emerald-600" />
+                              <File strokeWidth={1.8} className="size-4 text-emerald-600" />
                               <span className="truncate">{doc.title}</span>
                             </a>
-                            <p className="mt-0.5 pl-6.5 text-[11px] text-zinc-400">by {doc.uploadedBy}</p>
+                            <p className="mt-0.5 pl-6.5 text-xs text-zinc-400">by {doc.uploadedBy}</p>
                           </TableCell>
                           <TableCell className="text-zinc-500">{folderName(doc.folderId)}</TableCell>
                           <TableCell className="text-zinc-500">{formatSize(doc.fileSizeBytes)}</TableCell>
@@ -405,7 +369,7 @@ export default function DocumentsPage() {
                       )}
                     </TableBody>
                   </Table>
-                </Card>
+                </TablePanel>
               </section>
             </>
           )}
@@ -420,7 +384,7 @@ export default function DocumentsPage() {
               </SheetHeader>
               <SheetBody>
                 <div className="grid gap-1.5">
-                  <Label htmlFor="folder-name" className="text-xs font-semibold text-zinc-700">
+                  <Label htmlFor="folder-name" className="text-xs font-medium text-zinc-700">
                     Name
                   </Label>
                   <Input
@@ -434,7 +398,7 @@ export default function DocumentsPage() {
                   />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label htmlFor="folder-role" className="text-xs font-semibold text-zinc-700">
+                  <Label htmlFor="folder-role" className="text-xs font-medium text-zinc-700">
                     Who can view
                   </Label>
                   <select
@@ -484,17 +448,17 @@ export default function DocumentsPage() {
               </SheetHeader>
               <SheetBody>
                 <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-zinc-700">File</Label>
+                  <Label className="text-xs font-medium text-zinc-700">File</Label>
                   <input
                     ref={fileInputRef}
                     type="file"
                     onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
-                    className="block w-full cursor-pointer rounded-lg border border-dashed border-zinc-300 bg-[#f8faf9] p-3 text-xs text-zinc-600 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-emerald-700"
+                    className="block w-full cursor-pointer rounded-lg border border-dashed border-zinc-300 bg-[#f8faf9] p-3 text-xs text-zinc-600 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-emerald-700"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-1.5">
-                    <Label htmlFor="upload-folder" className="text-xs font-semibold text-zinc-700">
+                    <Label htmlFor="upload-folder" className="text-xs font-medium text-zinc-700">
                       Folder
                     </Label>
                     <select
@@ -512,7 +476,7 @@ export default function DocumentsPage() {
                     </select>
                   </div>
                   <div className="grid gap-1.5">
-                    <Label htmlFor="upload-role" className="text-xs font-semibold text-zinc-700">
+                    <Label htmlFor="upload-role" className="text-xs font-medium text-zinc-700">
                       Who can view
                     </Label>
                     <select

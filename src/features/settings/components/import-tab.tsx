@@ -23,8 +23,7 @@ import {
   GIVING_CSV_HEADERS,
   MEMBER_CSV_HEADERS,
 } from "@/features/import/schemas"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { InformationCircleIcon } from "@hugeicons/core-free-icons"
+import { Info } from "lucide-react"
 
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text
@@ -176,7 +175,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
   return (
     <div className="space-y-6">
       <Alert>
-        <HugeiconsIcon icon={InformationCircleIcon} strokeWidth={2} className="size-4" />
+        <Info className="size-4" />
         <AlertTitle>Leaving another ChMS</AlertTitle>
         <AlertDescription className="text-xs">
           Export members and giving as CSV from your old tool (Planning Center, Breeze, Rock,
@@ -235,7 +234,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
                 {Object.keys(rows[0])
                   .slice(0, 6)
                   .map((h) => (
-                    <TableHead key={h} className="text-xs">
+                    <TableHead key={h}>
                       {h}
                     </TableHead>
                   ))}

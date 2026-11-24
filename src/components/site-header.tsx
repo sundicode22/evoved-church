@@ -1,16 +1,36 @@
+"use client"
+
+import Link from "next/link"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
 export function SiteHeader() {
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
+    <header className="flex h-12 shrink-0 items-center gap-2 border-b bg-background">
+      <div className="flex items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1" />
-        <Separator
-          orientation="vertical"
-          className="mx-2 h-4 data-vertical:self-auto"
-        />
-        <h1 className="text-base font-medium">Documents</h1>
+        <Separator orientation="vertical" className="mr-1 h-4" />
+        <Breadcrumb>
+          <BreadcrumbList className="text-sm">
+            <BreadcrumbItem className="hidden md:block">
+              <BreadcrumbLink render={<Link href="/dashboard" />}>
+                Home
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator className="hidden md:block" />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Dashboard</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
       </div>
     </header>
   )

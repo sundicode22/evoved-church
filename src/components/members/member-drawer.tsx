@@ -42,8 +42,7 @@ import { HOUSEHOLD_ROLE_LABELS, type HouseholdRole } from "@/features/members/sc
 import { MEMBER_KEYS } from "@/features/members/hooks/use-members"
 import { Can } from "@/components/auth/can"
 import { toast } from "sonner"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Mail01Icon, SmartPhone01Icon } from "@hugeicons/core-free-icons"
+import { Mail, Smartphone } from "lucide-react"
 
 export function MemberDrawer({
   memberId,
@@ -132,11 +131,7 @@ export function MemberDrawer({
                   <TabsContent value="profile" className="mt-0 space-y-4 pb-4">
                     <ul className="space-y-3 rounded-xl border border-zinc-200/70 bg-white p-4 text-sm">
                       <li className="flex items-start gap-2.5">
-                        <HugeiconsIcon
-                          icon={Mail01Icon}
-                          strokeWidth={2}
-                          className="mt-0.5 size-3.5 text-zinc-400"
-                        />
+                        <Mail className="mt-0.5 size-3.5 text-zinc-400" />
                         <div>
                           <p className="text-[11px] text-zinc-400">Email</p>
                           <p className="text-zinc-800">{member.email || "—"}</p>
@@ -144,11 +139,7 @@ export function MemberDrawer({
                       </li>
                       <Separator />
                       <li className="flex items-start gap-2.5">
-                        <HugeiconsIcon
-                          icon={SmartPhone01Icon}
-                          strokeWidth={2}
-                          className="mt-0.5 size-3.5 text-zinc-400"
-                        />
+                        <Smartphone className="mt-0.5 size-3.5 text-zinc-400" />
                         <div>
                           <p className="text-[11px] text-zinc-400">Phone</p>
                           <p className="text-zinc-800">{member.phoneNumber || "—"}</p>

@@ -73,19 +73,13 @@ import { Progress, ProgressLabel, ProgressValue } from "@/components/ui/progress
 import { ConfirmAction } from "@/components/confirm-action"
 import { FileAttachment, type AttachmentFile } from "@/components/file-attachment"
 import { TableToolbar } from "@/components/table-toolbar"
+import { TablePanel } from "@/components/table-panel"
 import { ServerPagination } from "@/components/server-pagination"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Can, RequireAbility } from "@/components/auth/can"
 import { ChartOfAccountsAccordion } from "@/features/accounting/components/coa-accordion"
 import { AccountingCommand } from "@/features/accounting/components/accounting-command"
 import { downloadCsv } from "@/features/accounting/lib/export-csv"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  PlusSignIcon,
-  Invoice01Icon,
-  Coins01Icon,
-  Shield01Icon,
-} from "@hugeicons/core-free-icons"
 import {
   useFunds,
   useRequisitions,
@@ -99,6 +93,8 @@ import {
   useCreateBudgetLine,
 } from "@/features/accounting/hooks/use-funds"
 import type { CreateFundInput } from "@/features/accounting/schemas"
+import { PageHeader } from "@/components/page-header"
+import { Coins, Plus, Receipt as Receipt, Shield } from "lucide-react"
 
 function money(n: number) {
   return n.toLocaleString("en-US", {
@@ -319,20 +315,14 @@ export default function AccountingPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-[#fbfcfb] dark:bg-zinc-950">
+      <SidebarInset className="min-h-screen bg-white dark:bg-zinc-950">
         <RequireAbility permission="accounting.read">
-          <div className="border-b border-zinc-200/80 bg-white px-8 py-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-                  Fund Accounting
-                </h1>
-                <p className="mt-0.5 text-xs text-zinc-400">
-                  Church funds, budget lines, expense encumbrance, and an audited general ledger.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
+          <PageHeader
+            title="Fund"
+            description="Funds, budgets, encumbrance, and the audited ledger."
+            icon={<Coins className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            actions={
+              <>
                 <AccountingCommand
                   funds={funds.map((f: any) => ({
                     id: f.id,
@@ -402,14 +392,14 @@ export default function AccountingPage() {
                     className="h-8 gap-1.5 rounded-lg bg-[#22c55e] px-3.5 text-xs font-normal text-white hover:bg-[#16a34a]"
                     onClick={() => setReqSheetOpen(true)}
                   >
-                    <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
+                    <Plus strokeWidth={2} className="size-3.5" />
                     New requisition
                   </Button>
                 </Can>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-zinc-500">
+              </>
+            }
+          >
+            <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
               <HoverCard>
                 <HoverCardTrigger
                   render={<button type="button" className="outline-none" />}
@@ -424,7 +414,7 @@ export default function AccountingPage() {
               <span className="text-zinc-300">·</span>
               <span>
                 Available:{" "}
-                <strong className="font-semibold text-emerald-700 tabular-nums">
+                <strong className="font-medium text-emerald-700 tabular-nums">
                   ${money(totalAvailable)}
                 </strong>
               </span>
@@ -434,7 +424,7 @@ export default function AccountingPage() {
                   render={<button type="button" className="outline-none" />}
                 >
                   Encumbered:{" "}
-                  <strong className="font-semibold text-amber-700 tabular-nums">
+                  <strong className="font-medium text-amber-700 tabular-nums">
                     ${money(totalEncumbered)}
                   </strong>
                 </HoverCardTrigger>
@@ -443,7 +433,7 @@ export default function AccountingPage() {
                 </HoverCardContent>
               </HoverCard>
             </div>
-          </div>
+          </PageHeader>
 
           <div className="p-8">
             <Tabs
@@ -487,13 +477,13 @@ export default function AccountingPage() {
                       return (
                         <div
                           key={fund.id}
-                          className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs"
+                          className="space-y-4 rounded-lg border border-zinc-200/80 bg-white p-5 shadow-xs"
                         >
                           <div className="flex items-start justify-between">
                             <div>
                               <Badge
                                 variant="outline"
-                                className={`text-[10px] font-semibold tracking-wider uppercase ${
+                                className={`text-[10px] font-medium tracking-wider uppercase ${
                                   fund.type === "unrestricted"
                                     ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                                     : "border-amber-200 bg-amber-50 text-amber-800"
@@ -501,7 +491,7 @@ export default function AccountingPage() {
                               >
                                 {String(fund.type).replace(/_/g, " ")}
                               </Badge>
-                              <h3 className="mt-2 text-sm font-semibold text-zinc-900">{fund.name}</h3>
+                              <h3 className="mt-2 text-sm font-medium text-zinc-900">{fund.name}</h3>
                               <HoverCard>
                                 <HoverCardTrigger
                                   render={
@@ -519,12 +509,12 @@ export default function AccountingPage() {
                               </HoverCard>
                             </div>
                             <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
-                              <HugeiconsIcon icon={Coins01Icon} strokeWidth={2} className="size-4" />
+                              <Coins className="size-4" />
                             </div>
                           </div>
                           <div>
                             <p className="text-[11px] text-zinc-400">Available</p>
-                            <p className="text-xl font-semibold tabular-nums text-zinc-900">
+                            <p className="text-xl font-medium tabular-nums text-zinc-900">
                               ${money(net)}
                             </p>
                           </div>
@@ -542,7 +532,7 @@ export default function AccountingPage() {
               </TabsContent>
 
               <TabsContent value="budgets">
-                <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xs">
+                <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
                   <TableToolbar
                     title="Budget lines"
                     description="Allocations by fund, department, and fiscal year."
@@ -606,7 +596,7 @@ export default function AccountingPage() {
                               <TableCell className="text-xs tabular-nums">
                                 {line.fiscalYear}
                               </TableCell>
-                              <TableCell className="text-right font-semibold tabular-nums">
+                              <TableCell className="text-right font-medium tabular-nums">
                                 ${money(Number(line.allocatedAmount))}
                               </TableCell>
                               <TableCell>
@@ -637,13 +627,13 @@ export default function AccountingPage() {
               </TabsContent>
 
               <TabsContent value="requisitions">
-                <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xs">
+                <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
                   <TableToolbar
                     title="Expense requisitions"
                     description="Server-paginated. Approve / reject via confirm — encumbrance stays with the fund."
                     icon={
                       <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
-                        <HugeiconsIcon icon={Invoice01Icon} strokeWidth={2} className="size-4" />
+                        <Receipt className="size-4" />
                       </div>
                     }
                     count={pagination?.total}
@@ -698,7 +688,7 @@ export default function AccountingPage() {
                               req.status === "disbursed"
                             return (
                               <TableRow key={req.id}>
-                                <TableCell className="font-semibold text-emerald-700">
+                                <TableCell className="font-medium text-emerald-700">
                                   {req.requisitionNumber}
                                 </TableCell>
                                 <TableCell className="font-medium">{req.vendorName}</TableCell>
@@ -719,15 +709,12 @@ export default function AccountingPage() {
                                     </HoverCardContent>
                                   </HoverCard>
                                 </TableCell>
-                                <TableCell className="font-semibold tabular-nums">
+                                <TableCell className="font-medium tabular-nums">
                                   ${Number(req.amount).toFixed(2)}
                                 </TableCell>
                                 <TableCell>
                                   <span className="flex items-center gap-1.5 text-zinc-700">
-                                    <HugeiconsIcon
-                                      icon={Shield01Icon}
-                                      className="size-3.5 text-emerald-600"
-                                    />
+                                    <Shield className="size-3.5 text-emerald-600" />
                                     Tier {req.currentTierLevel}
                                   </span>
                                 </TableCell>
@@ -805,7 +792,7 @@ export default function AccountingPage() {
               </TabsContent>
 
               <TabsContent value="ledger">
-                <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xs">
+                <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
                   <TableToolbar
                     title="General ledger"
                     description="Drafts are editable. Posting records who posted — never silent."
@@ -848,7 +835,7 @@ export default function AccountingPage() {
                         <TableBody>
                           {journalEntries.map((je: any) => (
                             <TableRow key={je.id}>
-                              <TableCell className="font-semibold text-emerald-700">
+                              <TableCell className="font-medium text-emerald-700">
                                 {je.entryNumber}
                               </TableCell>
                               <TableCell>{je.memo}</TableCell>
@@ -904,7 +891,7 @@ export default function AccountingPage() {
               </TabsContent>
 
               <TabsContent value="coa">
-                <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xs">
+                <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
                   <TableToolbar
                     title="Chart of accounts"
                     description="Grouped by FASB church classes — assets through expenses."

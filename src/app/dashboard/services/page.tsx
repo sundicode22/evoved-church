@@ -53,8 +53,8 @@ import {
   type ChurchService,
   type ServiceType,
 } from "@/features/services/schemas"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { ChurchIcon, PlusSignIcon } from "@hugeicons/core-free-icons"
+import { PageHeader } from "@/components/page-header"
+import { Church, Plus } from "lucide-react"
 
 export default function ServicesPage() {
   const { data, isLoading } = useServices()
@@ -108,34 +108,27 @@ export default function ServicesPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-[#fbfcfb]">
+      <SidebarInset className="min-h-screen bg-white">
         <RequireAbility permission="services.read">
-          <div className="border-b border-zinc-200/80 bg-white px-8 py-5">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900">
-                  <HugeiconsIcon icon={ChurchIcon} strokeWidth={2} className="size-6 text-emerald-600" />
-                  Services
-                </h1>
-                <p className="mt-0.5 text-xs text-zinc-400">
-                  Sunday worship, midweek, prayer, youth, kids, and special gatherings — each with its
-                  own run sheet and volunteers.
-                </p>
-              </div>
+          <PageHeader
+            title="Services"
+            description="Worship, midweek, prayer, youth, and special gatherings."
+            icon={<Church className="size-5 text-[#16a34a]" strokeWidth={1.75} />}
+            actions={
               <Can permission="services.write">
                 <Button
-                  className="h-9 gap-1.5 bg-[#22c55e] text-xs text-white hover:bg-[#16a34a]"
+                  className="h-8 gap-1.5 bg-[#22c55e] text-xs font-normal text-white hover:bg-[#16a34a]"
                   onClick={() => setCreateOpen(true)}
                 >
-                  <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.5} className="size-3.5" />
+                  <Plus strokeWidth={2} className="size-3.5" />
                   New service
                 </Button>
               </Can>
-            </div>
-          </div>
+            }
+          />
 
           <div className="grid gap-6 p-8 lg:grid-cols-[280px_1fr]">
-            <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xs">
+            <div className="overflow-hidden rounded-lg border border-zinc-200/80 bg-white shadow-xs">
               <TableToolbar title="All services" count={data?.length} />
               <ScrollArea className="max-h-[70vh]">
                 {isLoading && (
@@ -168,7 +161,7 @@ export default function ServicesPage() {
                               : "text-zinc-700 hover:bg-zinc-50"
                           }`}
                         >
-                          <span className="text-sm font-semibold">{s.name}</span>
+                          <span className="text-sm font-medium">{s.name}</span>
                           <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-zinc-500">
                             <Badge variant="outline" className="text-[10px]">
                               {typeLabel}
@@ -184,7 +177,7 @@ export default function ServicesPage() {
               </ScrollArea>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xs">
+            <div className="overflow-hidden rounded-lg border border-zinc-200/80 bg-white shadow-xs">
               {!selected ? (
                 <Empty className="py-16">
                   <EmptyHeader>
@@ -196,7 +189,7 @@ export default function ServicesPage() {
                 <>
                   <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-5 py-4">
                     <div>
-                      <h2 className="text-base font-semibold text-zinc-900">{selected.name}</h2>
+                      <h2 className="text-base font-medium text-zinc-900">{selected.name}</h2>
                       <p className="mt-0.5 text-xs text-zinc-500">
                         {selected.locationLabel || "No location"} ·{" "}
                         {selected.defaultDayOfWeek != null
@@ -238,10 +231,10 @@ export default function ServicesPage() {
                         .map((seg, i) => (
                           <div
                             key={seg.id}
-                            className="rounded-xl border border-zinc-200/80 bg-[#fbfcfb] px-4 py-3"
+                            className="rounded-lg border border-zinc-200/80 bg-[#f4f6f5] px-4 py-3"
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <p className="text-sm font-semibold text-zinc-900">
+                              <p className="text-sm font-medium text-zinc-900">
                                 {i + 1}. {seg.title}
                               </p>
                               <Badge variant="outline" className="text-[10px] tabular-nums">
@@ -284,7 +277,7 @@ export default function ServicesPage() {
                       {selected.volunteers.map((v) => (
                         <div
                           key={v.id}
-                          className="flex items-center justify-between rounded-xl border border-zinc-200/80 px-4 py-3"
+                          className="flex items-center justify-between rounded-lg border border-zinc-200/80 px-4 py-3"
                         >
                           <div>
                             <p className="text-sm font-medium text-zinc-900">{v.role}</p>

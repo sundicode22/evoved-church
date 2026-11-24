@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import { useNomenclatureStore } from "@/features/settings/use-nomenclature";
 import {
   useNomenclatureQuery,
   useUpdateNomenclature,
 } from "@/features/settings/hooks/use-nomenclature-api";
+import { CheckCircle2 } from "lucide-react"
 
 export function NomenclatureTab({ canEdit }: { canEdit: boolean }) {
   const { nomenclature, resetToDefaults } = useNomenclatureStore();
@@ -30,7 +29,7 @@ export function NomenclatureTab({ canEdit }: { canEdit: boolean }) {
   return (
     <form
       onSubmit={handleSave}
-      className="max-w-3xl rounded-2xl border border-zinc-200/80 bg-white p-8 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 space-y-6"
+      className="max-w-3xl rounded-lg border border-zinc-200/80 bg-white p-8 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 space-y-6"
     >
       <div>
         <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
@@ -173,8 +172,7 @@ export function NomenclatureTab({ canEdit }: { canEdit: boolean }) {
           disabled={!canEdit || saveMutation.isPending}
           className="h-9 px-5 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-normal gap-1.5 shadow-xs"
         >
-          <HugeiconsIcon
-            icon={CheckmarkCircle02Icon}
+          <CheckCircle2
             strokeWidth={2.5}
             className="size-3.5"
           />

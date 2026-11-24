@@ -5,8 +5,7 @@ import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { X } from "lucide-react"
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -98,7 +97,7 @@ function SheetContent({
               />
             }
           >
-            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+            <X />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
         )}
@@ -132,7 +131,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sheet-footer"
       className={cn(
-        "mt-auto flex flex-col-reverse gap-2 border-t border-zinc-100 bg-[#fbfcfb]/80 px-6 py-4 sm:flex-row sm:justify-end",
+        "mt-auto flex flex-col-reverse gap-2 border-t border-zinc-100 bg-[#f4f6f5]/80 px-6 py-4 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
