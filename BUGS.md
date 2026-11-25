@@ -23,7 +23,8 @@
 
 ## Design defaults
 - Shadows: **minimal** (`shadow-xs` / border) — no heavy elevation
-- Accent: `#6495ed` / `#4f7fd4`
+- Primary: `#6495ed` / `#4f7fd4` (chrome, links)
+- Accent CTA: `#16a34a` / `#15803d` (call buttons)
 - Active nav: `#eef3fc` + `#2b4c8c`
 - Creates/edits: **inset Sheets** + Field/FieldGroup + Zod only
 - Tables first; board optional
