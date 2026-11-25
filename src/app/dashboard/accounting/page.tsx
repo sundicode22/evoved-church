@@ -89,10 +89,11 @@ import {
   useChartOfAccounts,
   useCreateRequisition,
   useCreateFund,
+  useCreateAccount,
   useBudgetLines,
   useCreateBudgetLine,
 } from "@/features/accounting/hooks/use-funds"
-import type { CreateFundInput } from "@/features/accounting/schemas"
+import type { CreateAccountInput, CreateFundInput } from "@/features/accounting/schemas"
 import { PageHeader } from "@/components/page-header"
 import { Coins, Plus, Receipt as Receipt, Shield } from "lucide-react"
 
@@ -129,10 +130,12 @@ export default function AccountingPage() {
   const postJournal = usePostJournalEntry()
   const createReq = useCreateRequisition()
   const createFund = useCreateFund()
+  const createAccount = useCreateAccount()
   const createLine = useCreateBudgetLine()
 
   const [reqSheetOpen, setReqSheetOpen] = React.useState(false)
   const [fundDialogOpen, setFundDialogOpen] = React.useState(false)
+  const [accountSheetOpen, setAccountSheetOpen] = React.useState(false)
   const [lineSheetOpen, setLineSheetOpen] = React.useState(false)
   const [pendingDecision, setPendingDecision] = React.useState<PendingDecision | null>(null)
   const [pendingPostId, setPendingPostId] = React.useState<string | null>(null)
@@ -151,6 +154,13 @@ export default function AccountingPage() {
     type: "unrestricted",
     budgetAmount: 0,
     description: "",
+  })
+  const [accountForm, setAccountForm] = React.useState<CreateAccountInput>({
+    accountName: "",
+    accountNumber: "",
+    category: "expense",
+    description: "",
+    openingBalance: 0,
   })
   const [lineForm, setLineForm] = React.useState({
     fundId: "",
@@ -280,6 +290,30 @@ export default function AccountingPage() {
     })
   }
 
+  function submitAccount(e: React.FormEvent) {
+    e.preventDefault()
+    createAccount.mutate(
+      {
+        ...accountForm,
+        accountName: accountForm.accountName.trim(),
+        accountNumber: accountForm.accountNumber.trim(),
+        description: accountForm.description?.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          setAccountSheetOpen(false)
+          setAccountForm({
+            accountName: "",
+            accountNumber: "",
+            category: "expense",
+            description: "",
+            openingBalance: 0,
+          })
+        },
+      }
+    )
+  }
+
   function submitLine(e: React.FormEvent) {
     e.preventDefault()
     createLine.mutate(
@@ -319,7 +353,7 @@ export default function AccountingPage() {
         <RequireAbility permission="accounting.read">
           <PageHeader
             title="Fund"
-            description="Funds, budgets, encumbrance, and the audited ledger."
+            description="Per-location books: funds, chart of accounts, encumbrance, and the audited ledger."
             icon={<Coins className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <>
@@ -379,7 +413,8 @@ export default function AccountingPage() {
                 </NavigationMenu>
 
                 <Can permission="accounting.budgets">
-                  <Button variant="outline" onClick={() => setFundDialogOpen(true)}>
+                  <Button variant="primary" onClick={() => setFundDialogOpen(true)}>
+                    <Plus strokeWidth={2} className="size-4" />
                     New fund
                   </Button>
                 </Can>
@@ -883,7 +918,7 @@ export default function AccountingPage() {
                 <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
                   <TableToolbar
                     title="Chart of accounts"
-                    description="Grouped by FASB church classes — assets through expenses."
+                    description="This location’s books — starter accounts plus any you add."
                     count={chartOfAccounts.length}
                     onExport={() => {
                       downloadCsv(
@@ -904,6 +939,14 @@ export default function AccountingPage() {
                         onClick: () => toast.message("Accordion expands by default"),
                       },
                     ]}
+                    primaryAction={
+                      <Can permission="accounting.budgets">
+                        <Button variant="primary" onClick={() => setAccountSheetOpen(true)}>
+                          <Plus strokeWidth={2} className="size-4" />
+                          Add account
+                        </Button>
+                      </Can>
+                    }
                   />
                   <ChartOfAccountsAccordion accounts={chartOfAccounts} />
                 </div>
@@ -1033,13 +1076,117 @@ export default function AccountingPage() {
             </SheetContent>
           </Sheet>
 
+          <Sheet open={accountSheetOpen} onOpenChange={setAccountSheetOpen}>
+            <SheetContent side="right" inset size="sm" className="p-0">
+              <form onSubmit={submitAccount} className="flex h-full flex-col">
+                <SheetHeader className="pr-12">
+                  <SheetTitle className="font-medium">Add account</SheetTitle>
+                  <SheetDescription>
+                    Name it whatever you need for this location. Numbers must be unique within
+                    these books.
+                  </SheetDescription>
+                </SheetHeader>
+                <SheetBody>
+                  <FieldGroup className="gap-4">
+                    <Field>
+                      <FieldLabel>Account name</FieldLabel>
+                      <Input
+                        value={accountForm.accountName}
+                        onChange={(e) =>
+                          setAccountForm((f) => ({ ...f, accountName: e.target.value }))
+                        }
+                        placeholder="e.g. Youth Camp Fees, Van Lease"
+                        required
+                        autoFocus
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Account number</FieldLabel>
+                      <Input
+                        value={accountForm.accountNumber}
+                        onChange={(e) =>
+                          setAccountForm((f) => ({ ...f, accountNumber: e.target.value }))
+                        }
+                        placeholder="e.g. 5040"
+                        required
+                      />
+                      <FieldDescription>
+                        Suggested ranges: 1xxx assets · 2xxx liabilities · 3xxx net assets · 4xxx
+                        revenue · 5xxx expense
+                      </FieldDescription>
+                    </Field>
+                    <Field>
+                      <FieldLabel>Category</FieldLabel>
+                      <Select
+                        value={accountForm.category}
+                        onValueChange={(v) =>
+                          v &&
+                          setAccountForm((f) => ({
+                            ...f,
+                            category: v as CreateAccountInput["category"],
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="h-[39px] w-full shadow-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="asset">Asset</SelectItem>
+                          <SelectItem value="liability">Liability</SelectItem>
+                          <SelectItem value="net_assets">Net assets</SelectItem>
+                          <SelectItem value="revenue">Revenue</SelectItem>
+                          <SelectItem value="expense">Expense</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <Field>
+                      <FieldLabel>Opening balance</FieldLabel>
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={accountForm.openingBalance}
+                        onChange={(e) =>
+                          setAccountForm((f) => ({
+                            ...f,
+                            openingBalance: Number(e.target.value) || 0,
+                          }))
+                        }
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Description (optional)</FieldLabel>
+                      <Textarea
+                        value={accountForm.description || ""}
+                        onChange={(e) =>
+                          setAccountForm((f) => ({ ...f, description: e.target.value }))
+                        }
+                        rows={3}
+                        placeholder="What this account tracks"
+                      />
+                    </Field>
+                  </FieldGroup>
+                </SheetBody>
+                <SheetFooter>
+                  <Button type="button" variant="outline" onClick={() => setAccountSheetOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="primary" disabled={createAccount.isPending}>
+                    {createAccount.isPending ? "Saving…" : "Add account"}
+                  </Button>
+                </SheetFooter>
+              </form>
+            </SheetContent>
+          </Sheet>
+
           <Dialog open={fundDialogOpen} onOpenChange={setFundDialogOpen}>
             <DialogContent className="sm:max-w-md">
               <form onSubmit={submitFund} className="grid gap-4">
                 <DialogHeader>
                   <DialogTitle>Create fund</DialogTitle>
                   <DialogDescription>
-                    Restricted vs unrestricted with a starting budget.
+                    Added to this location’s books. Restricted vs unrestricted with a starting
+                    budget.
                   </DialogDescription>
                 </DialogHeader>
                 <FieldGroup>
@@ -1121,10 +1268,7 @@ export default function AccountingPage() {
                   <Button type="button" variant="outline" onClick={() => setFundDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={createFund.isPending}
-                  >
+                  <Button type="submit" variant="primary" disabled={createFund.isPending}>
                     Create fund
                   </Button>
                 </DialogFooter>

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { campuses } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
+import { provisionCampusBooks } from "@/features/accounting/default-books"
 import type { CreateCampusInput } from "./schemas"
 
 type CampusRecord = {
@@ -36,12 +37,13 @@ export const campusService = {
   },
 
   async createCampus(input: CreateCampusInput) {
+    const isMain = (input.type ?? "main") === "main"
     const payload = {
       name: input.name,
       slug: input.slug,
       type: input.type ?? "main",
       city: input.city || "",
-      isMainCampus: true,
+      isMainCampus: isMain,
     }
 
     try {
@@ -52,11 +54,14 @@ export const campusService = {
           slug: payload.slug,
           type: payload.type,
           city: payload.city,
-          isMainCampus: true,
+          isMainCampus: isMain,
           isActive: true,
         })
         .returning()
-      if (row) return row
+      if (row) {
+        await provisionCampusBooks(row.id)
+        return row
+      }
     } catch {
       /* fall through to memory */
     }
@@ -67,9 +72,10 @@ export const campusService = {
       slug: payload.slug,
       type: payload.type,
       city: payload.city,
-      isMainCampus: true,
+      isMainCampus: isMain,
     }
     memoryCampuses.unshift(created)
+    await provisionCampusBooks(created.id)
     return created
   },
 }

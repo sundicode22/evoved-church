@@ -11,6 +11,28 @@ export const createFundSchema = z.object({
   campusId: z.string().min(1).optional(),
 })
 
+export const accountCategorySchema = z.enum([
+  "asset",
+  "liability",
+  "net_assets",
+  "revenue",
+  "expense",
+])
+
+export const createAccountSchema = z.object({
+  accountName: z.string().min(2, "Account name is required"),
+  accountNumber: z
+    .string()
+    .min(2, "Account number is required")
+    .max(50)
+    .regex(/^[A-Za-z0-9.-]+$/, "Use letters, numbers, dots, or dashes"),
+  category: accountCategorySchema,
+  description: z.string().optional(),
+  openingBalance: z.number().nonnegative().default(0),
+  fundId: z.string().optional(),
+  campusId: z.string().min(1).optional(),
+})
+
 export const createBudgetLineSchema = z.object({
   fundId: z.string().min(1, "Fund is required"),
   accountId: z.string().optional(),
@@ -66,6 +88,7 @@ export const postJournalEntrySchema = z.object({
 })
 
 export type CreateFundInput = z.infer<typeof createFundSchema>
+export type CreateAccountInput = z.infer<typeof createAccountSchema>
 export type CreateBudgetLineInput = z.infer<typeof createBudgetLineSchema>
 export type CreateRequisitionInput = z.infer<typeof createRequisitionSchema>
 export type ApproveRequisitionInput = z.infer<typeof approveRequisitionSchema>

@@ -9,8 +9,10 @@ import {
   CreateJournalEntryInput,
   PostJournalEntryInput,
   CreateFundInput,
+  CreateAccountInput,
   CreateBudgetLineInput,
 } from "../schemas"
+import { useBranchStore } from "@/store/use-branch-store"
 
 export const ACCOUNTING_KEYS = {
   all: ["accounting"] as const,
@@ -29,11 +31,13 @@ export const ACCOUNTING_KEYS = {
 }
 
 export function useFunds(campusId?: string) {
+  const activeCampusId = useBranchStore((s) => s.activeCampusId)
+  const resolved = campusId || activeCampusId || undefined
   return useQuery({
-    queryKey: ACCOUNTING_KEYS.funds(campusId),
+    queryKey: ACCOUNTING_KEYS.funds(resolved),
     queryFn: async () => {
       const response = await apiClient.get<ApiResponse<any[]>>("/accounting/funds", {
-        params: { campusId },
+        params: { campusId: resolved },
       })
       return response.data.data || response.data
     },
@@ -42,11 +46,13 @@ export function useFunds(campusId?: string) {
 }
 
 export function useChartOfAccounts(campusId?: string) {
+  const activeCampusId = useBranchStore((s) => s.activeCampusId)
+  const resolved = campusId || activeCampusId || undefined
   return useQuery({
-    queryKey: ACCOUNTING_KEYS.coa(campusId),
+    queryKey: ACCOUNTING_KEYS.coa(resolved),
     queryFn: async () => {
       const response = await apiClient.get<ApiResponse<any[]>>("/accounting/chart-of-accounts", {
-        params: { campusId },
+        params: { campusId: resolved },
       })
       return response.data.data || response.data
     },
@@ -106,6 +112,21 @@ export function useCreateFund() {
     onError: (err: Error) => toast.error(err.message),
     onSuccess: () => {
       toast.success("Fund created")
+      queryClient.invalidateQueries({ queryKey: ACCOUNTING_KEYS.all })
+    },
+  })
+}
+
+export function useCreateAccount() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: CreateAccountInput) => {
+      const response = await apiClient.post<ApiResponse<any>>("/accounting/chart-of-accounts", input)
+      return response.data.data
+    },
+    onError: (err: Error) => toast.error(err.message),
+    onSuccess: (_data, variables) => {
+      toast.success(`${variables.accountName} added to this location’s books`)
       queryClient.invalidateQueries({ queryKey: ACCOUNTING_KEYS.all })
     },
   })

@@ -90,16 +90,7 @@ export default function OnboardingPage() {
         setAvailableCampuses([normalized])
         setActiveCampus(normalized)
 
-        // Seed General fund so write-to-books works day one
-        await apiClient
-          .post("/accounting/funds", {
-            name: "General Fund",
-            code: "GEN",
-            type: "unrestricted",
-            campusId: campus.id,
-            budgetAmount: 0,
-          })
-          .catch(() => null)
+        // Campus create provisions this location’s General Fund + starter COA
       }
 
       if (invites.length > 0) {

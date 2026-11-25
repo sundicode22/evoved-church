@@ -29,6 +29,13 @@
       "when": 1795540687920,
       "tag": "0003_blog_posts",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795545000000,
+      "tag": "0004_per_campus_books",
+      "breakpoints": true
     }
   ]
 }

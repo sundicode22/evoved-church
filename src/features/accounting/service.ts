@@ -18,8 +18,13 @@ import {
   CreateJournalEntryInput,
   PostJournalEntryInput,
   CreateFundInput,
+  CreateAccountInput,
   CreateBudgetLineInput,
 } from "./schemas"
+import {
+  getMemoryBooks,
+  provisionCampusBooks,
+} from "./default-books"
 import { emailService } from "@/features/communications/resend"
 import { DbPaginationResult } from "@/lib/db/pagination"
 
@@ -72,10 +77,15 @@ export const accountingService = {
    * Retrieves all church funds with budget, encumbered, expended, and unencumbered balance
    */
   async getFunds(campusId?: string) {
+    const scopeId = campusId && campusId !== "all" ? campusId : undefined
     try {
+      if (scopeId) {
+        await provisionCampusBooks(scopeId)
+      }
+
       const conditions = [eq(accountingFunds.isActive, true)]
-      if (campusId && campusId !== "all") {
-        conditions.push(eq(accountingFunds.campusId, campusId))
+      if (scopeId) {
+        conditions.push(eq(accountingFunds.campusId, scopeId))
       }
 
       const funds = await db
@@ -84,54 +94,11 @@ export const accountingService = {
         .where(and(...conditions))
 
       if (funds.length === 0) {
-        const demo = [
-          {
-            id: "fund-1",
-            code: "GEN-100",
-            name: "General Operating Fund",
-            type: "unrestricted",
-            budgetAmount: 250000.0,
-            encumberedAmount: 18500.0,
-            expendedAmount: 85609.5,
-            balance: 145890.5,
-            netAvailable: 145890.5 - 18500.0,
-          },
-          {
-            id: "fund-2",
-            code: "BLDG-200",
-            name: "Sanctuary Expansion & Capital Campaign",
-            type: "temporarily_restricted",
-            budgetAmount: 500000.0,
-            encumberedAmount: 45000.0,
-            expendedAmount: 134600.0,
-            balance: 320400.0,
-            netAvailable: 320400.0 - 45000.0,
-          },
-          {
-            id: "fund-3",
-            code: "MISS-300",
-            name: "World Missions & Regional Church Planting",
-            type: "temporarily_restricted",
-            budgetAmount: 75000.0,
-            encumberedAmount: 5000.0,
-            expendedAmount: 21100.0,
-            balance: 48900.0,
-            netAvailable: 48900.0 - 5000.0,
-          },
-          {
-            id: "fund-4",
-            code: "BEN-400",
-            name: "Benevolence & Community Food Pantry",
-            type: "temporarily_restricted",
-            budgetAmount: 30000.0,
-            encumberedAmount: 2200.0,
-            expendedAmount: 9550.0,
-            balance: 18250.0,
-            netAvailable: 18250.0 - 2200.0,
-          },
-          ...demoFundsExtra,
-        ]
-        return demo
+        if (scopeId) {
+          const mem = getMemoryBooks(scopeId)
+          return [...mem.funds, ...demoFundsExtra.filter((f) => !f.campusId || f.campusId === scopeId)]
+        }
+        return demoFundsExtra
       }
 
       return funds.map((f) => {
@@ -148,7 +115,8 @@ export const accountingService = {
       })
     } catch (err) {
       console.error("[accountingService.getFunds] DB error:", err)
-      return []
+      if (scopeId) return getMemoryBooks(scopeId).funds
+      return demoFundsExtra
     }
   },
 
@@ -246,30 +214,117 @@ export const accountingService = {
   },
 
   /**
-   * Retrieves Chart of Accounts (1000 Assets, 2000 Liabilities, 3000 Net Assets, 4000 Revenues, 5000 Expenses)
+   * Location-scoped chart of accounts (each campus has its own books).
    */
   async getChartOfAccounts(campusId?: string) {
+    const scopeId = campusId && campusId !== "all" ? campusId : undefined
     try {
-      const accounts = await db.select().from(chartOfAccounts).where(eq(chartOfAccounts.isActive, true))
-      if (accounts.length === 0) {
-        return [
-          { id: "acct-1010", accountNumber: "1010", accountName: "Operating Checking Account", category: "asset", balance: 145890.5 },
-          { id: "acct-1020", accountNumber: "1020", accountName: "Building Fund Savings", category: "asset", balance: 320400.0 },
-          { id: "acct-2010", accountNumber: "2010", accountName: "Accounts Payable (Vendors)", category: "liability", balance: 14200.0 },
-          { id: "acct-3010", accountNumber: "3010", accountName: "Unrestricted Net Assets", category: "net_assets", balance: 145890.5 },
-          { id: "acct-3020", accountNumber: "3020", accountName: "Restricted Net Assets", category: "net_assets", balance: 387550.0 },
-          { id: "acct-4010", accountNumber: "4010", accountName: "General Tithes & Offerings", category: "revenue", balance: 295400.0 },
-          { id: "acct-4020", accountNumber: "4020", accountName: "Building Pledges Received", category: "revenue", balance: 145000.0 },
-          { id: "acct-5010", accountNumber: "5010", accountName: "Pastoral & Staff Payroll", category: "expense", balance: 98000.0 },
-          { id: "acct-5020", accountNumber: "5020", accountName: "Sanctuary Facility Lease", category: "expense", balance: 42000.0 },
-          { id: "acct-5030", accountNumber: "5030", accountName: "Worship & Production Gear", category: "expense", balance: 16450.0 },
-        ]
+      if (scopeId) {
+        await provisionCampusBooks(scopeId)
       }
-      return accounts
+
+      const conditions = [eq(chartOfAccounts.isActive, true)]
+      if (scopeId) {
+        conditions.push(eq(chartOfAccounts.campusId, scopeId))
+      }
+
+      const accounts = await db
+        .select()
+        .from(chartOfAccounts)
+        .where(and(...conditions))
+
+      if (accounts.length === 0) {
+        if (scopeId) {
+          return getMemoryBooks(scopeId).accounts
+        }
+        return []
+      }
+
+      return accounts.map((a) => ({
+        ...a,
+        balance: Number(a.openingBalance || 0),
+        openingBalance: Number(a.openingBalance || 0),
+      }))
     } catch (err) {
       console.error("[accountingService.getChartOfAccounts] DB error:", err)
+      if (scopeId) return getMemoryBooks(scopeId).accounts
       return []
     }
+  },
+
+  async createAccount(input: CreateAccountInput) {
+    const accountNumber = input.accountNumber.trim()
+    const accountName = input.accountName.trim()
+    if (!accountNumber || !accountName) {
+      throw new ValidationError("Account number and name are required")
+    }
+
+    let campusId = input.campusId
+    try {
+      if (!campusId) {
+        const rows = await db.select().from(campuses).limit(1)
+        campusId = rows[0]?.id
+      }
+      if (campusId) {
+        await provisionCampusBooks(campusId)
+        const dup = await db
+          .select({ id: chartOfAccounts.id })
+          .from(chartOfAccounts)
+          .where(
+            and(
+              eq(chartOfAccounts.campusId, campusId),
+              eq(chartOfAccounts.accountNumber, accountNumber),
+              eq(chartOfAccounts.isActive, true)
+            )
+          )
+          .limit(1)
+        if (dup.length > 0) {
+          throw new ValidationError(`Account ${accountNumber} already exists for this location`)
+        }
+
+        const [created] = await db
+          .insert(chartOfAccounts)
+          .values({
+            campusId,
+            fundId: input.fundId || null,
+            accountNumber,
+            accountName,
+            category: input.category,
+            description: input.description || null,
+            openingBalance: String(input.openingBalance ?? 0),
+          })
+          .returning()
+        if (created) {
+          return {
+            ...created,
+            balance: Number(created.openingBalance || 0),
+            openingBalance: Number(created.openingBalance || 0),
+          }
+        }
+      }
+    } catch (err) {
+      if (err instanceof ValidationError) throw err
+      console.error("[accountingService.createAccount]", err)
+    }
+
+    if (!campusId) campusId = "demo"
+    const books = getMemoryBooks(campusId)
+    if (books.accounts.some((a) => a.accountNumber === accountNumber && a.isActive)) {
+      throw new ValidationError(`Account ${accountNumber} already exists for this location`)
+    }
+    const row = {
+      id: `acct-${Date.now().toString(36)}`,
+      campusId,
+      accountNumber,
+      accountName,
+      category: input.category,
+      description: input.description || null,
+      openingBalance: input.openingBalance ?? 0,
+      balance: input.openingBalance ?? 0,
+      isActive: true,
+    }
+    books.accounts = [row, ...books.accounts]
+    return row
   },
 
   /**
@@ -374,35 +429,70 @@ export const accountingService = {
   },
 
   async createFund(input: CreateFundInput) {
+    const code = input.code.trim().toUpperCase()
+    const name = input.name.trim()
+    let campusId = input.campusId
+
     try {
-      let campusId = input.campusId
       if (!campusId) {
         const defaultCampus = await db.select().from(campuses).limit(1)
         campusId = defaultCampus[0]?.id
       }
       if (campusId) {
+        await provisionCampusBooks(campusId)
+        const dup = await db
+          .select({ id: accountingFunds.id })
+          .from(accountingFunds)
+          .where(
+            and(
+              eq(accountingFunds.campusId, campusId),
+              eq(accountingFunds.code, code),
+              eq(accountingFunds.isActive, true)
+            )
+          )
+          .limit(1)
+        if (dup.length > 0) {
+          throw new ValidationError(`Fund code ${code} already exists for this location`)
+        }
+
         const [created] = await db
           .insert(accountingFunds)
           .values({
             campusId,
-            name: input.name,
-            code: input.code,
+            name,
+            code,
             type: input.type,
             budgetAmount: input.budgetAmount.toString(),
             description: input.description || null,
             balance: "0.00",
           })
           .returning()
-        return created
+        if (created) {
+          return {
+            ...created,
+            budgetAmount: Number(created.budgetAmount || 0),
+            encumberedAmount: Number(created.encumberedAmount || 0),
+            expendedAmount: Number(created.expendedAmount || 0),
+            balance: Number(created.balance || 0),
+            netAvailable: 0,
+          }
+        }
       }
     } catch (err) {
+      if (err instanceof ValidationError) throw err
       console.error("[accountingService.createFund] falling back to demo store", err)
     }
 
+    if (!campusId) campusId = "demo"
+    const books = getMemoryBooks(campusId)
+    if (books.funds.some((f) => f.code === code && f.isActive)) {
+      throw new ValidationError(`Fund code ${code} already exists for this location`)
+    }
     const fund = {
       id: `fund-${crypto.randomUUID().slice(0, 8)}`,
-      code: input.code,
-      name: input.name,
+      campusId,
+      code,
+      name,
       type: input.type,
       budgetAmount: input.budgetAmount,
       encumberedAmount: 0,
@@ -410,7 +500,9 @@ export const accountingService = {
       balance: 0,
       netAvailable: 0,
       description: input.description,
+      isActive: true,
     }
+    books.funds.unshift(fund)
     demoFundsExtra.unshift(fund)
     return fund
   },

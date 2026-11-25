@@ -53,8 +53,9 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
       })
     },
     onSuccess: () => {
-      toast.success("Location created")
+      toast.success("Location created with its own books")
       qc.invalidateQueries({ queryKey: ["campuses"] })
+      qc.invalidateQueries({ queryKey: ["accounting"] })
       setOpen(false)
       setName("")
       setCity("")
@@ -68,12 +69,12 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-semibold text-zinc-900">Locations</h2>
-          <p className="text-xs text-zinc-500">Sites of your church (Main, North, Online).</p>
+          <p className="text-xs text-zinc-500">
+            Each site gets its own General Fund and chart of accounts.
+          </p>
         </div>
         {canEdit ? (
-          <Button
-            onClick={() => setOpen(true)}
-          >
+          <Button variant="primary" onClick={() => setOpen(true)}>
             Add location
           </Button>
         ) : null}

@@ -9,6 +9,7 @@ import {
   integer,
   jsonb,
   pgEnum,
+  unique,
 } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
 
@@ -428,21 +429,25 @@ export const visitorAppointments = pgTable("visitor_appointments", {
 // ==========================================
 // DYNAMIC FUND ACCOUNTING & EXPENSE CONTROLS
 // ==========================================
-export const accountingFunds = pgTable("accounting_funds", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  campusId: uuid("campus_id").references(() => campuses.id).notNull(),
-  name: varchar("name", { length: 255 }).notNull(),
-  code: varchar("code", { length: 50 }).notNull().unique(),
-  type: fundTypeEnum("type").default("unrestricted").notNull(),
-  budgetAmount: decimal("budget_amount", { precision: 14, scale: 2 }).default("0.00").notNull(),
-  encumberedAmount: decimal("encumbered_amount", { precision: 14, scale: 2 }).default("0.00").notNull(), // Locked for approved requisitions
-  expendedAmount: decimal("expended_amount", { precision: 14, scale: 2 }).default("0.00").notNull(), // Actually paid out
-  balance: decimal("balance", { precision: 14, scale: 2 }).default("0.00").notNull(), // Liquid cash balance
-  description: text("description"),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-})
+export const accountingFunds = pgTable(
+  "accounting_funds",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    campusId: uuid("campus_id").references(() => campuses.id).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    code: varchar("code", { length: 50 }).notNull(),
+    type: fundTypeEnum("type").default("unrestricted").notNull(),
+    budgetAmount: decimal("budget_amount", { precision: 14, scale: 2 }).default("0.00").notNull(),
+    encumberedAmount: decimal("encumbered_amount", { precision: 14, scale: 2 }).default("0.00").notNull(), // Locked for approved requisitions
+    expendedAmount: decimal("expended_amount", { precision: 14, scale: 2 }).default("0.00").notNull(), // Actually paid out
+    balance: decimal("balance", { precision: 14, scale: 2 }).default("0.00").notNull(), // Liquid cash balance
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [unique("accounting_funds_campus_code_unique").on(table.campusId, table.code)]
+)
 
 export const fundTransfers = pgTable("fund_transfers", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -455,20 +460,26 @@ export const fundTransfers = pgTable("fund_transfers", {
   transferDate: timestamp("transfer_date").defaultNow().notNull(),
 })
 
-export const chartOfAccounts = pgTable("chart_of_accounts", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  campusId: uuid("campus_id").references(() => campuses.id).notNull(),
-  fundId: uuid("fund_id").references(() => accountingFunds.id),
-  accountNumber: varchar("account_number", { length: 50 }).notNull().unique(),
-  accountName: varchar("account_name", { length: 255 }).notNull(),
-  category: accountCategoryEnum("category").notNull(),
-  description: text("description"),
-  openingBalance: decimal("opening_balance", { precision: 14, scale: 2 }).default("0.00").notNull(),
-  openingBalanceDate: timestamp("opening_balance_date"),
-  connectWithFunds: boolean("connect_with_funds").default(false).notNull(),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-})
+export const chartOfAccounts = pgTable(
+  "chart_of_accounts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    campusId: uuid("campus_id").references(() => campuses.id).notNull(),
+    fundId: uuid("fund_id").references(() => accountingFunds.id),
+    accountNumber: varchar("account_number", { length: 50 }).notNull(),
+    accountName: varchar("account_name", { length: 255 }).notNull(),
+    category: accountCategoryEnum("category").notNull(),
+    description: text("description"),
+    openingBalance: decimal("opening_balance", { precision: 14, scale: 2 }).default("0.00").notNull(),
+    openingBalanceDate: timestamp("opening_balance_date"),
+    connectWithFunds: boolean("connect_with_funds").default(false).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    unique("chart_of_accounts_campus_number_unique").on(table.campusId, table.accountNumber),
+  ]
+)
 
 export const expenseApprovalRules = pgTable("expense_approval_rules", {
   id: uuid("id").defaultRandom().primaryKey(),

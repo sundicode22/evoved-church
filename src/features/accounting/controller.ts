@@ -7,6 +7,7 @@ import {
   postJournalEntrySchema,
   fundTransferSchema,
   createFundSchema,
+  createAccountSchema,
   createBudgetLineSchema,
 } from "./schemas"
 import { formatErrorResponse } from "@/lib/errors"
@@ -24,10 +25,11 @@ export const accountingController = new Elysia({ prefix: "/accounting" })
     }
   })
 
-  .post("/funds", async ({ body, set }) => {
+  .post("/funds", async ({ body, headers, set }) => {
     try {
       const parsed = createFundSchema.parse(body)
-      const created = await accountingService.createFund(parsed)
+      const campusId = parsed.campusId || (headers["x-campus-id"] as string)
+      const created = await accountingService.createFund({ ...parsed, campusId })
       set.status = 201
       return { success: true, data: created }
     } catch (error) {
@@ -71,6 +73,20 @@ export const accountingController = new Elysia({ prefix: "/accounting" })
       const { status, body } = formatErrorResponse(error)
       set.status = status
       return body
+    }
+  })
+
+  .post("/chart-of-accounts", async ({ body, headers, set }) => {
+    try {
+      const parsed = createAccountSchema.parse(body)
+      const campusId = parsed.campusId || (headers["x-campus-id"] as string)
+      const created = await accountingService.createAccount({ ...parsed, campusId })
+      set.status = 201
+      return { success: true, data: created }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
     }
   })
 
