@@ -119,7 +119,8 @@ function PublicFormBody({
         <Button
           type="submit"
           disabled={pending}
-          className="w-full bg-accent-cta text-white hover:bg-accent-cta"
+          variant="accent"
+          className="w-full"
         >
           Submit
         </Button>

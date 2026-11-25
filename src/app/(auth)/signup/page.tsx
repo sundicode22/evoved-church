@@ -89,7 +89,7 @@ export default function SignupPage() {
             <Button
               type="submit"
               disabled={form.formState.isSubmitting}
-              className="h-10 w-full rounded-lg bg-accent-cta text-sm text-white shadow-xs hover:bg-accent-cta-hover"
+              className="h-10 w-full rounded-lg text-sm"
             >
               {form.formState.isSubmitting ? "Creating account…" : "Create account"}
             </Button>

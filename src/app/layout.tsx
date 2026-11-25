@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={cn(inter.variable, inter.className, "h-full antialiased font-sans")}
     >
       <body className={cn(inter.className, "min-h-full flex flex-col bg-white font-sans font-normal text-zinc-900 antialiased")}>
-        <NextTopLoader color="#16a34a" height={3} showSpinner={false} />
+        <NextTopLoader color="#6495ed" height={3} showSpinner={false} />
         <TooltipProvider>
           <QueryProvider>{children}</QueryProvider>
           <Toaster richColors position="top-right" />

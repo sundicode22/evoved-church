@@ -281,6 +281,7 @@ export function MemberDrawer({
                   Close
                 </Button>
                 <Button
+                  variant="accent"
                   onClick={() => attach.mutate()}
                   disabled={attach.isPending}
                 >

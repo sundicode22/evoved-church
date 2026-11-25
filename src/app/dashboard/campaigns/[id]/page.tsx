@@ -167,6 +167,7 @@ function CampaignDetailPage() {
                 </Can>
                 <Can permission="campaigns.send">
                   <Button
+                    variant="accent"
                     onClick={() => setConfirmSend(true)}
                     disabled={!data || locked || send.isPending}
                     className="h-8 gap-1.5 rounded-lg px-3.5 text-xs font-normal shadow-xs"

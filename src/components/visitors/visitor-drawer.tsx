@@ -96,10 +96,7 @@ export function VisitorDrawer() {
                     {VISITOR_STAGE_LABELS[lead.stage as keyof typeof VISITOR_STAGE_LABELS] ||
                       lead.stage}
                   </Badge>
-                  <Button
-                    size="sm"
-                    className="h-8 gap-1 bg-accent-cta text-white shadow-sm hover:bg-accent-cta-hover"
-                  >
+                  <Button size="sm" className="h-8 gap-1">
                     Create appointment
                   </Button>
                 </div>

@@ -143,8 +143,9 @@ export function NomenclatureTab({ canEdit }: { canEdit: boolean }) {
 
         <Button
           type="submit"
+          variant="accent"
           disabled={!canEdit || saveMutation.isPending}
-          className="h-9 px-5 rounded-lg bg-accent-cta hover:bg-accent-cta text-white text-xs font-normal gap-1.5 shadow-xs"
+          className="h-9 gap-1.5 px-5 text-xs font-normal"
         >
           <CheckCircle2
             strokeWidth={2.5}

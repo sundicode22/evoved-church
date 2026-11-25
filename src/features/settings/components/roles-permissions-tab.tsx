@@ -346,6 +346,7 @@ export function RolesPermissionsTab() {
             </Button>
             <Can permission="settings.roles">
               <Button
+                variant="accent"
                 disabled={!dirty || save.isPending || selected?.isAdmin}
                 onClick={() =>
                   selected &&

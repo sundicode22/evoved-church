@@ -375,7 +375,7 @@ function BlockEditSheet({
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={updateBlock.isPending}>
+              <Button type="submit" variant="accent" disabled={updateBlock.isPending}>
                 Save changes
               </Button>
             </SheetFooter>
@@ -616,7 +616,7 @@ function ThemeTab({
             </FieldGroup>
             <Can permission="blog.write">
               <div className="flex justify-end">
-                <Button type="submit" disabled={updateTheme.isPending}>
+                <Button type="submit" variant="accent" disabled={updateTheme.isPending}>
                   Save theme
                 </Button>
               </div>
@@ -923,7 +923,7 @@ function NewsletterTab() {
                 </Button>
                 <Button
                   type="submit"
-                  variant={editing ? "default" : "primary"}
+                  variant={editing ? "accent" : "default"}
                   disabled={createIssue.isPending || updateIssue.isPending}
                 >
                   {editing ? "Save draft" : "Create draft"}

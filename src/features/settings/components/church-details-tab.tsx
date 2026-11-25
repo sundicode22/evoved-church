@@ -195,7 +195,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
               <Button type="button" variant="outline" onClick={() => setChurchOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" disabled={save.isPending}>
+              <Button type="submit" variant="accent" disabled={save.isPending}>
                 Save
               </Button>
             </SheetFooter>
@@ -231,7 +231,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
               <Button type="button" variant="outline" onClick={() => setContactOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" disabled={save.isPending}>
+              <Button type="submit" variant="accent" disabled={save.isPending}>
                 Save
               </Button>
             </SheetFooter>

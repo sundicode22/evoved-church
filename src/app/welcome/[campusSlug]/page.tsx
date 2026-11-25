@@ -142,7 +142,8 @@ function WelcomePage() {
                   <Button
                     type="submit"
                     disabled={pending}
-                    className="h-10 w-full rounded-lg bg-accent-cta text-sm text-white shadow-sm hover:bg-accent-cta-hover"
+                    variant="accent"
+                    className="h-10 w-full rounded-lg text-sm"
                   >
                     {pending ? "Submitting…" : "Say hello"}
                   </Button>

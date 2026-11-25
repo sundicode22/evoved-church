@@ -176,8 +176,9 @@ export default function OnboardingPage() {
                 {...(isLastStep
                   ? { type: "button" as const, onClick: () => void finish() }
                   : { type: "submit" as const, form: ONBOARDING_STEP_FORM_ID })}
+                variant={isLastStep ? "accent" : "default"}
                 disabled={pending}
-                className="h-10 gap-1 rounded-lg bg-accent-cta px-5 text-sm font-medium text-white shadow-xs hover:bg-accent-cta-hover"
+                className="h-10 gap-1 px-5 text-sm font-medium"
               >
                 {isLastStep ? (pending ? "Finishing…" : "Finish setup") : "Continue"}
                 {!isLastStep && <ChevronRight className="size-4" />}

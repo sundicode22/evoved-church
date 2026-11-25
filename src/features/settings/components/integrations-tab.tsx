@@ -122,7 +122,8 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
                   <Button
                     disabled={!canEdit}
                     onClick={() => setSheet("stripe")}
-                    className="h-9 w-full rounded-lg bg-accent-cta text-sm text-white hover:bg-accent-cta-hover"
+                    variant="accent"
+                    className="h-9 w-full rounded-lg text-sm"
                   >
                     {stripeConnected ? "Manage Stripe" : "Connect your account"}
                   </Button>
@@ -178,7 +179,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               <Button type="button" variant="outline" onClick={() => setSheet(null)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={stripeForm.formState.isSubmitting}>
+              <Button type="submit" variant="accent" disabled={stripeForm.formState.isSubmitting}>
                 Connect your account
               </Button>
             </SheetFooter>
@@ -219,7 +220,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               <Button type="button" variant="outline" onClick={() => setSheet(null)}>
                 Cancel
               </Button>
-              <Button type="submit">Save</Button>
+              <Button type="submit" variant="accent">Save</Button>
             </SheetFooter>
           </form>
         </SheetContent>
@@ -261,7 +262,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               <Button type="button" variant="outline" onClick={() => setSheet(null)}>
                 Cancel
               </Button>
-              <Button type="submit">Save</Button>
+              <Button type="submit" variant="accent">Save</Button>
             </SheetFooter>
           </form>
         </SheetContent>

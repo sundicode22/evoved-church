@@ -388,7 +388,7 @@ export function TablePagination({
   )
 }
 
-/** Cornflower primary — Add / Create entry points across dashboard lists. */
+/** Primary (cornflower) — Add / Create entry points across dashboard lists. */
 export function TableAddButton({
   children,
   onClick,
@@ -401,13 +401,7 @@ export function TableAddButton({
   className?: string
 }) {
   return (
-    <Button
-      type={type}
-      variant="primary"
-      size="default"
-      onClick={onClick}
-      className={className}
-    >
+    <Button type={type} variant="default" size="default" onClick={onClick} className={className}>
       {children}
     </Button>
   )

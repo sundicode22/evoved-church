@@ -63,10 +63,10 @@
   /* Minimal by default — prefer border over elevation */
   --panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
   /*
-   * Dual brand system (required):
-   * - Primary (--brand): cornflower blue — Add/Create buttons, chrome, links, focus
-   * - Accent (--accent-cta): lime/emerald — Save/Send/Confirm and other non-Add CTAs
-   * - Export / utility toolbar actions use Button variant="secondary"
+   * Brand source of truth (edit here only):
+   * - --brand / --primary: cornflower blue — Add/Create, chrome, links, focus
+   * - --accent-cta: lime/emerald — Save/Send/Confirm only (Button variant="accent")
+   * - Export / utility: Button variant="secondary"
    */
   --brand: #6495ed;
   --brand-hover: #4f7fd4;
@@ -84,8 +84,9 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.697 0.133 262);
-  --primary-foreground: oklch(0.985 0 0);
+  /* Primary = brand cornflower (single source) */
+  --primary: var(--brand);
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -96,7 +97,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.697 0.133 262);
+  --ring: var(--brand);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -105,12 +106,12 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.697 0.133 262);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.96 0.02 262);
-  --sidebar-accent-foreground: oklch(0.38 0.09 262);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--brand-soft);
+  --sidebar-accent-foreground: var(--brand-ink);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: var(--brand);
 }
 
 .dark {
@@ -120,8 +121,16 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.72 0.12 262);
-  --primary-foreground: oklch(0.985 0 0);
+  --brand: #6495ed;
+  --brand-hover: #4f7fd4;
+  --brand-soft: #1e2a44;
+  --brand-ink: #c5d6f7;
+  --accent-cta: #16a34a;
+  --accent-cta-hover: #15803d;
+  --accent-cta-soft: #0f2a1a;
+  --accent-cta-ink: #bbf7d0;
+  --primary: var(--brand);
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -131,7 +140,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.65 0.11 262);
+  --ring: var(--brand);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -139,12 +148,12 @@
   --chart-5: oklch(0.269 0 0);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.72 0.12 262);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--brand-soft);
+  --sidebar-accent-foreground: var(--brand-ink);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: var(--brand);
 }
 
 @layer base {

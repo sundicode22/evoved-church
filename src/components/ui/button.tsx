@@ -7,12 +7,18 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        /** Lime/emerald — Save, Send, Confirm, and other non-Add filled actions. */
+        /**
+         * Primary = cornflower (--primary / --brand from globals.css).
+         * Default filled button — Add/Create and general primary actions.
+         */
         default:
-          "border-transparent bg-accent-cta text-white shadow-xs hover:bg-accent-cta-hover",
-        /** Cornflower blue — Add / Create entry-point buttons only. */
+          "border-transparent bg-primary text-primary-foreground shadow-xs hover:bg-brand-hover",
+        /** Alias of default — same cornflower primary. */
         primary:
-          "border-transparent bg-brand text-white shadow-xs hover:bg-brand-hover",
+          "border-transparent bg-primary text-primary-foreground shadow-xs hover:bg-brand-hover",
+        /** Lime accent — Save / Send / Confirm only. */
+        accent:
+          "border-transparent bg-accent-cta text-white shadow-xs hover:bg-accent-cta-hover",
         outline:
           "border-border bg-white text-foreground hover:bg-input/50 aria-expanded:bg-muted aria-expanded:text-foreground shadow-xs dark:bg-input/30",
         /** Secondary — Export and similar utility toolbar actions. */
@@ -22,7 +28,7 @@ const buttonVariants = cva(
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-brand underline-offset-4 hover:underline",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         /** Shared control height with inputs (39px). */
