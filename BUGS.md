@@ -23,8 +23,8 @@
 
 ## Design defaults
 - Shadows: **minimal** (`shadow-xs` / border) — no heavy elevation
-- Accent: `#16a34a` / `#22c55e`
-- Active nav: `#eaf5ea` + `#1b5e20`
+- Accent: `#6495ed` / `#4f7fd4`
+- Active nav: `#eef3fc` + `#2b4c8c`
 - Creates/edits: **inset Sheets** + Field/FieldGroup + Zod only
 - Tables first; board optional
 - Lucide stroke ~1.75

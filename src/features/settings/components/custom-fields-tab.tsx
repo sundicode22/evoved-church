@@ -81,7 +81,6 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
         {canEdit ? (
           <Button
             onClick={() => setOpen(true)}
-            className="h-9 rounded-lg bg-[var(--brand)] text-sm text-white hover:bg-[var(--brand-hover)]"
           >
             Add field
           </Button>
@@ -119,7 +118,7 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
       )}
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="sm:max-w-md">
+        <SheetContent side="right" inset size="sm" className="p-0">
           <SheetHeader>
             <SheetTitle>Add custom field</SheetTitle>
           </SheetHeader>
@@ -173,7 +172,6 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
             <Button
               disabled={!fieldKey || !fieldLabel || create.isPending}
               onClick={() => create.mutate()}
-              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
             >
               Save field
             </Button>

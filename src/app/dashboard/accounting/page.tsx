@@ -379,20 +379,13 @@ export default function AccountingPage() {
                 </NavigationMenu>
 
                 <Can permission="accounting.budgets">
-                  <Button
-                    variant="outline"
-                    className="h-8 rounded-lg px-3 text-xs font-normal"
-                    onClick={() => setFundDialogOpen(true)}
-                  >
+                  <Button variant="outline" onClick={() => setFundDialogOpen(true)}>
                     New fund
                   </Button>
                 </Can>
                 <Can permission="accounting.requisitions">
-                  <Button
-                    className="h-8 gap-1.5 rounded-lg bg-[var(--brand)] px-3.5 text-xs font-normal text-white hover:bg-[var(--brand)]"
-                    onClick={() => setReqSheetOpen(true)}
-                  >
-                    <Plus strokeWidth={2} className="size-3.5" />
+                  <Button onClick={() => setReqSheetOpen(true)}>
+                    <Plus strokeWidth={2} className="size-4" />
                     New requisition
                   </Button>
                 </Can>
@@ -551,11 +544,7 @@ export default function AccountingPage() {
                     ]}
                     primaryAction={
                       <Can permission="accounting.budgets">
-                        <Button
-                          size="sm"
-                          className="h-8 bg-[var(--brand)] text-xs text-white hover:bg-[var(--brand)]"
-                          onClick={() => setLineSheetOpen(true)}
-                        >
+                        <Button onClick={() => setLineSheetOpen(true)}>
                           Add line
                         </Button>
                       </Can>
@@ -1036,7 +1025,6 @@ export default function AccountingPage() {
                   <Button
                     type="submit"
                     disabled={createReq.isPending || !reqForm.fundId || !reqForm.accountId}
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Submit requisition
                   </Button>
@@ -1136,7 +1124,6 @@ export default function AccountingPage() {
                   <Button
                     type="submit"
                     disabled={createFund.isPending}
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Create fund
                   </Button>
@@ -1237,7 +1224,6 @@ export default function AccountingPage() {
                   <Button
                     type="submit"
                     disabled={createLine.isPending || !lineForm.fundId}
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Add line
                   </Button>

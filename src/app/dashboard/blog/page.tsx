@@ -7,7 +7,7 @@ import { BookOpen, ExternalLink, Plus } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -35,6 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { ConfirmAction } from "@/components/confirm-action"
+import { ImageUpload } from "@/components/image-upload"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Can, RequireAbility } from "@/components/auth/can"
@@ -134,14 +135,14 @@ export default function BlogDashboardPage() {
                 <Link
                   href="/portal/main"
                   target="_blank"
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-xs font-normal text-zinc-700 shadow-xs hover:bg-zinc-50"
+                  className={buttonVariants({ variant: "outline" })}
                 >
-                  <ExternalLink className="size-3.5" strokeWidth={1.75} />
+                  <ExternalLink className="size-4" strokeWidth={1.75} />
                   View portal
                 </Link>
                 <Can permission="blog.write">
                   <TableAddButton onClick={openCreate}>
-                    <Plus className="size-3.5" strokeWidth={1.75} />
+                    <Plus className="size-4" strokeWidth={1.75} />
                     New post
                   </TableAddButton>
                 </Can>
@@ -151,7 +152,7 @@ export default function BlogDashboardPage() {
 
           <div className="p-6 md:p-8">
             {!isLoading && (data?.length ?? 0) === 0 ? (
-              <Empty className="rounded-lg border border-zinc-200/80 py-16">
+              <Empty className="rounded-xl bg-[#f8faf9] py-16 shadow-xs">
                 <EmptyHeader>
                   <EmptyTitle>No blog posts</EmptyTitle>
                   <EmptyDescription>
@@ -159,13 +160,10 @@ export default function BlogDashboardPage() {
                   </EmptyDescription>
                 </EmptyHeader>
                 <Can permission="blog.write">
-                  <Button
-                    className="mt-4 h-8 gap-1.5 bg-[var(--brand)] text-xs text-white hover:bg-[var(--brand-hover)]"
-                    onClick={openCreate}
-                  >
-                    <Plus className="size-3.5" />
+                  <TableAddButton onClick={openCreate}>
+                    <Plus className="size-4" strokeWidth={1.75} />
                     Write first post
-                  </Button>
+                  </TableAddButton>
                 </Can>
               </Empty>
             ) : (
@@ -283,16 +281,18 @@ export default function BlogDashboardPage() {
           </div>
 
           <Sheet open={open} onOpenChange={setOpen}>
-            <SheetContent className="sm:max-w-xl">
+            <SheetContent side="right" inset size="lg" className="p-0">
               <form onSubmit={submit} className="flex h-full flex-col">
-                <SheetHeader>
-                  <SheetTitle>{editing ? "Edit post" : "New blog post"}</SheetTitle>
+                <SheetHeader className="pr-12">
+                  <SheetTitle className="font-medium">
+                    {editing ? "Edit post" : "New blog post"}
+                  </SheetTitle>
                   <SheetDescription>
                     Add a cover image and rich body — members read it on the portal.
                   </SheetDescription>
                 </SheetHeader>
                 <SheetBody>
-                  <FieldGroup>
+                  <FieldGroup className="gap-4">
                     <Field>
                       <FieldLabel htmlFor="blog-title">Title</FieldLabel>
                       <Input
@@ -313,25 +313,12 @@ export default function BlogDashboardPage() {
                       />
                     </Field>
                     <Field>
-                      <FieldLabel htmlFor="blog-cover">Cover image URL</FieldLabel>
-                      <Input
-                        id="blog-cover"
+                      <ImageUpload
+                        label="Cover image (optional)"
                         value={form.coverImageUrl}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, coverImageUrl: e.target.value }))
-                        }
-                        placeholder="https://…"
+                        onChange={(url) => setForm((f) => ({ ...f, coverImageUrl: url }))}
+                        previewClassName="aspect-[21/9] w-full object-cover"
                       />
-                      {form.coverImageUrl ? (
-                        <div className="mt-2 overflow-hidden rounded-xl border border-zinc-200">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={form.coverImageUrl}
-                            alt=""
-                            className="aspect-[21/9] w-full object-cover"
-                          />
-                        </div>
-                      ) : null}
                     </Field>
                     <Field>
                       <FieldLabel htmlFor="blog-author">Author</FieldLabel>
@@ -361,7 +348,6 @@ export default function BlogDashboardPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending || update.isPending || !form.title.trim()}
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
                   >
                     {editing ? "Save changes" : "Save draft"}
                   </Button>

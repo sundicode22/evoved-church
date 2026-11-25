@@ -7,7 +7,18 @@ export const createBlogPostSchema = z.object({
   title: z.string().min(2, "Title is required"),
   slug: z.string().min(2).optional(),
   excerpt: z.string().max(400).optional().or(z.literal("")),
-  coverImageUrl: z.union([z.string().url("Cover image must be a valid URL"), z.literal("")]).optional(),
+  coverImageUrl: z
+    .string()
+    .refine(
+      (v) =>
+        !v ||
+        v.startsWith("data:image/") ||
+        /^https?:\/\//i.test(v) ||
+        v.startsWith("/"),
+      "Cover image must be a valid URL or upload"
+    )
+    .optional()
+    .or(z.literal("")),
   bodyHtml: z.string().min(1, "Body is required"),
   authorName: z.string().max(150).optional().or(z.literal("")),
   status: z.enum(BLOG_STATUSES).default("draft"),

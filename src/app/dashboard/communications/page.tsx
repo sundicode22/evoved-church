@@ -121,7 +121,6 @@ export default function CommunicationsPage() {
                     New sequence
                   </Button>
                   <Button
-                    className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                     onClick={() => setStepOpen(true)}
                     disabled={!active}
                   >
@@ -143,7 +142,7 @@ export default function CommunicationsPage() {
                   onClick={() => setActiveId(s.id)}
                   className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
                     active?.id === s.id
-                      ? "border-emerald-300 bg-[#eaf5ea]"
+                      ? "border-emerald-300 bg-[var(--brand-soft)]"
                       : "border-zinc-200/80 bg-white hover:border-emerald-200"
                   }`}
                 >
@@ -270,7 +269,6 @@ export default function CommunicationsPage() {
                   <Button
                     type="submit"
                     disabled={createSeq.isPending || name.trim().length < 2}
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Create sequence
                   </Button>
@@ -349,7 +347,6 @@ export default function CommunicationsPage() {
                   <Button
                     type="submit"
                     disabled={addStep.isPending || body.trim().length < 1}
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Save step
                   </Button>

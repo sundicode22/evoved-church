@@ -281,7 +281,6 @@ export function MemberDrawer({
                   Close
                 </Button>
                 <Button
-                  className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
                   onClick={() => attach.mutate()}
                   disabled={attach.isPending}
                 >

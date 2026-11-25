@@ -10,7 +10,19 @@ export const createGroupSchema = z.object({
   campusId: z.string().min(1).optional(),
   name: z.string().min(2, "Group name is required"),
   type: groupTypeSchema.default("public"),
-  imageUrl: z.string().url("Enter a valid image URL").optional().or(z.literal("")).nullable(),
+  imageUrl: z
+    .string()
+    .refine(
+      (v) =>
+        !v ||
+        v.startsWith("data:image/") ||
+        /^https?:\/\//i.test(v) ||
+        v.startsWith("/"),
+      "Enter a valid image URL or upload an image"
+    )
+    .optional()
+    .or(z.literal(""))
+    .nullable(),
   description: z.string().optional().nullable(),
   leaderMemberId: z.string().optional().nullable(),
   isActive: z.boolean().default(true),

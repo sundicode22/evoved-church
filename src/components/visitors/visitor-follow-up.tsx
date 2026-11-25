@@ -218,7 +218,6 @@ export function VisitorFollowUpDialogs({
             <Button
               type="submit"
               disabled={pending}
-              className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
             >
               {pending
                 ? "Saving…"

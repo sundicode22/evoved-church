@@ -240,7 +240,7 @@ function Column({
     <div
       ref={setNodeRef}
       className={`flex w-[300px] shrink-0 flex-col rounded-2xl bg-[#f4f6f5] p-1 shadow-sm transition-shadow ${
-        isOver ? "bg-[#eaf5ea] shadow-md" : ""
+        isOver ? "bg-[var(--brand-soft)] shadow-md" : ""
       }`}
     >
       <div className="flex items-center justify-between px-3 py-3">
@@ -385,19 +385,19 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-zinc-400" />
+            <Search className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-400" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search visitors..."
-              className="h-9 w-56 bg-white pl-8 shadow-xs"
+              className="h-10 w-64 bg-white pl-10 shadow-xs"
             />
           </div>
-          <div className="flex rounded-lg bg-zinc-100/80 p-0.5 shadow-xs">
+          <div className="flex h-10 items-center rounded-lg bg-zinc-100/80 p-0.5 shadow-xs">
             <button
               type="button"
               onClick={() => setActiveView("board")}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+              className={`h-full rounded-md px-3.5 text-sm font-medium ${
                 activeView === "board" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"
               }`}
             >
@@ -406,14 +406,14 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
             <button
               type="button"
               onClick={() => setActiveView("list")}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+              className={`h-full rounded-md px-3.5 text-sm font-medium ${
                 activeView === "list" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"
               }`}
             >
               List
             </button>
           </div>
-          <Button className="h-9 bg-[var(--brand)] text-white shadow-sm hover:bg-[var(--brand-hover)]">
+          <Button>
             <Plus className="size-4" />
             Add visitor
           </Button>

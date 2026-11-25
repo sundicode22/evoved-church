@@ -73,7 +73,6 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
         {canEdit ? (
           <Button
             onClick={() => setOpen(true)}
-            className="h-9 rounded-lg bg-[var(--brand)] text-sm text-white hover:bg-[var(--brand-hover)]"
           >
             Add location
           </Button>
@@ -116,7 +115,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
       )}
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="sm:max-w-md">
+        <SheetContent side="right" inset size="sm" className="p-0">
           <SheetHeader>
             <SheetTitle>Add location</SheetTitle>
           </SheetHeader>
@@ -150,7 +149,6 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
             <Button
               disabled={name.trim().length < 2 || create.isPending}
               onClick={() => create.mutate()}
-              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
             >
               Save location
             </Button>

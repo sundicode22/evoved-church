@@ -317,7 +317,6 @@ export default function ProjectsPage() {
                   <Button
                     type="submit"
                     disabled={createCard.isPending || title.trim().length < 2}
-                    className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Add task
                   </Button>

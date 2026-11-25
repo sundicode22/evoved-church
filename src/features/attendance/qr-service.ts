@@ -21,7 +21,7 @@ export const qrService = {
       width: options.width || 320,
       margin: options.margin || 2,
       color: {
-        dark: options.color?.dark || "#16a34a", // Leaf emerald green default
+        dark: options.color?.dark || "#6495ed", // Leaf emerald green default
         light: options.color?.light || "#ffffff",
       },
     }

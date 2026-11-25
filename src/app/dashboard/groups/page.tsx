@@ -33,6 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Can, RequireAbility } from "@/components/auth/can"
+import { ImageUpload } from "@/components/image-upload"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import {
   ColumnCustomize,
@@ -45,13 +46,19 @@ import {
   useColumnVisibility,
   type ColumnOption,
 } from "@/components/table-panel"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useCreateGroup, useGroups } from "@/features/groups/hooks/use-groups"
 import {
   GROUP_TYPE_LABELS,
   GROUP_TYPES,
   type GroupType,
 } from "@/features/groups/schemas"
-import { cn } from "@/lib/utils"
 
 const COLUMNS: ColumnOption[] = [
   { id: "name", label: "Group" },
@@ -133,10 +140,10 @@ export default function GroupsPage() {
                 </EmptyHeader>
                 <Can permission="groups.write">
                   <Button
-                    className="mt-4 h-8 gap-1.5 bg-[var(--brand)] text-xs text-white hover:bg-[var(--brand)]"
+                    className="mt-4 gap-1.5 bg-[var(--accent-cta)] text-white hover:bg-[var(--accent-cta-hover)]"
                     onClick={() => setSheetOpen(true)}
                   >
-                    <Plus className="size-3.5" strokeWidth={1.75} />
+                    <Plus className="size-4" strokeWidth={1.75} />
                     Create group
                   </Button>
                 </Can>
@@ -199,7 +206,7 @@ export default function GroupsPage() {
                                   className="size-8 rounded-md object-cover"
                                 />
                               ) : (
-                                <div className="flex size-8 items-center justify-center rounded-md bg-[#eaf5ea] text-xs font-medium text-[#1b5e20]">
+                                <div className="flex size-8 items-center justify-center rounded-md bg-[var(--brand-soft)] text-xs font-medium text-[var(--brand-ink)]">
                                   {group.name.slice(0, 1)}
                                 </div>
                               )}
@@ -265,7 +272,7 @@ export default function GroupsPage() {
                 <SheetHeader className="pr-12">
                   <SheetTitle className="font-medium">Create group</SheetTitle>
                   <SheetDescription>
-                    Name the group, pick a type, and optionally add an image URL.
+                    Name the group, choose a type, and upload an optional cover image.
                   </SheetDescription>
                 </SheetHeader>
                 <SheetBody>
@@ -275,37 +282,34 @@ export default function GroupsPage() {
                       <Input
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="h-9 text-sm"
+                        className="h-10 text-sm"
                         required
                       />
                     </Field>
                     <Field>
-                      <FieldLabel>Type</FieldLabel>
-                      <div className="flex gap-1.5">
-                        {GROUP_TYPES.map((t) => (
-                          <button
-                            key={t}
-                            type="button"
-                            onClick={() => setType(t)}
-                            className={cn(
-                              "h-8 rounded-md border px-3 text-xs capitalize transition-colors",
-                              type === t
-                                ? "border-[var(--brand)] bg-[#eaf5ea] text-[#1b5e20]"
-                                : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                            )}
-                          >
-                            {GROUP_TYPE_LABELS[t]}
-                          </button>
-                        ))}
-                      </div>
+                      <FieldLabel>Group type</FieldLabel>
+                      <Select
+                        value={type}
+                        onValueChange={(v) => v && setType(v as GroupType)}
+                      >
+                        <SelectTrigger className="h-10 w-full shadow-xs">
+                          <SelectValue placeholder="Select group type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {GROUP_TYPES.map((t) => (
+                            <SelectItem key={t} value={t}>
+                              {GROUP_TYPE_LABELS[t]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </Field>
                     <Field>
-                      <FieldLabel>Image URL (optional)</FieldLabel>
-                      <Input
+                      <ImageUpload
+                        label="Group image (optional)"
                         value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
-                        placeholder="https://"
-                        className="h-9 text-sm"
+                        onChange={setImageUrl}
+                        previewClassName="aspect-square max-h-48 object-cover"
                       />
                     </Field>
                   </FieldGroup>
@@ -314,7 +318,6 @@ export default function GroupsPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-9"
                     onClick={() => setSheetOpen(false)}
                   >
                     Cancel
@@ -322,7 +325,6 @@ export default function GroupsPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending}
-                    className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     {create.isPending ? "Saving…" : "Create group"}
                   </Button>

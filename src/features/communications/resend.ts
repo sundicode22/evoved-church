@@ -49,7 +49,7 @@ export const emailService = {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1f2937;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <div style="display: inline-block; background-color: #16a34a; color: white; padding: 8px 16px; border-radius: 9999px; font-weight: bold; font-size: 14px;">
+            <div style="display: inline-block; background-color: #6495ed; color: white; padding: 8px 16px; border-radius: 9999px; font-weight: bold; font-size: 14px;">
               ${churchName}
             </div>
           </div>
@@ -88,11 +88,11 @@ export const emailService = {
           <h2 style="font-size: 18px; font-weight: 700; color: #111827;">Expense Sign-off Requisition: ${requisitionNumber}</h2>
           <p style="font-size: 14px; color: #4b5563;">Hello ${approverName}, your authorization is requested for a Tier ${tierLevel} expenditure:</p>
           <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin: 16px 0;">
-            <p style="margin: 4px 0;"><strong>Amount:</strong> <span style="color: #16a34a; font-size: 16px; font-weight: bold;">${amount}</span></p>
+            <p style="margin: 4px 0;"><strong>Amount:</strong> <span style="color: #6495ed; font-size: 16px; font-weight: bold;">${amount}</span></p>
             <p style="margin: 4px 0;"><strong>Department:</strong> ${department}</p>
             <p style="margin: 4px 0;"><strong>Vendor:</strong> ${vendor}</p>
           </div>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/accounting/requisitions/${requisitionNumber}" style="display: inline-block; background-color: #16a34a; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px;">Review & Approve Requisition</a>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/accounting/requisitions/${requisitionNumber}" style="display: inline-block; background-color: #6495ed; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px;">Review & Approve Requisition</a>
         </div>
       `,
     })
@@ -141,9 +141,9 @@ export const emailService = {
           <p style="font-size: 14px; color: #4b5563;">Thank you for your generous stewardship and partnership in ministry throughout ${taxYear}.</p>
           <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; margin: 16px 0;">
             <p style="margin: 0; font-size: 13px; color: #166534;">Total 501(c)(3) Tax-Deductible Giving:</p>
-            <p style="margin: 4px 0 0; font-size: 24px; font-weight: 800; color: #15803d;">${totalDeductible}</p>
+            <p style="margin: 4px 0 0; font-size: 24px; font-weight: 800; color: #4f7fd4;">${totalDeductible}</p>
           </div>
-          <a href="${pdfDownloadUrl}" style="display: inline-block; background-color: #15803d; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px;">Download Official Tax PDF</a>
+          <a href="${pdfDownloadUrl}" style="display: inline-block; background-color: #4f7fd4; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px;">Download Official Tax PDF</a>
         </div>
       `,
     })

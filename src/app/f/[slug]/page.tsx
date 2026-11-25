@@ -129,7 +129,7 @@ export default function PublicFormPage() {
             <Button
               type="submit"
               disabled={submit.isPending}
-              className="w-full bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
+              className="w-full bg-[var(--accent-cta)] text-white hover:bg-[var(--accent-cta)]"
             >
               Submit
             </Button>

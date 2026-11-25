@@ -80,7 +80,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               key={card.id}
               className="flex flex-col rounded-lg border bg-white p-5 shadow-xs"
             >
-              <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-[#eaf5ea] text-[#1b5e20]">
+              <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand-ink)]">
                 <Icon className="size-5" />
               </div>
               <h3 className="text-sm font-semibold text-zinc-900">{card.name}</h3>
@@ -90,7 +90,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
                   <Button
                     disabled={!canEdit}
                     onClick={() => setSheet("stripe")}
-                    className="h-9 w-full rounded-lg bg-[var(--brand)] text-sm text-white hover:bg-[var(--brand-hover)]"
+                    className="h-9 w-full rounded-lg bg-[var(--accent-cta)] text-sm text-white hover:bg-[var(--accent-cta-hover)]"
                   >
                     {stripeConnected ? "Manage Stripe" : "Connect your account"}
                   </Button>
@@ -111,7 +111,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
       </div>
 
       <Sheet open={sheet === "stripe"} onOpenChange={(o) => !o && setSheet(null)}>
-        <SheetContent className="sm:max-w-md">
+        <SheetContent side="right" inset size="sm" className="p-0">
           <SheetHeader>
             <SheetTitle>Connect Stripe</SheetTitle>
           </SheetHeader>
@@ -140,7 +140,6 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
               onClick={() => void connectStripe()}
             >
               Connect your account
@@ -150,7 +149,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
       </Sheet>
 
       <Sheet open={sheet === "resend"} onOpenChange={(o) => !o && setSheet(null)}>
-        <SheetContent className="sm:max-w-md">
+        <SheetContent side="right" inset size="sm" className="p-0">
           <SheetHeader>
             <SheetTitle>Configure Resend</SheetTitle>
           </SheetHeader>
@@ -180,7 +179,6 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
               onClick={() => {
                 toast.success("Resend settings saved locally (demo)")
                 setSheet(null)
@@ -193,7 +191,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
       </Sheet>
 
       <Sheet open={sheet === "twilio"} onOpenChange={(o) => !o && setSheet(null)}>
-        <SheetContent className="sm:max-w-md">
+        <SheetContent side="right" inset size="sm" className="p-0">
           <SheetHeader>
             <SheetTitle>Configure Twilio</SheetTitle>
           </SheetHeader>
@@ -226,7 +224,6 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
               onClick={() => {
                 toast.success("Twilio settings saved locally (demo)")
                 setSheet(null)

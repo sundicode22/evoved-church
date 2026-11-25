@@ -112,7 +112,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
       </section>
 
       <Sheet open={churchOpen} onOpenChange={setChurchOpen}>
-        <SheetContent className="sm:max-w-md">
+        <SheetContent side="right" inset size="sm" className="p-0">
           <SheetHeader>
             <SheetTitle>Edit church details</SheetTitle>
           </SheetHeader>
@@ -148,7 +148,6 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
               disabled={save.isPending}
               onClick={() => saveDraft(() => setChurchOpen(false))}
             >
@@ -159,7 +158,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
       </Sheet>
 
       <Sheet open={contactOpen} onOpenChange={setContactOpen}>
-        <SheetContent className="sm:max-w-md">
+        <SheetContent side="right" inset size="sm" className="p-0">
           <SheetHeader>
             <SheetTitle>Edit contact details</SheetTitle>
           </SheetHeader>
@@ -207,7 +206,6 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
               disabled={save.isPending}
               onClick={() => saveDraft(() => setContactOpen(false))}
             >

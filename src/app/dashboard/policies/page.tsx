@@ -150,7 +150,6 @@ export default function PoliciesPage() {
               <Can permission="policies.write">
                 <Button
                   onClick={openCreate}
-                  className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
                   New policy
@@ -384,7 +383,6 @@ export default function PoliciesPage() {
                       create.isPending ||
                       update.isPending
                     }
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     {editing ? "Save changes" : "Create draft"}
                   </Button>

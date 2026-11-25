@@ -22,17 +22,17 @@ import { useVisitorBoard } from "@/features/visitors/hooks/use-visitor-leads"
 import { formatCompact, formatMoney } from "@/lib/format"
 
 const givingConfig = {
-  online: { label: "Online", color: "#16a34a" },
+  online: { label: "Online", color: "#6495ed" },
   inPerson: { label: "In person", color: "#86efac" },
 } satisfies ChartConfig
 
 const attendanceConfig = {
-  adults: { label: "Adults", color: "#15803d" },
+  adults: { label: "Adults", color: "#4f7fd4" },
   children: { label: "Children", color: "#4ade80" },
 } satisfies ChartConfig
 
 const funnelConfig = {
-  count: { label: "People", color: "#16a34a" },
+  count: { label: "People", color: "#6495ed" },
 } satisfies ChartConfig
 
 function money(n: number) {
@@ -172,7 +172,7 @@ export default function DashboardHomePage() {
                 <Link
                   key={l.href}
                   href={l.href}
-                  className="rounded-lg bg-zinc-100 px-3.5 py-2 text-base text-zinc-900 hover:bg-[#eaf5ea]"
+                  className="rounded-lg bg-zinc-100 px-3.5 py-2 text-base text-zinc-900 hover:bg-[var(--brand-soft)]"
                 >
                   {l.label}
                 </Link>
@@ -189,7 +189,7 @@ function StatCard({ label, value, href }: { label: string; value: string; href: 
   return (
     <Link
       href={href}
-      className="rounded-xl bg-zinc-50 px-5 py-5 transition-colors hover:bg-[#eaf5ea]"
+      className="rounded-xl bg-zinc-50 px-5 py-5 transition-colors hover:bg-[var(--brand-soft)]"
     >
       <p className="text-base font-medium text-zinc-800">{label}</p>
       <p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">{value}</p>

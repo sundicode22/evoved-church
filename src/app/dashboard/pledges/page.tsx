@@ -359,7 +359,6 @@ export default function PledgesPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending}
-                    className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     {create.isPending ? "Saving…" : "Create pledge"}
                   </Button>

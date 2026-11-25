@@ -79,7 +79,7 @@ export default function MemberPortalPage() {
           {settings.publicGiving ? (
             <Link
               href={settings.givingUrl}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[var(--brand)] px-3.5 text-sm font-medium text-white shadow-xs hover:bg-[var(--brand-hover)]"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[var(--accent-cta)] px-3.5 text-sm font-medium text-white shadow-xs hover:bg-[var(--accent-cta-hover)]"
             >
               <HeartHandshake className="size-4" strokeWidth={1.75} />
               Give

@@ -117,7 +117,6 @@ export default function ServicesPage() {
             actions={
               <Can permission="services.write">
                 <Button
-                  className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                   onClick={() => setCreateOpen(true)}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
@@ -157,7 +156,7 @@ export default function ServicesPage() {
                           onClick={() => setSelectedId(s.id)}
                           className={`flex w-full flex-col rounded-xl px-3 py-2.5 text-left transition-colors ${
                             active
-                              ? "bg-[#eaf5ea] text-[#1b5e20]"
+                              ? "bg-[var(--brand-soft)] text-[var(--brand-ink)]"
                               : "text-zinc-700 hover:bg-zinc-50"
                           }`}
                         >
@@ -395,7 +394,6 @@ export default function ServicesPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending || name.trim().length < 2}
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Create service
                   </Button>

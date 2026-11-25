@@ -89,14 +89,14 @@ export function ColumnCustomize({
         render={
           <Button
             variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 rounded-lg border-zinc-200 text-xs font-normal shadow-xs"
+            size="default"
+            className="h-10 gap-1.5 rounded-lg border-zinc-200 text-sm font-normal shadow-xs"
           />
         }
       >
-        <Columns3 className="size-3.5 text-zinc-500" strokeWidth={1.75} />
+        <Columns3 className="size-4 text-zinc-500" strokeWidth={1.75} />
         Columns
-        <ChevronDown className="size-3.5 opacity-50" strokeWidth={1.75} />
+        <ChevronDown className="size-4 opacity-50" strokeWidth={1.75} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-xs">
         <DropdownMenuGroup>
@@ -130,7 +130,7 @@ export function ViewToggle({
   onChange: (v: "table" | "board") => void
 }) {
   return (
-    <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-100/80 p-0.5">
+    <div className="inline-flex h-10 items-center rounded-lg border border-zinc-200 bg-zinc-100/80 p-0.5 shadow-xs">
       {(
         [
           { id: "table", label: "List" },
@@ -142,7 +142,7 @@ export function ViewToggle({
           type="button"
           onClick={() => onChange(opt.id)}
           className={cn(
-            "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+            "h-full rounded-md px-3.5 text-sm font-medium transition-colors",
             value === opt.id
               ? "bg-white text-zinc-900 shadow-xs"
               : "text-zinc-500 hover:text-zinc-800"
@@ -207,13 +207,13 @@ export function TableSearch({
   className?: string
 }) {
   return (
-    <div className={cn("relative w-full min-w-[11rem] max-w-xs sm:w-56", className)}>
-      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
+    <div className={cn("relative w-full min-w-[12rem] max-w-sm sm:w-64", className)}>
+      <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-400" />
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
+        className="h-10 rounded-lg border-zinc-200 bg-white pl-10 text-sm shadow-xs"
       />
     </div>
   )
@@ -325,7 +325,7 @@ export function TablePagination({
               onValueChange={(v) => v && onPageSizeChange(Number(v))}
               items={pageSizeOptions.map((n) => ({ value: String(n), label: String(n) }))}
             >
-              <SelectTrigger className="h-8 w-[70px] rounded-lg text-xs shadow-xs">
+              <SelectTrigger className="h-10 w-[76px] rounded-lg text-sm shadow-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -345,46 +345,46 @@ export function TablePagination({
           <Button
             type="button"
             variant="outline"
-            size="icon-sm"
-            className="size-8 rounded-lg shadow-xs"
+            size="icon"
+            className="size-10 rounded-lg shadow-xs"
             disabled={!canPrev}
             onClick={() => onPageChange(1)}
             aria-label="First page"
           >
-            <ChevronsLeft className="size-3.5" strokeWidth={1.75} />
+            <ChevronsLeft className="size-4" strokeWidth={1.75} />
           </Button>
           <Button
             type="button"
             variant="outline"
-            size="icon-sm"
-            className="size-8 rounded-lg shadow-xs"
+            size="icon"
+            className="size-10 rounded-lg shadow-xs"
             disabled={!canPrev}
             onClick={() => onPageChange(page - 1)}
             aria-label="Previous page"
           >
-            <ChevronLeft className="size-3.5" strokeWidth={1.75} />
+            <ChevronLeft className="size-4" strokeWidth={1.75} />
           </Button>
           <Button
             type="button"
             variant="outline"
-            size="icon-sm"
-            className="size-8 rounded-lg shadow-xs"
+            size="icon"
+            className="size-10 rounded-lg shadow-xs"
             disabled={!canNext}
             onClick={() => onPageChange(page + 1)}
             aria-label="Next page"
           >
-            <ChevronRight className="size-3.5" strokeWidth={1.75} />
+            <ChevronRight className="size-4" strokeWidth={1.75} />
           </Button>
           <Button
             type="button"
             variant="outline"
-            size="icon-sm"
-            className="size-8 rounded-lg shadow-xs"
+            size="icon"
+            className="size-10 rounded-lg shadow-xs"
             disabled={!canNext}
             onClick={() => onPageChange(totalPages)}
             aria-label="Last page"
           >
-            <ChevronsRight className="size-3.5" strokeWidth={1.75} />
+            <ChevronsRight className="size-4" strokeWidth={1.75} />
           </Button>
         </div>
       </div>
@@ -392,22 +392,18 @@ export function TablePagination({
   )
 }
 
-/** Outline add button matching reference. */
+/** Primary add / CTA — same brand button used across dashboard CRUD. */
 export function TableAddButton({
   children,
   onClick,
+  type = "button",
 }: {
   children: React.ReactNode
   onClick?: () => void
+  type?: "button" | "submit"
 }) {
   return (
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      onClick={onClick}
-      className="h-8 gap-1.5 rounded-lg border-zinc-200 text-xs font-normal shadow-xs"
-    >
+    <Button type={type} size="default" onClick={onClick}>
       {children}
     </Button>
   )

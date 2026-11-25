@@ -32,7 +32,8 @@ Premium all-in-one ChMS: multi-location ops, visitor CRM, church members with ho
 - **Ledger**: never silent auto-post; always record who created / who posted.
 
 ## 6. UI
-- Shell: `SidebarProvider` → `AppSidebar` → `SidebarInset`, canvas `#fbfcfb`, accent `#16a34a`.
+- Shell: `SidebarProvider` → `AppSidebar` → `SidebarInset`, canvas `#fbfcfb`.
+- Colors (two-brand): **primary** cornflower `#6495ed` (`--brand`) for chrome/links; **accent** emerald `#16a34a` (`--accent-cta`) for CTA / call buttons only.
 - Lists: Shadcn `Table` + `TableToolbar` (ButtonGroup export/filter/more) + row `DropdownMenu` actions + `Empty` + server `Pagination` + `ScrollArea`.
 - Forms & detail: inset `Sheet`. Compact create: `Dialog`. Confirms: `ConfirmAction`. Forms use `Field` / `FieldGroup`; receipts via `FileAttachment`.
 - Accounting COA: `Accordion` by account class; ⌘K `Command` jump; `HoverCard` for codes/hints; `NavigationMenu` for guidance links.

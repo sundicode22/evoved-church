@@ -47,6 +47,8 @@ export function RichTextEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3] },
+        // Avoid duplicate "link" when StarterKit ships Link built-in.
+        link: false,
       }),
       Placeholder.configure({ placeholder }),
       Link.configure({

@@ -138,7 +138,7 @@ export default function WelcomePage() {
                   <Button
                     type="submit"
                     disabled={pending}
-                    className="h-10 w-full rounded-lg bg-[var(--brand)] text-sm text-white shadow-sm hover:bg-[var(--brand-hover)]"
+                    className="h-10 w-full rounded-lg bg-[var(--accent-cta)] text-sm text-white shadow-sm hover:bg-[var(--accent-cta-hover)]"
                   >
                     {pending ? "Submitting…" : "Say hello"}
                   </Button>

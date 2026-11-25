@@ -147,7 +147,6 @@ export default function ChurchCalendarPage() {
             actions={
               <Can permission="calendar.write">
                 <Button
-                  className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                   onClick={openCreate}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
@@ -433,7 +432,6 @@ export default function ChurchCalendarPage() {
                   <Button
                     type="submit"
                     disabled={createOcc.isPending || createProgram.isPending}
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Save event
                   </Button>

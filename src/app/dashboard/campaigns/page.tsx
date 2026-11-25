@@ -268,7 +268,6 @@ export default function CampaignsPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending || name.trim().length < 2}
-                    className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Create
                   </Button>

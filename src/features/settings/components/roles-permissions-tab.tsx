@@ -116,7 +116,6 @@ function CreateRoleSheet({
             <Button
               type="submit"
               disabled={create.isPending || name.trim().length < 2}
-              className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
             >
               Create role
             </Button>
@@ -190,12 +189,8 @@ export function RolesPermissionsTab() {
       <TablePanel>
         <div className="flex justify-end px-1">
           <Can permission="settings.roles">
-            <Button
-              size="sm"
-              onClick={() => setDialogOpen(true)}
-              className="h-8 gap-1.5 bg-[var(--brand)] font-normal text-white hover:bg-[var(--brand)]"
-            >
-              <Plus className="size-3.5" />
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="size-4" />
               New role
             </Button>
           </Can>

@@ -99,7 +99,6 @@ export default function ResourcesPage() {
             actions={
               <Can permission="facilities.write">
                 <Button
-                  className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                   onClick={() => setOpen(true)}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
@@ -119,8 +118,7 @@ export default function ResourcesPage() {
                   </EmptyDescription>
                 </EmptyHeader>
                 <Can permission="facilities.write">
-                  <Button
-                    className="mt-4 bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
+                  <Button className="mt-4"
                     onClick={() => setOpen(true)}
                   >
                     Create resource
@@ -255,7 +253,6 @@ export default function ResourcesPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending || name.trim().length < 2}
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Save resource
                   </Button>

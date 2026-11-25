@@ -119,7 +119,6 @@ export default function AppointmentsPage() {
             actions={
               <Can permission="appointments.write">
                 <Button
-                  className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                   onClick={openCreate}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
@@ -298,7 +297,6 @@ export default function AppointmentsPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending || name.trim().length < 2}
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Save schedule
                   </Button>

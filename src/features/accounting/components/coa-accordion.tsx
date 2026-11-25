@@ -121,13 +121,10 @@ export function ChartOfAccountsAccordion({ accounts }: { accounts: CoaAccount[] 
                 <div className="flex w-full items-center justify-between gap-3 pr-2">
                   <div className="flex items-center gap-2 text-left">
                     <HoverCard>
+                      {/* span — never nest a button inside AccordionTrigger's button */}
                       <HoverCardTrigger
                         render={
-                          <button
-                            type="button"
-                            className="text-sm font-normal capitalize text-zinc-900 outline-none"
-                            onClick={(e) => e.stopPropagation()}
-                          />
+                          <span className="cursor-default text-sm font-normal capitalize text-zinc-900 outline-none" />
                         }
                       >
                         {meta.label}

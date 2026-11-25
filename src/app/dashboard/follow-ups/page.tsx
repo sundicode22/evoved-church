@@ -102,7 +102,6 @@ export default function FollowUpsPage() {
             actions={
               <Can permission="followups.write">
                 <Button
-                  className="h-8 gap-1.5 bg-[var(--brand)] text-xs font-normal text-white hover:bg-[var(--brand)]"
                   onClick={() => setOpen(true)}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
@@ -272,7 +271,6 @@ export default function FollowUpsPage() {
                   <Button
                     type="submit"
                     disabled={create.isPending || title.trim().length < 2}
-                    className="bg-[var(--brand)] text-white hover:bg-[var(--brand)]"
                   >
                     Save follow-up
                   </Button>
