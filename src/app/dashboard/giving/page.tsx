@@ -6,16 +6,17 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Form } from "@/components/ui/form"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import {
+  NumberFormField,
+  SelectFormField,
+  TextFormField,
+} from "@/components/form-fields"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Sheet,
   SheetBody,
@@ -25,7 +26,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
 import {
   Table,
   TableBody,
@@ -60,11 +61,36 @@ import {
   GIVING_METHODS,
   METHOD_LABELS,
   STATUS_LABELS,
-  type GivingChannel,
   type GivingContribution,
-  type GivingFrequency,
-  type GivingMethod,
 } from "@/features/giving/schemas"
+
+const todayISO = () => new Date().toISOString().slice(0, 10)
+
+const givingFormSchema = z.object({
+  donorDisplayName: z.string().trim().min(1, "Donor name is required"),
+  fundId: z.string().min(1, "Fund is required"),
+  amount: z
+    .number({ error: "Amount is required" })
+    .positive("Amount must be greater than 0"),
+  method: z.enum(GIVING_METHODS),
+  channel: z.enum(GIVING_CHANNELS),
+  frequency: z.enum(GIVING_FREQUENCIES),
+  contributionDate: z.string().min(1, "Date is required"),
+  notes: z.string(),
+})
+
+type GivingFormValues = z.infer<typeof givingFormSchema>
+
+const givingDefaults = (fundId: string): Partial<GivingFormValues> => ({
+  donorDisplayName: "",
+  fundId,
+  amount: undefined,
+  method: "cash_envelope",
+  channel: "in_person",
+  frequency: "one_time",
+  contributionDate: todayISO(),
+  notes: "",
+})
 
 const COLUMNS: ColumnOption[] = [
   { id: "donor", label: "Donor" },
@@ -124,20 +150,16 @@ export default function GivingPage() {
   const [postTarget, setPostTarget] = React.useState<GivingContribution | null>(null)
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
 
-  const [donorDisplayName, setDonorDisplayName] = React.useState("")
-  const [fundId, setFundId] = React.useState("fund-1")
-  const [amount, setAmount] = React.useState("")
-  const [method, setMethod] = React.useState<GivingMethod>("cash_envelope")
-  const [channel, setChannel] = React.useState<GivingChannel>("in_person")
-  const [frequency, setFrequency] = React.useState<GivingFrequency>("one_time")
-  const [contributionDate, setContributionDate] = React.useState(
-    () => new Date().toISOString().slice(0, 10)
-  )
-  const [notes, setNotes] = React.useState("")
+  const defaultFundId = funds?.[0]?.id ?? "fund-1"
+
+  const form = useForm<GivingFormValues>({
+    resolver: zodResolver(givingFormSchema),
+    defaultValues: givingDefaults(defaultFundId),
+  })
 
   React.useEffect(() => {
-    if (funds?.[0]?.id && fundId === "fund-1") setFundId(funds[0].id)
-  }, [funds, fundId])
+    if (sheetOpen) form.reset(givingDefaults(defaultFundId))
+  }, [sheetOpen, defaultFundId, form])
 
   const contributions = data?.contributions ?? []
   const summary = data?.summary ?? { total: 0, inPerson: 0, online: 0, recurring: 0 }
@@ -162,36 +184,23 @@ export default function GivingPage() {
     { label: "Recurring", value: summary.recurring },
   ]
 
-  function resetForm() {
-    setDonorDisplayName("")
-    setAmount("")
-    setMethod("cash_envelope")
-    setChannel("in_person")
-    setFrequency("one_time")
-    setContributionDate(new Date().toISOString().slice(0, 10))
-    setNotes("")
-  }
-
-  function submitCreate(e: React.FormEvent) {
-    e.preventDefault()
-    const parsedAmount = Number(amount)
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) return
+  function onSubmit(values: GivingFormValues) {
     create.mutate(
       {
-        donorDisplayName,
-        fundId,
-        amount: parsedAmount,
-        method,
-        channel,
-        frequency,
-        contributionDate: new Date(contributionDate).toISOString(),
-        notes: notes || null,
+        donorDisplayName: values.donorDisplayName,
+        fundId: values.fundId,
+        amount: values.amount,
+        method: values.method,
+        channel: values.channel,
+        frequency: values.frequency,
+        contributionDate: new Date(values.contributionDate).toISOString(),
+        notes: values.notes || null,
         isTaxDeductible: true,
       },
       {
         onSuccess: () => {
           setSheetOpen(false)
-          resetForm()
+          form.reset(givingDefaults(defaultFundId))
         },
       }
     )
@@ -366,152 +375,80 @@ export default function GivingPage() {
 
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
-              <form onSubmit={submitCreate} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle className="font-medium">Add giving</SheetTitle>
-                  <SheetDescription>
-                    Record a contribution. Posting to the ledger is a separate confirm step.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel>Donor name</FieldLabel>
-                      <Input
-                        value={donorDisplayName}
-                        onChange={(e) => setDonorDisplayName(e.target.value)}
-                        className="h-9 text-sm"
-                        required
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+                  <SheetHeader className="pr-12">
+                    <SheetTitle className="font-medium">Add giving</SheetTitle>
+                    <SheetDescription>
+                      Record a contribution. Posting to the ledger is a separate confirm step.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <TextFormField
+                        control={form.control}
+                        name="donorDisplayName"
+                        label="Donor name"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Fund</FieldLabel>
-                      <Select
-                        value={fundId}
-                        items={fundItems.length ? fundItems : [{ value: "fund-1", label: "General Operating Fund" }]}
-                        onValueChange={(v) => v && setFundId(v)}
-                      >
-                        <SelectTrigger className="h-9 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(fundItems.length
+                      <SelectFormField
+                        control={form.control}
+                        name="fundId"
+                        label="Fund"
+                        options={
+                          fundItems.length
                             ? fundItems
                             : [{ value: "fund-1", label: "General Operating Fund" }]
-                          ).map((f) => (
-                            <SelectItem key={f.value} value={f.value}>
-                              {f.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Amount</FieldLabel>
-                      <Input
-                        type="number"
-                        min="0.01"
+                        }
+                      />
+                      <NumberFormField
+                        control={form.control}
+                        name="amount"
+                        label="Amount"
+                        min={0.01}
                         step="0.01"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className="h-9 text-sm"
-                        required
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Method</FieldLabel>
-                      <Select
-                        value={method}
-                        items={METHOD_ITEMS}
-                        onValueChange={(v) => v && setMethod(v as GivingMethod)}
-                      >
-                        <SelectTrigger className="h-9 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {METHOD_ITEMS.map((m) => (
-                            <SelectItem key={m.value} value={m.value}>
-                              {m.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Channel</FieldLabel>
-                      <Select
-                        value={channel}
-                        items={CHANNEL_ITEMS}
-                        onValueChange={(v) => v && setChannel(v as GivingChannel)}
-                      >
-                        <SelectTrigger className="h-9 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CHANNEL_ITEMS.map((c) => (
-                            <SelectItem key={c.value} value={c.value}>
-                              {c.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Frequency</FieldLabel>
-                      <Select
-                        value={frequency}
-                        items={FREQUENCY_ITEMS}
-                        onValueChange={(v) => v && setFrequency(v as GivingFrequency)}
-                      >
-                        <SelectTrigger className="h-9 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {FREQUENCY_ITEMS.map((f) => (
-                            <SelectItem key={f.value} value={f.value}>
-                              {f.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Date</FieldLabel>
-                      <Input
+                      <SelectFormField
+                        control={form.control}
+                        name="method"
+                        label="Method"
+                        options={METHOD_ITEMS}
+                      />
+                      <SelectFormField
+                        control={form.control}
+                        name="channel"
+                        label="Channel"
+                        options={CHANNEL_ITEMS}
+                      />
+                      <SelectFormField
+                        control={form.control}
+                        name="frequency"
+                        label="Frequency"
+                        options={FREQUENCY_ITEMS}
+                      />
+                      <TextFormField
+                        control={form.control}
+                        name="contributionDate"
+                        label="Date"
                         type="date"
-                        value={contributionDate}
-                        onChange={(e) => setContributionDate(e.target.value)}
-                        className="h-9 text-sm"
-                        required
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Notes</FieldLabel>
-                      <Input
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        className="h-9 text-sm"
-                      />
-                    </Field>
-                  </FieldGroup>
-                </SheetBody>
-                <SheetFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-9"
-                    onClick={() => setSheetOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending}
-                  >
-                    {create.isPending ? "Saving…" : "Record contribution"}
-                  </Button>
-                </SheetFooter>
-              </form>
+                      <TextFormField control={form.control} name="notes" label="Notes" />
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9"
+                      onClick={() => setSheetOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={create.isPending}>
+                      {create.isPending ? "Saving…" : "Record contribution"}
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
 

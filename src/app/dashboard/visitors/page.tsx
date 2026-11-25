@@ -7,7 +7,11 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { Form } from "@/components/ui/form"
+import { TextFormField, SelectFormField } from "@/components/form-fields"
 import {
   Sheet,
   SheetBody,
@@ -17,14 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { FieldGroup } from "@/components/ui/field"
 import {
   Table,
   TableBody,
@@ -73,6 +70,28 @@ const SOURCES = [
   "Other",
 ]
 
+const addVisitorFormSchema = z.object({
+  contactName: z.string().trim().min(2, "Name must be at least 2 characters"),
+  title: z.string().optional(),
+  contactEmail: z.string().trim().email("Valid email required").optional().or(z.literal("")),
+  contactPhone: z.string().optional(),
+  location: z.string().optional(),
+  source: z.string().min(1, "Source is required"),
+})
+
+type AddVisitorFormValues = z.infer<typeof addVisitorFormSchema>
+
+const ADD_VISITOR_DEFAULTS: AddVisitorFormValues = {
+  contactName: "",
+  title: "",
+  contactEmail: "",
+  contactPhone: "",
+  location: "",
+  source: SOURCES[0],
+}
+
+const SOURCE_OPTIONS = SOURCES.map((s) => ({ value: s, label: s }))
+
 function stageTone(stage: string): "neutral" | "success" | "warning" | "info" {
   if (stage === "active_partner") return "success"
   if (stage === "first_visit") return "info"
@@ -96,12 +115,10 @@ export default function VisitorsPage() {
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(10)
   const [sheetOpen, setSheetOpen] = React.useState(false)
-  const [contactName, setContactName] = React.useState("")
-  const [contactEmail, setContactEmail] = React.useState("")
-  const [contactPhone, setContactPhone] = React.useState("")
-  const [location, setLocation] = React.useState("")
-  const [source, setSource] = React.useState(SOURCES[0])
-  const [title, setTitle] = React.useState("")
+  const form = useForm<AddVisitorFormValues>({
+    resolver: zodResolver(addVisitorFormSchema),
+    defaultValues: ADD_VISITOR_DEFAULTS,
+  })
 
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
   const createLead = useCreateLead()
@@ -116,42 +133,32 @@ export default function VisitorsPage() {
 
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize)
 
-  function resetForm() {
-    setContactName("")
-    setContactEmail("")
-    setContactPhone("")
-    setLocation("")
-    setSource(SOURCES[0])
-    setTitle("")
-  }
-
   function openCreate() {
-    resetForm()
+    form.reset(ADD_VISITOR_DEFAULTS)
     setSheetOpen(true)
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    const name = contactName.trim()
+  const submit = form.handleSubmit(async (values) => {
+    const name = values.contactName.trim()
     try {
       await createLead.mutateAsync({
         contactName: name,
-        title: title.trim() || `Guest — ${name}`,
-        contactEmail: contactEmail.trim() || "",
-        contactPhone: contactPhone.trim() || "",
-        location: location.trim() || undefined,
-        source,
+        title: values.title?.trim() || `Guest — ${name}`,
+        contactEmail: values.contactEmail?.trim() || "",
+        contactPhone: values.contactPhone?.trim() || "",
+        location: values.location?.trim() || undefined,
+        source: values.source,
         value: 0,
         tags: [],
       })
       setSheetOpen(false)
-      resetForm()
+      form.reset(ADD_VISITOR_DEFAULTS)
       await refetch()
       await board.refetch()
     } catch {
       /* toast in hook */
     }
-  }
+  })
 
   return (
     <SidebarProvider
@@ -315,66 +322,47 @@ export default function VisitorsPage() {
                   </SheetDescription>
                 </SheetHeader>
                 <SheetBody>
-                  <FieldGroup className="gap-4">
-                    <Field>
-                      <FieldLabel>Name</FieldLabel>
-                      <Input
-                        value={contactName}
-                        onChange={(e) => setContactName(e.target.value)}
-                        required
+                  <Form {...form}>
+                    <FieldGroup className="gap-4">
+                      <TextFormField
+                        control={form.control}
+                        name="contactName"
+                        label="Name"
                         autoFocus
-                        minLength={2}
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Title (optional)</FieldLabel>
-                      <Input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                      <TextFormField
+                        control={form.control}
+                        name="title"
+                        label="Title (optional)"
                         placeholder="e.g. First-Time Family — Cooper"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Email</FieldLabel>
-                      <Input
+                      <TextFormField
+                        control={form.control}
+                        name="contactEmail"
+                        label="Email"
                         type="email"
-                        value={contactEmail}
-                        onChange={(e) => setContactEmail(e.target.value)}
                         placeholder="optional"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Phone</FieldLabel>
-                      <Input
-                        value={contactPhone}
-                        onChange={(e) => setContactPhone(e.target.value)}
+                      <TextFormField
+                        control={form.control}
+                        name="contactPhone"
+                        label="Phone"
                         placeholder="optional"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Location</FieldLabel>
-                      <Input
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
+                      <TextFormField
+                        control={form.control}
+                        name="location"
+                        label="Location"
                         placeholder="Main Sanctuary"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Source</FieldLabel>
-                      <Select value={source} onValueChange={(v) => v && setSource(v)}>
-                        <SelectTrigger className="h-[39px] w-full shadow-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SOURCES.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {s}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  </FieldGroup>
+                      <SelectFormField
+                        control={form.control}
+                        name="source"
+                        label="Source"
+                        options={SOURCE_OPTIONS}
+                      />
+                    </FieldGroup>
+                  </Form>
                 </SheetBody>
                 <SheetFooter>
                   <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>

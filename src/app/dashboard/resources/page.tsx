@@ -2,22 +2,16 @@
 
 import * as React from "react"
 import { Package, Plus } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Sheet,
   SheetBody,
@@ -28,6 +22,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Form, FormField } from "@/components/ui/form"
+import {
+  NumberFormField,
+  SelectFormField,
+  TextFormField,
+  TextareaFormField,
+} from "@/components/form-fields"
 import {
   Empty,
   EmptyDescription,
@@ -48,38 +49,57 @@ import {
   useCreateResource,
   useResources,
 } from "@/features/facilities/hooks/use-facilities"
-import { RESOURCE_CATEGORIES } from "@/features/facilities/schemas"
+import {
+  RESOURCE_CATEGORIES,
+  createResourceSchema,
+} from "@/features/facilities/schemas"
+
+const resourceFormSchema = createResourceSchema
+  .pick({ name: true, description: true })
+  .extend({
+    category: z.enum(["equipment", "supply", "other"]),
+    quantity: z.number().int().min(1, "Quantity must be at least 1").optional(),
+    requiresApproval: z.boolean(),
+  })
+
+type ResourceFormValues = z.infer<typeof resourceFormSchema>
+
+const emptyForm: ResourceFormValues = {
+  name: "",
+  category: "equipment",
+  description: "",
+  quantity: 1,
+  requiresApproval: false,
+}
 
 export default function ResourcesPage() {
   const { data, isLoading } = useResources()
   const create = useCreateResource()
   const [open, setOpen] = React.useState(false)
-  const [name, setName] = React.useState("")
-  const [category, setCategory] = React.useState<"equipment" | "supply" | "other">(
-    "equipment"
-  )
-  const [description, setDescription] = React.useState("")
-  const [quantity, setQuantity] = React.useState("1")
-  const [requiresApproval, setRequiresApproval] = React.useState(false)
+  const form = useForm<ResourceFormValues>({
+    resolver: zodResolver(resourceFormSchema),
+    defaultValues: emptyForm,
+  })
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function openCreate() {
+    form.reset(emptyForm)
+    setOpen(true)
+  }
+
+  function submit(values: ResourceFormValues) {
     create.mutate(
       {
-        name,
-        category,
-        description,
-        quantity: Number(quantity) || 1,
-        requiresApproval,
+        name: values.name,
+        category: values.category,
+        description: values.description ?? "",
+        quantity: values.quantity ?? 1,
+        requiresApproval: values.requiresApproval,
+        isActive: true,
       },
       {
         onSuccess: () => {
           setOpen(false)
-          setName("")
-          setDescription("")
-          setQuantity("1")
-          setCategory("equipment")
-          setRequiresApproval(false)
+          form.reset(emptyForm)
         },
       }
     )
@@ -99,7 +119,7 @@ export default function ResourcesPage() {
             actions={
               <Can permission="facilities.write">
                 <Button
-                  onClick={() => setOpen(true)}
+                  onClick={openCreate}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
                   Add resource
@@ -119,7 +139,7 @@ export default function ResourcesPage() {
                 </EmptyHeader>
                 <Can permission="facilities.write">
                   <Button className="mt-4"
-                    onClick={() => setOpen(true)}
+                    onClick={openCreate}
                   >
                     Create resource
                   </Button>
@@ -177,7 +197,8 @@ export default function ResourcesPage() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetContent side="right" inset size="md" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
+              <Form {...form}>
+              <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
                 <SheetHeader className="pr-12">
                   <SheetTitle>Add resource</SheetTitle>
                   <SheetDescription>
@@ -186,78 +207,50 @@ export default function ResourcesPage() {
                 </SheetHeader>
                 <SheetBody>
                   <FieldGroup>
-                    <Field>
-                      <FieldLabel>Name</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Category</FieldLabel>
-                      <Select
-                        value={category}
-                        items={RESOURCE_CATEGORIES.map((c) => ({
-                          value: c.value,
-                          label: c.label,
-                        }))}
-                        onValueChange={(v) =>
-                          v && setCategory(v as "equipment" | "supply" | "other")
-                        }
-                      >
-                        <SelectTrigger className="h-9 w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {RESOURCE_CATEGORIES.map((c) => (
-                            <SelectItem key={c.value} value={c.value}>
-                              {c.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Quantity</FieldLabel>
-                      <Input
-                        type="number"
-                        min={1}
-                        className="h-9"
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Description</FieldLabel>
-                      <Textarea
-                        className="min-h-16"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                      />
-                    </Field>
-                    <Field className="flex flex-row items-center justify-between gap-3">
-                      <FieldLabel>Requires approval</FieldLabel>
-                      <Switch
-                        checked={requiresApproval}
-                        onCheckedChange={setRequiresApproval}
-                      />
-                    </Field>
+                    <TextFormField control={form.control} name="name" label="Name" />
+                    <SelectFormField
+                      control={form.control}
+                      name="category"
+                      label="Category"
+                      options={RESOURCE_CATEGORIES.map((c) => ({
+                        value: c.value,
+                        label: c.label,
+                      }))}
+                    />
+                    <NumberFormField
+                      control={form.control}
+                      name="quantity"
+                      label="Quantity"
+                      min={1}
+                      step={1}
+                    />
+                    <TextareaFormField
+                      control={form.control}
+                      name="description"
+                      label="Description"
+                    />
+                    <FormField
+                      control={form.control}
+                      name="requiresApproval"
+                      render={({ field }) => (
+                        <Field className="flex flex-row items-center justify-between gap-3">
+                          <FieldLabel>Requires approval</FieldLabel>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </Field>
+                      )}
+                    />
                   </FieldGroup>
                 </SheetBody>
                 <SheetFooter>
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending || name.trim().length < 2}
-                  >
+                  <Button type="submit" variant="primary" disabled={create.isPending}>
                     Save resource
                   </Button>
                 </SheetFooter>
               </form>
+              </Form>
             </SheetContent>
           </Sheet>
         </RequireAbility>

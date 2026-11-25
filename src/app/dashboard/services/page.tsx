@@ -4,16 +4,13 @@ import * as React from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Form } from "@/components/ui/form"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { SelectFormField, TextFormField } from "@/components/form-fields"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Sheet,
   SheetBody,
@@ -23,12 +20,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
@@ -50,11 +42,32 @@ import {
 import {
   DAY_LABELS,
   SERVICE_TYPES,
+  serviceTypeSchema,
   type ChurchService,
-  type ServiceType,
 } from "@/features/services/schemas"
 import { PageHeader } from "@/components/page-header"
 import { Church, Plus } from "lucide-react"
+
+const serviceFormSchema = z.object({
+  name: z.string().trim().min(2, "Name is required"),
+  type: serviceTypeSchema,
+  locationLabel: z.string(),
+  defaultDayOfWeek: z.string().min(1, "Default day is required"),
+  defaultStartTime: z.string().min(1, "Start time is required"),
+})
+
+type ServiceFormValues = z.infer<typeof serviceFormSchema>
+
+const SERVICE_FORM_DEFAULTS: ServiceFormValues = {
+  name: "",
+  type: "sunday_worship",
+  locationLabel: "",
+  defaultDayOfWeek: "0",
+  defaultStartTime: "10:00",
+}
+
+const SERVICE_TYPE_OPTIONS = SERVICE_TYPES.map((t) => ({ value: t.value, label: t.label }))
+const DAY_OPTIONS = DAY_LABELS.map((d, i) => ({ value: String(i), label: d }))
 
 export default function ServicesPage() {
   const { data, isLoading } = useServices()
@@ -64,11 +77,14 @@ export default function ServicesPage() {
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [createOpen, setCreateOpen] = React.useState(false)
   const [confirmDelete, setConfirmDelete] = React.useState<ChurchService | null>(null)
-  const [name, setName] = React.useState("")
-  const [type, setType] = React.useState<ServiceType>("sunday_worship")
-  const [locationLabel, setLocationLabel] = React.useState("")
-  const [defaultStartTime, setDefaultStartTime] = React.useState("10:00")
-  const [defaultDayOfWeek, setDefaultDayOfWeek] = React.useState("0")
+  const form = useForm<ServiceFormValues>({
+    resolver: zodResolver(serviceFormSchema),
+    defaultValues: SERVICE_FORM_DEFAULTS,
+  })
+
+  React.useEffect(() => {
+    if (createOpen) form.reset(SERVICE_FORM_DEFAULTS)
+  }, [createOpen, form])
 
   const selected = data?.find((s) => s.id === (selectedId ?? data[0]?.id)) ?? null
   const update = useUpdateService(selected?.id || "")
@@ -77,21 +93,20 @@ export default function ServicesPage() {
     if (!selectedId && data?.[0]) setSelectedId(data[0].id)
   }, [data, selectedId])
 
-  function submitCreate(e: React.FormEvent) {
-    e.preventDefault()
+  function onSubmit(values: ServiceFormValues) {
     create.mutate(
       {
-        name,
-        type,
-        locationLabel,
-        defaultStartTime,
-        defaultDayOfWeek: Number(defaultDayOfWeek),
+        name: values.name,
+        type: values.type,
+        locationLabel: values.locationLabel,
+        defaultStartTime: values.defaultStartTime,
+        defaultDayOfWeek: Number(values.defaultDayOfWeek),
         recurrence: "weekly",
       },
       {
         onSuccess: (s) => {
           setCreateOpen(false)
-          setName("")
+          form.reset(SERVICE_FORM_DEFAULTS)
           setSelectedId(s.id)
         },
       }
@@ -305,100 +320,56 @@ export default function ServicesPage() {
 
           <Sheet open={createOpen} onOpenChange={setCreateOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
-              <form onSubmit={submitCreate} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle>New service</SheetTitle>
-                  <SheetDescription>
-                    Any gathering — not only Sunday. Set type, day, and default start time.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel>Name</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+                  <SheetHeader className="pr-12">
+                    <SheetTitle>New service</SheetTitle>
+                    <SheetDescription>
+                      Any gathering — not only Sunday. Set type, day, and default start time.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <TextFormField control={form.control} name="name" label="Name" />
+                      <SelectFormField
+                        control={form.control}
+                        name="type"
+                        label="Type"
+                        options={SERVICE_TYPE_OPTIONS}
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Type</FieldLabel>
-                      <Select
-                        value={type}
-                        items={SERVICE_TYPES.map((t) => ({ value: t.value, label: t.label }))}
-                        onValueChange={(v) => v && setType(v as ServiceType)}
-                      >
-                        <SelectTrigger className="h-9 w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SERVICE_TYPES.map((t) => (
-                            <SelectItem key={t.value} value={t.value}>
-                              {t.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Location</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={locationLabel}
-                        onChange={(e) => setLocationLabel(e.target.value)}
+                      <TextFormField
+                        control={form.control}
+                        name="locationLabel"
+                        label="Location"
                         placeholder="Main Sanctuary"
                       />
-                    </Field>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field>
-                        <FieldLabel>Default day</FieldLabel>
-                        <Select
-                          value={defaultDayOfWeek}
-                          items={DAY_LABELS.map((d, i) => ({
-                            value: String(i),
-                            label: d,
-                          }))}
-                          onValueChange={(v) => v && setDefaultDayOfWeek(v)}
-                        >
-                          <SelectTrigger className="h-9 w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {DAY_LABELS.map((d, i) => (
-                              <SelectItem key={d} value={String(i)}>
-                                {d}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                      <Field>
-                        <FieldLabel>Start time</FieldLabel>
-                        <Input
-                          type="time"
-                          className="h-9"
-                          value={defaultStartTime}
-                          onChange={(e) => setDefaultStartTime(e.target.value)}
+                      <div className="grid grid-cols-2 gap-3">
+                        <SelectFormField
+                          control={form.control}
+                          name="defaultDayOfWeek"
+                          label="Default day"
+                          options={DAY_OPTIONS}
                         />
-                        <FieldDescription>24h local time</FieldDescription>
-                      </Field>
-                    </div>
-                  </FieldGroup>
-                </SheetBody>
-                <SheetFooter>
-                  <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending || name.trim().length < 2}
-                  >
-                    Create service
-                  </Button>
-                </SheetFooter>
-              </form>
+                        <TextFormField
+                          control={form.control}
+                          name="defaultStartTime"
+                          label="Start time"
+                          type="time"
+                          description="24h local time"
+                        />
+                      </div>
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={create.isPending}>
+                      Create service
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
 

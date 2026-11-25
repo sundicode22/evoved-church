@@ -7,8 +7,11 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Form } from "@/components/ui/form"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { TextareaFormField, TextFormField } from "@/components/form-fields"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -19,7 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
 import {
   Empty,
   EmptyDescription,
@@ -44,6 +47,26 @@ import {
 } from "@/features/follow-ups/hooks/use-follow-ups"
 import { FOLLOW_UP_STATUSES, type FollowUp } from "@/features/follow-ups/schemas"
 
+const followUpFormSchema = z.object({
+  title: z.string().trim().min(2, "Title is required"),
+  relatedLeadName: z.string(),
+  relatedMemberName: z.string(),
+  assignedToName: z.string(),
+  dueAt: z.string(),
+  notes: z.string(),
+})
+
+type FollowUpFormValues = z.infer<typeof followUpFormSchema>
+
+const FOLLOW_UP_DEFAULTS: FollowUpFormValues = {
+  title: "",
+  relatedLeadName: "",
+  relatedMemberName: "",
+  assignedToName: "",
+  dueAt: "",
+  notes: "",
+}
+
 function statusTone(status: FollowUp["status"]) {
   if (status === "done") return "success" as const
   if (status === "cancelled") return "warning" as const
@@ -56,33 +79,30 @@ export default function FollowUpsPage() {
   const create = useCreateFollowUp()
   const update = useUpdateFollowUp()
   const [open, setOpen] = React.useState(false)
-  const [title, setTitle] = React.useState("")
-  const [relatedLeadName, setRelatedLeadName] = React.useState("")
-  const [relatedMemberName, setRelatedMemberName] = React.useState("")
-  const [assignedToName, setAssignedToName] = React.useState("")
-  const [dueAt, setDueAt] = React.useState("")
-  const [notes, setNotes] = React.useState("")
+  const form = useForm<FollowUpFormValues>({
+    resolver: zodResolver(followUpFormSchema),
+    defaultValues: FOLLOW_UP_DEFAULTS,
+  })
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  React.useEffect(() => {
+    if (open) form.reset(FOLLOW_UP_DEFAULTS)
+  }, [open, form])
+
+  function onSubmit(values: FollowUpFormValues) {
     create.mutate(
       {
-        title,
-        relatedLeadName,
-        relatedMemberName,
-        assignedToName,
-        dueAt: dueAt ? new Date(dueAt).toISOString() : undefined,
-        notes,
+        title: values.title,
+        relatedLeadName: values.relatedLeadName,
+        relatedMemberName: values.relatedMemberName,
+        assignedToName: values.assignedToName,
+        dueAt: values.dueAt ? new Date(values.dueAt).toISOString() : undefined,
+        notes: values.notes,
+        status: "open",
       },
       {
         onSuccess: () => {
           setOpen(false)
-          setTitle("")
-          setRelatedLeadName("")
-          setRelatedMemberName("")
-          setAssignedToName("")
-          setDueAt("")
-          setNotes("")
+          form.reset(FOLLOW_UP_DEFAULTS)
         },
       }
     )
@@ -203,79 +223,51 @@ export default function FollowUpsPage() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetContent side="right" inset size="md" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle>Add follow-up</SheetTitle>
-                  <SheetDescription>
-                    Capture who needs care, who owns it, and when it is due.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel>Title</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        required
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+                  <SheetHeader className="pr-12">
+                    <SheetTitle>Add follow-up</SheetTitle>
+                    <SheetDescription>
+                      Capture who needs care, who owns it, and when it is due.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <TextFormField control={form.control} name="title" label="Title" />
+                      <TextFormField
+                        control={form.control}
+                        name="relatedLeadName"
+                        label="Related guest / lead"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Related guest / lead</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={relatedLeadName}
-                        onChange={(e) => setRelatedLeadName(e.target.value)}
+                      <TextFormField
+                        control={form.control}
+                        name="relatedMemberName"
+                        label="Related member"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Related member</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={relatedMemberName}
-                        onChange={(e) => setRelatedMemberName(e.target.value)}
+                      <TextFormField
+                        control={form.control}
+                        name="assignedToName"
+                        label="Assignee"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Assignee</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={assignedToName}
-                        onChange={(e) => setAssignedToName(e.target.value)}
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Due</FieldLabel>
-                      <Input
+                      <TextFormField
+                        control={form.control}
+                        name="dueAt"
+                        label="Due"
                         type="datetime-local"
-                        className="h-9"
-                        value={dueAt}
-                        onChange={(e) => setDueAt(e.target.value)}
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Notes</FieldLabel>
-                      <Textarea
-                        className="min-h-16"
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                      />
-                    </Field>
-                  </FieldGroup>
-                </SheetBody>
-                <SheetFooter>
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending || title.trim().length < 2}
-                  >
-                    Save follow-up
-                  </Button>
-                </SheetFooter>
-              </form>
+                      <TextareaFormField control={form.control} name="notes" label="Notes" />
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={create.isPending}>
+                      Save follow-up
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
         </RequireAbility>

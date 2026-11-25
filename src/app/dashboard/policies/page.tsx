@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
@@ -55,7 +55,23 @@ import {
   usePublishPolicy,
   useDeletePolicy,
 } from "@/features/policies/hooks/use-policies"
-import { POLICY_MODULES, type ChurchPolicy, type PolicyModule } from "@/features/policies/schemas"
+import {
+  POLICY_MODULES,
+  createPolicySchema,
+  type ChurchPolicy,
+} from "@/features/policies/schemas"
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  SelectFormField,
+  TextFormField,
+  TextareaFormField,
+} from "@/components/form-fields"
 import { PageHeader } from "@/components/page-header"
 import { FileCheck, Plus } from "lucide-react"
 
@@ -72,6 +88,20 @@ const INVOLVED_ROLE_OPTIONS = [
   "Administrator",
 ]
 
+const policyFormSchema = createPolicySchema
+  .pick({ title: true, module: true, summary: true, bodyHtml: true })
+  .extend({ involvedRoles: z.array(z.string()) })
+
+type PolicyFormValues = z.infer<typeof policyFormSchema>
+
+const emptyPolicyForm: PolicyFormValues = {
+  title: "",
+  module: "general",
+  summary: "",
+  bodyHtml: "<p></p>",
+  involvedRoles: [],
+}
+
 export default function PoliciesPage() {
   const [moduleFilter, setModuleFilter] = React.useState<string>("all")
   const { data, isLoading } = usePolicies(moduleFilter === "all" ? undefined : moduleFilter)
@@ -85,11 +115,10 @@ export default function PoliciesPage() {
   const [confirmPublish, setConfirmPublish] = React.useState<ChurchPolicy | null>(null)
   const [confirmDelete, setConfirmDelete] = React.useState<ChurchPolicy | null>(null)
 
-  const [title, setTitle] = React.useState("")
-  const [module, setModule] = React.useState<PolicyModule>("general")
-  const [summary, setSummary] = React.useState("")
-  const [bodyHtml, setBodyHtml] = React.useState("<p></p>")
-  const [involvedRoles, setInvolvedRoles] = React.useState<string[]>([])
+  const form = useForm<PolicyFormValues>({
+    resolver: zodResolver(policyFormSchema),
+    defaultValues: emptyPolicyForm,
+  })
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(10)
 
@@ -97,34 +126,35 @@ export default function PoliciesPage() {
 
   function openCreate() {
     setEditing(null)
-    setTitle("")
-    setModule("general")
-    setSummary("")
-    setBodyHtml("<p></p>")
-    setInvolvedRoles([])
+    form.reset(emptyPolicyForm)
     setEditorOpen(true)
   }
 
   function openEdit(p: ChurchPolicy) {
     setEditing(p)
-    setTitle(p.title)
-    setModule(p.module)
-    setSummary(p.summary || "")
-    setBodyHtml(p.bodyHtml || "<p></p>")
-    setInvolvedRoles(p.involvedRoles ?? [])
+    form.reset({
+      title: p.title,
+      module: p.module,
+      summary: p.summary || "",
+      bodyHtml: p.bodyHtml || "<p></p>",
+      involvedRoles: p.involvedRoles ?? [],
+    })
     setEditorOpen(true)
   }
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function submit(values: PolicyFormValues) {
+    const payload = {
+      title: values.title,
+      module: values.module,
+      summary: values.summary ?? "",
+      bodyHtml: values.bodyHtml,
+      involvedRoles: values.involvedRoles,
+    }
     if (editing) {
-      update.mutate(
-        { title, module, summary, bodyHtml, involvedRoles },
-        { onSuccess: () => setEditorOpen(false) }
-      )
+      update.mutate(payload, { onSuccess: () => setEditorOpen(false) })
     } else {
       create.mutate(
-        { title, module, summary, bodyHtml, involvedRoles, status: "draft" },
+        { ...payload, status: "draft" },
         { onSuccess: () => setEditorOpen(false) }
       )
     }
@@ -301,7 +331,8 @@ export default function PoliciesPage() {
           {/* Create / edit — inset Sheet + TipTap */}
           <Sheet open={editorOpen} onOpenChange={setEditorOpen}>
             <SheetContent side="right" inset size="xl" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
+              <Form {...form}>
+              <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
                 <SheetHeader className="pr-12">
                   <SheetTitle>{editing ? "Edit policy" : "New policy"}</SheetTitle>
                   <SheetDescription>
@@ -310,66 +341,67 @@ export default function PoliciesPage() {
                 </SheetHeader>
                 <SheetBody>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-medium">Title</Label>
-                      <Input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="h-9"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-medium">Module</Label>
-                      <Select
-                        value={module}
-                        items={POLICY_MODULES.map((m) => ({ value: m.value, label: m.label }))}
-                        onValueChange={(v) => v && setModule(v as PolicyModule)}
-                      >
-                        <SelectTrigger className="h-9 w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {POLICY_MODULES.map((m) => (
-                            <SelectItem key={m.value} value={m.value}>
-                              {m.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2 sm:col-span-2">
-                      <Label className="text-xs font-medium">Roles involved</Label>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {INVOLVED_ROLE_OPTIONS.map((role) => (
-                          <label key={role} className="flex items-center gap-2 text-sm">
-                            <Checkbox
-                              checked={involvedRoles.includes(role)}
-                              onCheckedChange={(on) =>
-                                setInvolvedRoles((prev) =>
-                                  on ? [...prev, role] : prev.filter((item) => item !== role)
-                                )
-                              }
-                            />
-                            {role}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-medium">Summary</Label>
-                      <Textarea
-                        value={summary}
-                        onChange={(e) => setSummary(e.target.value)}
-                        className="min-h-16 text-xs"
-                        maxLength={280}
-                        placeholder="One or two sentences for the policy card"
-                      />
-                    </div>
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-medium">Body</Label>
-                      <RichTextEditor value={bodyHtml} onChange={setBodyHtml} minHeight="280px" />
-                    </div>
+                    <TextFormField
+                      control={form.control}
+                      name="title"
+                      label="Title"
+                      className="sm:col-span-2"
+                    />
+                    <SelectFormField
+                      control={form.control}
+                      name="module"
+                      label="Module"
+                      options={POLICY_MODULES.map((m) => ({ value: m.value, label: m.label }))}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="involvedRoles"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel>Roles involved</FormLabel>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {INVOLVED_ROLE_OPTIONS.map((role) => (
+                              <label key={role} className="flex items-center gap-2 text-sm">
+                                <Checkbox
+                                  checked={field.value.includes(role)}
+                                  onCheckedChange={(on) =>
+                                    field.onChange(
+                                      on
+                                        ? [...field.value, role]
+                                        : field.value.filter((item) => item !== role)
+                                    )
+                                  }
+                                />
+                                {role}
+                              </label>
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <TextareaFormField
+                      control={form.control}
+                      name="summary"
+                      label="Summary"
+                      className="sm:col-span-2"
+                      placeholder="One or two sentences for the policy card"
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bodyHtml"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel>Body</FormLabel>
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(html) => field.onChange(html)}
+                            minHeight="280px"
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </SheetBody>
                 <SheetFooter>
@@ -378,16 +410,14 @@ export default function PoliciesPage() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={
-                      title.trim().length < 3 ||
-                      create.isPending ||
-                      update.isPending
-                    }
+                    variant="primary"
+                    disabled={create.isPending || update.isPending}
                   >
                     {editing ? "Save changes" : "Create draft"}
                   </Button>
                 </SheetFooter>
               </form>
+              </Form>
             </SheetContent>
           </Sheet>
 

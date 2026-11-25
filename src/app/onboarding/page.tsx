@@ -6,14 +6,20 @@ import { toast } from "sonner"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { FieldGroup } from "@/components/ui/field"
 import { BrandMark } from "@/features/auth/components/brand-mark"
-import { CampusStep } from "@/features/onboarding/components/campus-step"
-import { ChurchStep } from "@/features/onboarding/components/church-step"
+import { CampusStep, type CampusStepValues } from "@/features/onboarding/components/campus-step"
+import {
+  ChurchStep,
+  ONBOARDING_STEP_FORM_ID,
+  type ChurchStepValues,
+} from "@/features/onboarding/components/church-step"
 import { InviteStep } from "@/features/onboarding/components/invite-step"
-import { TerminologyStep } from "@/features/onboarding/components/terminology-step"
+import {
+  TerminologyStep,
+  type TerminologyStepValues,
+} from "@/features/onboarding/components/terminology-step"
 import { WizardStepper } from "@/features/onboarding/components/wizard-stepper"
-import { NOMENCLATURE_PRESETS, type NomenclaturePresetKey } from "@/features/onboarding/presets"
+import { NOMENCLATURE_PRESETS } from "@/features/onboarding/presets"
 import { apiClient } from "@/lib/axios"
 import { useBranchStore } from "@/store/use-branch-store"
 
@@ -34,27 +40,20 @@ export default function OnboardingPage() {
   const setActiveCampus = useBranchStore((s) => s.setActiveCampus)
 
   const [step, setStep] = React.useState(0)
-  const [churchName, setChurchName] = React.useState("")
-  const [denomination, setDenomination] = React.useState("")
-  const [campusName, setCampusName] = React.useState("")
-  const [city, setCity] = React.useState("")
-  const [slug, setSlug] = React.useState("")
-  const [preset, setPreset] = React.useState<NomenclaturePresetKey>("nondenom")
+  const [church, setChurch] = React.useState<ChurchStepValues>({ churchName: "", denomination: "" })
+  const [campus, setCampus] = React.useState<CampusStepValues>({ campusName: "", city: "", slug: "" })
+  const [terminology, setTerminology] = React.useState<TerminologyStepValues>({ preset: "nondenom" })
   const [invites, setInvites] = React.useState<string[]>([])
   const [pending, setPending] = React.useState(false)
 
-  const canContinue =
-    (step === 0 && churchName.trim().length >= 2 && denomination !== "") ||
-    (step === 1 && campusName.trim().length >= 2 && slug.length >= 2) ||
-    step === 2 ||
-    step === 3
+  const isLastStep = step === STEPS.length - 1
 
   async function finish() {
     setPending(true)
     try {
-      const selected = NOMENCLATURE_PRESETS.find((p) => p.key === preset)
+      const selected = NOMENCLATURE_PRESETS.find((p) => p.key === terminology.preset)
       await apiClient.patch("/settings/nomenclature", {
-        churchName: churchName.trim(),
+        churchName: church.churchName.trim(),
         campusTermSingular: "Location",
         campusTermPlural: "Locations",
         ...selected?.terms,
@@ -71,20 +70,20 @@ export default function OnboardingPage() {
           isMainCampus: boolean
         }
       }>("/campuses", {
-        name: campusName.trim(),
-        slug: slug.trim(),
-        city: city.trim(),
+        name: campus.campusName.trim(),
+        slug: campus.slug.trim(),
+        city: campus.city.trim(),
         type: "main",
       })
 
-      const campus = campusRes.data.data
-      if (campus) {
+      const created = campusRes.data.data
+      if (created) {
         const normalized = {
-          id: campus.id,
-          name: campus.name,
-          slug: campus.slug,
-          type: campus.type,
-          city: campus.city || city.trim() || "",
+          id: created.id,
+          name: created.name,
+          slug: created.slug,
+          type: created.type,
+          city: created.city || campus.city.trim() || "",
           isMainCampus: true,
         }
         setAvailableCampuses([normalized])
@@ -114,11 +113,6 @@ export default function OnboardingPage() {
     }
   }
 
-  function next() {
-    if (step < STEPS.length - 1) setStep(step + 1)
-    else void finish()
-  }
-
   const copy = STEP_COPY[step]
 
   return (
@@ -138,32 +132,34 @@ export default function OnboardingPage() {
             <CardDescription className="text-base text-zinc-600">{copy.description}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-7 px-6 pb-6 sm:px-8">
-            <FieldGroup>
-              {step === 0 && (
-                <ChurchStep
-                  churchName={churchName}
-                  denomination={denomination}
-                  onChange={(p) => {
-                    if (p.churchName !== undefined) setChurchName(p.churchName)
-                    if (p.denomination !== undefined) setDenomination(p.denomination)
-                  }}
-                />
-              )}
-              {step === 1 && (
-                <CampusStep
-                  campusName={campusName}
-                  city={city}
-                  slug={slug}
-                  onChange={(p) => {
-                    if (p.campusName !== undefined) setCampusName(p.campusName)
-                    if (p.city !== undefined) setCity(p.city)
-                    if (p.slug !== undefined) setSlug(p.slug)
-                  }}
-                />
-              )}
-              {step === 2 && <TerminologyStep value={preset} onChange={setPreset} />}
-              {step === 3 && <InviteStep emails={invites} onChange={setInvites} />}
-            </FieldGroup>
+            {step === 0 && (
+              <ChurchStep
+                defaultValues={church}
+                onContinue={(values) => {
+                  setChurch(values)
+                  setStep(1)
+                }}
+              />
+            )}
+            {step === 1 && (
+              <CampusStep
+                defaultValues={campus}
+                onContinue={(values) => {
+                  setCampus(values)
+                  setStep(2)
+                }}
+              />
+            )}
+            {step === 2 && (
+              <TerminologyStep
+                defaultValues={terminology}
+                onContinue={(values) => {
+                  setTerminology(values)
+                  setStep(3)
+                }}
+              />
+            )}
+            {step === 3 && <InviteStep emails={invites} onChange={setInvites} />}
 
             <div className="flex items-center justify-between pt-1">
               <Button
@@ -177,13 +173,14 @@ export default function OnboardingPage() {
                 Back
               </Button>
               <Button
-                type="button"
-                disabled={!canContinue || pending}
-                onClick={next}
+                {...(isLastStep
+                  ? { type: "button" as const, onClick: () => void finish() }
+                  : { type: "submit" as const, form: ONBOARDING_STEP_FORM_ID })}
+                disabled={pending}
                 className="h-10 gap-1 rounded-lg bg-accent-cta px-5 text-sm font-medium text-white shadow-xs hover:bg-accent-cta-hover"
               >
-                {step === STEPS.length - 1 ? (pending ? "Finishing…" : "Finish setup") : "Continue"}
-                {step < STEPS.length - 1 && <ChevronRight className="size-4" />}
+                {isLastStep ? (pending ? "Finishing…" : "Finish setup") : "Continue"}
+                {!isLastStep && <ChevronRight className="size-4" />}
               </Button>
             </div>
           </CardContent>

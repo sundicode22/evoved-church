@@ -1,34 +1,61 @@
 "use client";
 
 import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Form } from "@/components/ui/form";
+import { TextFormField } from "@/components/form-fields";
 import { toast } from "sonner";
 import { useNomenclatureStore } from "@/features/settings/use-nomenclature";
 import {
   useNomenclatureQuery,
   useUpdateNomenclature,
 } from "@/features/settings/hooks/use-nomenclature-api";
+import {
+  nomenclatureFormSchema,
+  type NomenclatureFormValues,
+} from "@/features/settings/schemas";
 import { CheckCircle2 } from "lucide-react"
+
+function toFormValues(
+  n: ReturnType<typeof useNomenclatureStore.getState>["nomenclature"]
+): NomenclatureFormValues {
+  return {
+    churchName: n.churchName,
+    currencyCode: n.currencyCode,
+    memberTermSingular: n.memberTermSingular,
+    memberTermPlural: n.memberTermPlural,
+    groupTermSingular: n.groupTermSingular,
+    campusTermSingular: n.campusTermSingular,
+    pastorTermSingular: n.pastorTermSingular,
+    givingTerm: n.givingTerm,
+  }
+}
 
 export function NomenclatureTab({ canEdit }: { canEdit: boolean }) {
   const { nomenclature, resetToDefaults } = useNomenclatureStore();
   useNomenclatureQuery();
   const saveMutation = useUpdateNomenclature();
-  // Unsaved edits layered over the stored nomenclature.
-  const [edits, setEdits] = React.useState<Partial<typeof nomenclature>>({});
-  const formState = { ...nomenclature, ...edits };
-  const setFormState = (next: typeof nomenclature) => setEdits(next);
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    saveMutation.mutate(formState);
+  const form = useForm<NomenclatureFormValues>({
+    resolver: zodResolver(nomenclatureFormSchema),
+    defaultValues: toFormValues(nomenclature),
+  });
+
+  // Sync from the stored nomenclature (e.g. after the API loads) without
+  // clobbering fields the user has already edited.
+  React.useEffect(() => {
+    form.reset(toFormValues(nomenclature), { keepDirtyValues: true });
+  }, [nomenclature, form]);
+
+  const handleSave = (values: NomenclatureFormValues) => {
+    saveMutation.mutate(values);
   };
 
   return (
     <form
-      onSubmit={handleSave}
+      onSubmit={form.handleSubmit(handleSave)}
       className="max-w-3xl rounded-lg border border-zinc-200/80 bg-white p-8 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 space-y-6"
     >
       <div>
@@ -41,117 +68,64 @@ export function NomenclatureTab({ canEdit }: { canEdit: boolean }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            Church / Organization Name
-          </Label>
-          <Input
-            value={formState.churchName}
-            onChange={(e) =>
-              setFormState({ ...formState, churchName: e.target.value })
-            }
-            className="h-9 text-xs"
+      <Form {...form}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+          <TextFormField
+            control={form.control}
+            name="churchName"
+            label="Church / Organization Name"
+            inputClassName="h-9 text-xs"
           />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            Currency Code
-          </Label>
-          <Input
-            value={formState.currencyCode}
-            onChange={(e) =>
-              setFormState({ ...formState, currencyCode: e.target.value })
-            }
-            className="h-9 text-xs uppercase"
+          <TextFormField
+            control={form.control}
+            name="currencyCode"
+            label="Currency Code"
+            inputClassName="h-9 text-xs uppercase"
           />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            Member Term (Singular)
-          </Label>
-          <Input
-            value={formState.memberTermSingular}
-            onChange={(e) =>
-              setFormState({ ...formState, memberTermSingular: e.target.value })
-            }
+          <TextFormField
+            control={form.control}
+            name="memberTermSingular"
+            label="Member Term (Singular)"
             placeholder="e.g. Member, Partner, Parishioner"
-            className="h-9 text-xs"
+            inputClassName="h-9 text-xs"
           />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            Member Term (Plural)
-          </Label>
-          <Input
-            value={formState.memberTermPlural}
-            onChange={(e) =>
-              setFormState({ ...formState, memberTermPlural: e.target.value })
-            }
+          <TextFormField
+            control={form.control}
+            name="memberTermPlural"
+            label="Member Term (Plural)"
             placeholder="e.g. Members, Partners, Parishioners"
-            className="h-9 text-xs"
+            inputClassName="h-9 text-xs"
           />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            Small Group Term
-          </Label>
-          <Input
-            value={formState.groupTermSingular}
-            onChange={(e) =>
-              setFormState({ ...formState, groupTermSingular: e.target.value })
-            }
+          <TextFormField
+            control={form.control}
+            name="groupTermSingular"
+            label="Small Group Term"
             placeholder="e.g. Small Group, Life Group, Cell"
-            className="h-9 text-xs"
+            inputClassName="h-9 text-xs"
           />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            Campus / Branch Term
-          </Label>
-          <Input
-            value={formState.campusTermSingular}
-            onChange={(e) =>
-              setFormState({ ...formState, campusTermSingular: e.target.value })
-            }
+          <TextFormField
+            control={form.control}
+            name="campusTermSingular"
+            label="Campus / Branch Term"
             placeholder="e.g. Campus, Branch, Parish, Assembly"
-            className="h-9 text-xs"
+            inputClassName="h-9 text-xs"
           />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            Pastoral Title
-          </Label>
-          <Input
-            value={formState.pastorTermSingular}
-            onChange={(e) =>
-              setFormState({ ...formState, pastorTermSingular: e.target.value })
-            }
+          <TextFormField
+            control={form.control}
+            name="pastorTermSingular"
+            label="Pastoral Title"
             placeholder="e.g. Pastor, Minister, Priest, Elder"
-            className="h-9 text-xs"
+            inputClassName="h-9 text-xs"
           />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            Giving & Tithe Term
-          </Label>
-          <Input
-            value={formState.givingTerm}
-            onChange={(e) =>
-              setFormState({ ...formState, givingTerm: e.target.value })
-            }
+          <TextFormField
+            control={form.control}
+            name="givingTerm"
+            label="Giving & Tithe Term"
             placeholder="e.g. Tithes & Offerings, Stewardship"
-            className="h-9 text-xs"
+            inputClassName="h-9 text-xs"
           />
         </div>
-      </div>
+      </Form>
 
       <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
         <Button
@@ -159,7 +133,7 @@ export function NomenclatureTab({ canEdit }: { canEdit: boolean }) {
           variant="outline"
           onClick={() => {
             resetToDefaults();
-            setEdits({});
+            form.reset(toFormValues(useNomenclatureStore.getState().nomenclature));
             toast.info("Reset to default evangelical/standard terms.");
           }}
           className="h-9 text-xs text-zinc-500"

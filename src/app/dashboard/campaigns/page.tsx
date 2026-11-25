@@ -8,17 +8,14 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Form } from "@/components/ui/form"
+import { FieldGroup } from "@/components/ui/field"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { SelectFormField, TextFormField } from "@/components/form-fields"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Sheet,
   SheetBody,
@@ -47,9 +44,18 @@ import {
   type ColumnOption,
 } from "@/components/table-panel"
 import { useCampaigns, useCreateCampaign } from "@/features/campaigns/hooks/use-campaigns"
-import type { CampaignChannel } from "@/features/campaigns/schemas"
+import { campaignChannelSchema } from "@/features/campaigns/schemas"
 import { CHANNEL_ITEMS, STATUS_STYLES } from "@/features/campaigns/constants"
 import { RowActionsMenu } from "@/components/row-actions-menu"
+
+const campaignFormSchema = z.object({
+  name: z.string().trim().min(2, "Campaign name is required"),
+  channel: campaignChannelSchema,
+})
+
+type CampaignFormValues = z.infer<typeof campaignFormSchema>
+
+const CAMPAIGN_FORM_DEFAULTS: CampaignFormValues = { name: "", channel: "email" }
 
 const COLUMNS: ColumnOption[] = [
   { id: "campaign", label: "Campaign" },
@@ -73,8 +79,14 @@ export default function CampaignsPage() {
   const { data, isLoading } = useCampaigns()
   const create = useCreateCampaign()
   const [open, setOpen] = React.useState(false)
-  const [name, setName] = React.useState("")
-  const [channel, setChannel] = React.useState<CampaignChannel>("email")
+  const form = useForm<CampaignFormValues>({
+    resolver: zodResolver(campaignFormSchema),
+    defaultValues: CAMPAIGN_FORM_DEFAULTS,
+  })
+
+  React.useEffect(() => {
+    if (open) form.reset(CAMPAIGN_FORM_DEFAULTS)
+  }, [open, form])
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(10)
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
@@ -83,14 +95,13 @@ export default function CampaignsPage() {
   const total = rows.length
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize)
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function onSubmit(values: CampaignFormValues) {
     create.mutate(
-      { name, channel },
+      { name: values.name, channel: values.channel },
       {
         onSuccess: (c) => {
           setOpen(false)
-          setName("")
+          form.reset(CAMPAIGN_FORM_DEFAULTS)
           router.push(`/dashboard/campaigns/${c.id}`)
         },
       }
@@ -224,55 +235,35 @@ export default function CampaignsPage() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle className="font-medium">New campaign</SheetTitle>
-                  <SheetDescription>
-                    Start with a name and channel. Email uses Resend; SMS uses a separate provider.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">Name</Label>
-                    <Input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="h-9 text-sm"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">Channel</Label>
-                    <Select
-                      value={channel}
-                      items={CHANNEL_ITEMS}
-                      onValueChange={(v) => v && setChannel(v as CampaignChannel)}
-                    >
-                      <SelectTrigger className="h-9 w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CHANNEL_ITEMS.map((i) => (
-                          <SelectItem key={i.value} value={i.value}>
-                            {i.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </SheetBody>
-                <SheetFooter>
-                  <Button type="button" variant="outline" className="h-9" onClick={() => setOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending || name.trim().length < 2}
-                  >
-                    Create
-                  </Button>
-                </SheetFooter>
-              </form>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+                  <SheetHeader className="pr-12">
+                    <SheetTitle className="font-medium">New campaign</SheetTitle>
+                    <SheetDescription>
+                      Start with a name and channel. Email uses Resend; SMS uses a separate provider.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup className="gap-4">
+                      <TextFormField control={form.control} name="name" label="Name" />
+                      <SelectFormField
+                        control={form.control}
+                        name="channel"
+                        label="Channel"
+                        options={CHANNEL_ITEMS}
+                      />
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button type="button" variant="outline" className="h-9" onClick={() => setOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={create.isPending}>
+                      Create
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
         </RequireAbility>

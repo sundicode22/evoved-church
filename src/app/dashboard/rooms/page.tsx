@@ -2,11 +2,13 @@
 
 import * as React from "react"
 import { DoorOpen, Plus } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -20,6 +22,11 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Form, FormField } from "@/components/ui/form"
+import {
+  NumberFormField,
+  TextFormField,
+} from "@/components/form-fields"
 import {
   Empty,
   EmptyDescription,
@@ -37,32 +44,48 @@ import {
 import { Can, RequireAbility } from "@/components/auth/can"
 import { TablePanel } from "@/components/table-panel"
 import { useCreateRoom, useRooms } from "@/features/facilities/hooks/use-facilities"
+import { createRoomSchema } from "@/features/facilities/schemas"
+
+const roomFormSchema = createRoomSchema
+  .pick({ name: true, capacity: true, locationNote: true })
+  .extend({ requiresApproval: z.boolean() })
+
+type RoomFormValues = z.infer<typeof roomFormSchema>
+
+const emptyForm: RoomFormValues = {
+  name: "",
+  capacity: undefined,
+  locationNote: "",
+  requiresApproval: false,
+}
 
 export default function RoomsPage() {
   const { data, isLoading } = useRooms()
   const create = useCreateRoom()
   const [open, setOpen] = React.useState(false)
-  const [name, setName] = React.useState("")
-  const [capacity, setCapacity] = React.useState("")
-  const [locationNote, setLocationNote] = React.useState("")
-  const [requiresApproval, setRequiresApproval] = React.useState(false)
+  const form = useForm<RoomFormValues>({
+    resolver: zodResolver(roomFormSchema),
+    defaultValues: emptyForm,
+  })
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function openCreate() {
+    form.reset(emptyForm)
+    setOpen(true)
+  }
+
+  function submit(values: RoomFormValues) {
     create.mutate(
       {
-        name,
-        capacity: capacity ? Number(capacity) : undefined,
-        locationNote,
-        requiresApproval,
+        name: values.name,
+        capacity: values.capacity,
+        locationNote: values.locationNote ?? "",
+        requiresApproval: values.requiresApproval,
+        isActive: true,
       },
       {
         onSuccess: () => {
           setOpen(false)
-          setName("")
-          setCapacity("")
-          setLocationNote("")
-          setRequiresApproval(false)
+          form.reset(emptyForm)
         },
       }
     )
@@ -82,7 +105,7 @@ export default function RoomsPage() {
             actions={
               <Can permission="facilities.write">
                 <Button
-                  onClick={() => setOpen(true)}
+                  onClick={openCreate}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
                   Add room
@@ -102,7 +125,7 @@ export default function RoomsPage() {
                 </EmptyHeader>
                 <Can permission="facilities.write">
                   <Button className="mt-4"
-                    onClick={() => setOpen(true)}
+                    onClick={openCreate}
                   >
                     Create room
                   </Button>
@@ -168,7 +191,8 @@ export default function RoomsPage() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetContent side="right" inset size="md" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
+              <Form {...form}>
+              <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
                 <SheetHeader className="pr-12">
                   <SheetTitle>Add room</SheetTitle>
                   <SheetDescription>
@@ -177,55 +201,42 @@ export default function RoomsPage() {
                 </SheetHeader>
                 <SheetBody>
                   <FieldGroup>
-                    <Field>
-                      <FieldLabel>Name</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Capacity</FieldLabel>
-                      <Input
-                        type="number"
-                        min={0}
-                        className="h-9"
-                        value={capacity}
-                        onChange={(e) => setCapacity(e.target.value)}
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Location note</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={locationNote}
-                        onChange={(e) => setLocationNote(e.target.value)}
-                        placeholder="Building / floor"
-                      />
-                    </Field>
-                    <Field className="flex flex-row items-center justify-between gap-3">
-                      <FieldLabel>Requires approval</FieldLabel>
-                      <Switch
-                        checked={requiresApproval}
-                        onCheckedChange={setRequiresApproval}
-                      />
-                    </Field>
+                    <TextFormField control={form.control} name="name" label="Name" />
+                    <NumberFormField
+                      control={form.control}
+                      name="capacity"
+                      label="Capacity"
+                      min={0}
+                      step={1}
+                    />
+                    <TextFormField
+                      control={form.control}
+                      name="locationNote"
+                      label="Location note"
+                      placeholder="Building / floor"
+                    />
+                    <FormField
+                      control={form.control}
+                      name="requiresApproval"
+                      render={({ field }) => (
+                        <Field className="flex flex-row items-center justify-between gap-3">
+                          <FieldLabel>Requires approval</FieldLabel>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </Field>
+                      )}
+                    />
                   </FieldGroup>
                 </SheetBody>
                 <SheetFooter>
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending || name.trim().length < 2}
-                  >
+                  <Button type="submit" variant="primary" disabled={create.isPending}>
                     Save room
                   </Button>
                 </SheetFooter>
               </form>
+              </Form>
             </SheetContent>
           </Sheet>
         </RequireAbility>

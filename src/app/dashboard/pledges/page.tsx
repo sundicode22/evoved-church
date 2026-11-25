@@ -6,15 +6,16 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Form } from "@/components/ui/form"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  NumberFormField,
+  SelectFormField,
+  TextFormField,
+} from "@/components/form-fields"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
   SheetBody,
@@ -24,7 +25,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
 import {
   Table,
   TableBody,
@@ -53,8 +54,29 @@ import { useFunds } from "@/features/accounting/hooks/use-funds"
 import {
   PLEDGE_FREQUENCIES,
   type GivingPledge,
-  type PledgeFrequency,
 } from "@/features/giving/schemas"
+
+const todayISO = () => new Date().toISOString().slice(0, 10)
+
+const pledgeFormSchema = z.object({
+  memberDisplayName: z.string().trim().min(1, "Member name is required"),
+  fundId: z.string().min(1, "Fund is required"),
+  amountTotal: z
+    .number({ error: "Total pledged is required" })
+    .positive("Amount must be greater than 0"),
+  frequency: z.enum(PLEDGE_FREQUENCIES),
+  startDate: z.string().min(1, "Start date is required"),
+})
+
+type PledgeFormValues = z.infer<typeof pledgeFormSchema>
+
+const pledgeDefaults = (fundId: string): Partial<PledgeFormValues> => ({
+  memberDisplayName: "",
+  fundId,
+  amountTotal: undefined,
+  frequency: "monthly",
+  startDate: todayISO(),
+})
 
 const FREQUENCY_ITEMS = PLEDGE_FREQUENCIES.map((value) => ({
   value,
@@ -80,15 +102,16 @@ export default function PledgesPage() {
   const [sheetOpen, setSheetOpen] = React.useState(false)
   const [deleteTarget, setDeleteTarget] = React.useState<GivingPledge | null>(null)
 
-  const [memberDisplayName, setMemberDisplayName] = React.useState("")
-  const [fundId, setFundId] = React.useState("fund-1")
-  const [amountTotal, setAmountTotal] = React.useState("")
-  const [frequency, setFrequency] = React.useState<PledgeFrequency>("monthly")
-  const [startDate, setStartDate] = React.useState(() => new Date().toISOString().slice(0, 10))
+  const defaultFundId = funds?.[0]?.id ?? "fund-1"
+
+  const form = useForm<PledgeFormValues>({
+    resolver: zodResolver(pledgeFormSchema),
+    defaultValues: pledgeDefaults(defaultFundId),
+  })
 
   React.useEffect(() => {
-    if (funds?.[0]?.id && fundId === "fund-1") setFundId(funds[0].id)
-  }, [funds, fundId])
+    if (sheetOpen) form.reset(pledgeDefaults(defaultFundId))
+  }, [sheetOpen, defaultFundId, form])
 
   const rows = data ?? []
   const filtered = rows.filter(
@@ -104,27 +127,21 @@ export default function PledgesPage() {
     label: f.name,
   }))
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
-    const amount = Number(amountTotal)
-    if (!Number.isFinite(amount) || amount <= 0) return
+  function onSubmit(values: PledgeFormValues) {
     create.mutate(
       {
         memberId: `mem-pledge-${crypto.randomUUID().slice(0, 8)}`,
-        memberDisplayName,
-        fundId,
-        fundName: fundItems.find((f) => f.value === fundId)?.label,
-        amountTotal: amount,
-        frequency,
-        startDate: new Date(startDate).toISOString(),
+        memberDisplayName: values.memberDisplayName,
+        fundId: values.fundId,
+        fundName: fundItems.find((f) => f.value === values.fundId)?.label,
+        amountTotal: values.amountTotal,
+        frequency: values.frequency,
+        startDate: new Date(values.startDate).toISOString(),
       },
       {
         onSuccess: () => {
           setSheetOpen(false)
-          setMemberDisplayName("")
-          setAmountTotal("")
-          setFrequency("monthly")
-          setStartDate(new Date().toISOString().slice(0, 10))
+          form.reset(pledgeDefaults(defaultFundId))
         },
       }
     )
@@ -260,110 +277,67 @@ export default function PledgesPage() {
 
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle className="font-medium">New pledge</SheetTitle>
-                  <SheetDescription>
-                    Capture a member’s pledged amount toward a fund.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel>Member name</FieldLabel>
-                      <Input
-                        value={memberDisplayName}
-                        onChange={(e) => setMemberDisplayName(e.target.value)}
-                        className="h-9 text-sm"
-                        required
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+                  <SheetHeader className="pr-12">
+                    <SheetTitle className="font-medium">New pledge</SheetTitle>
+                    <SheetDescription>
+                      Capture a member’s pledged amount toward a fund.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <TextFormField
+                        control={form.control}
+                        name="memberDisplayName"
+                        label="Member name"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Fund</FieldLabel>
-                      <Select
-                        value={fundId}
-                        items={
+                      <SelectFormField
+                        control={form.control}
+                        name="fundId"
+                        label="Fund"
+                        options={
                           fundItems.length
                             ? fundItems
                             : [{ value: "fund-1", label: "General Operating Fund" }]
                         }
-                        onValueChange={(v) => v && setFundId(v)}
-                      >
-                        <SelectTrigger className="h-9 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(fundItems.length
-                            ? fundItems
-                            : [{ value: "fund-1", label: "General Operating Fund" }]
-                          ).map((f) => (
-                            <SelectItem key={f.value} value={f.value}>
-                              {f.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Total pledged</FieldLabel>
-                      <Input
-                        type="number"
-                        min="0.01"
+                      />
+                      <NumberFormField
+                        control={form.control}
+                        name="amountTotal"
+                        label="Total pledged"
+                        min={0.01}
                         step="0.01"
-                        value={amountTotal}
-                        onChange={(e) => setAmountTotal(e.target.value)}
-                        className="h-9 text-sm"
-                        required
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Frequency</FieldLabel>
-                      <Select
-                        value={frequency}
-                        items={FREQUENCY_ITEMS}
-                        onValueChange={(v) => v && setFrequency(v as PledgeFrequency)}
-                      >
-                        <SelectTrigger className="h-9 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {FREQUENCY_ITEMS.map((f) => (
-                            <SelectItem key={f.value} value={f.value}>
-                              {f.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Start date</FieldLabel>
-                      <Input
+                      <SelectFormField
+                        control={form.control}
+                        name="frequency"
+                        label="Frequency"
+                        options={FREQUENCY_ITEMS}
+                      />
+                      <TextFormField
+                        control={form.control}
+                        name="startDate"
+                        label="Start date"
                         type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="h-9 text-sm"
-                        required
                       />
-                    </Field>
-                  </FieldGroup>
-                </SheetBody>
-                <SheetFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-9"
-                    onClick={() => setSheetOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending}
-                  >
-                    {create.isPending ? "Saving…" : "Create pledge"}
-                  </Button>
-                </SheetFooter>
-              </form>
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9"
+                      onClick={() => setSheetOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={create.isPending}>
+                      {create.isPending ? "Saving…" : "Create pledge"}
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
 

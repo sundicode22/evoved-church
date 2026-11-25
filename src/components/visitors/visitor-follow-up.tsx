@@ -11,16 +11,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { Form } from "@/components/ui/form"
+import { FieldGroup } from "@/components/ui/field"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  SelectFormField,
+  TextFormField,
+  TextareaFormField,
+} from "@/components/form-fields"
 import {
   useAssignLead,
   useVisitorComment,
@@ -28,6 +28,49 @@ import {
 } from "@/features/visitors/hooks/use-visitor-leads"
 
 export type FollowUpAction = "assign" | "comment" | "email" | "sms"
+
+const followUpFormSchema = z
+  .object({
+    action: z.enum(["assign", "comment", "email", "sms"]),
+    assigneeName: z.string(),
+    assigneeRole: z.enum(["admin", "user"]),
+    subject: z.string(),
+    body: z.string(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.action === "assign") {
+      if (v.assigneeName.trim().length < 2) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["assigneeName"],
+          message: "Enter a staff name",
+        })
+      }
+      return
+    }
+    if (!v.body.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["body"],
+        message:
+          v.action === "comment"
+            ? "Enter a comment"
+            : v.action === "email"
+              ? "Enter an email message"
+              : "Enter an SMS message",
+      })
+    }
+    if (v.action === "sms" && v.body.length > 320) {
+      ctx.addIssue({ code: "custom", path: ["body"], message: "SMS must be 320 characters or less" })
+    }
+  })
+
+type FollowUpFormValues = z.infer<typeof followUpFormSchema>
+
+const ASSIGNEE_ROLE_OPTIONS = [
+  { value: "admin", label: "Admin — controls the system" },
+  { value: "user", label: "User — follow-up owner" },
+]
 
 type VisitorFollowUpDialogsProps = {
   leadId: string | null
@@ -46,70 +89,61 @@ export function VisitorFollowUpDialogs({
   const comment = useVisitorComment()
   const outreach = useVisitorOutreach()
 
-  const [assigneeName, setAssigneeName] = React.useState("")
-  const [assigneeRole, setAssigneeRole] = React.useState<"admin" | "user">("user")
-  const [body, setBody] = React.useState("")
-  const [subject, setSubject] = React.useState("")
+  const form = useForm<FollowUpFormValues>({
+    resolver: zodResolver(followUpFormSchema),
+    defaultValues: {
+      action: "comment",
+      assigneeName: "",
+      assigneeRole: "user",
+      subject: "",
+      body: "",
+    },
+  })
 
   React.useEffect(() => {
     if (!action) return
-    setAssigneeName("")
-    setAssigneeRole("user")
-    setBody("")
-    setSubject(
-      contactName ? `Following up — ${contactName}` : "Following up from church"
-    )
-  }, [action, contactName, leadId])
+    form.reset({
+      action,
+      assigneeName: "",
+      assigneeRole: "user",
+      subject: contactName ? `Following up — ${contactName}` : "Following up from church",
+      body: "",
+    })
+  }, [action, contactName, leadId, form])
 
   const open = Boolean(action && leadId)
   const pending = assign.isPending || comment.isPending || outreach.isPending
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
+  const submit = form.handleSubmit(async (values) => {
     if (!leadId || !action) return
 
     try {
       if (action === "assign") {
-        if (assigneeName.trim().length < 2) {
-          toast.error("Enter a staff name")
-          return
-        }
+        const assigneeName = values.assigneeName.trim()
         await assign.mutateAsync({
           id: leadId,
-          assigneeName: assigneeName.trim(),
-          assigneeRole,
+          assigneeName,
+          assigneeRole: values.assigneeRole,
         })
         toast.success(
-          `Assigned ${assigneeName.trim()} as ${assigneeRole === "admin" ? "Admin" : "User"}`
+          `Assigned ${assigneeName} as ${values.assigneeRole === "admin" ? "Admin" : "User"}`
         )
       } else if (action === "comment") {
-        if (!body.trim()) {
-          toast.error("Enter a comment")
-          return
-        }
-        await comment.mutateAsync({ id: leadId, body: body.trim() })
+        await comment.mutateAsync({ id: leadId, body: values.body.trim() })
         toast.success("Comment saved")
       } else if (action === "email") {
-        if (!body.trim()) {
-          toast.error("Enter an email message")
-          return
-        }
         await outreach.mutateAsync({
           id: leadId,
           channel: "email",
-          message: body.trim(),
-          subject: subject.trim() || undefined,
+          message: values.body.trim(),
+          subject: values.subject.trim() || undefined,
         })
         toast.success("Email queued")
       } else {
-        if (!body.trim()) {
-          toast.error("Enter an SMS message")
-          return
-        }
         await outreach.mutateAsync({
           id: leadId,
           channel: "sms",
-          message: body.trim(),
+          message: values.body.trim(),
         })
         toast.success("SMS queued")
       }
@@ -117,7 +151,7 @@ export function VisitorFollowUpDialogs({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong")
     }
-  }
+  })
 
   const titles: Record<FollowUpAction, string> = {
     assign: "Assign staff",
@@ -145,56 +179,37 @@ export function VisitorFollowUpDialogs({
             </DialogDescription>
           </DialogHeader>
 
-          <FieldGroup className="gap-3">
-            {action === "assign" && (
-              <>
-                <Field>
-                  <FieldLabel>Staff name</FieldLabel>
-                  <Input
-                    value={assigneeName}
-                    onChange={(e) => setAssigneeName(e.target.value)}
+          <Form {...form}>
+            <FieldGroup className="gap-3">
+              {action === "assign" && (
+                <>
+                  <TextFormField
+                    control={form.control}
+                    name="assigneeName"
+                    label="Staff name"
                     placeholder="e.g. Jane Cooper"
-                    className="h-10"
                     autoFocus
                   />
-                </Field>
-                <Field>
-                  <FieldLabel>System role</FieldLabel>
-                  <Select
-                    value={assigneeRole}
-                    onValueChange={(v) => v && setAssigneeRole(v as "admin" | "user")}
-                  >
-                    <SelectTrigger className="h-10 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin — controls the system</SelectItem>
-                      <SelectItem value="user">User — follow-up owner</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-              </>
-            )}
+                  <SelectFormField
+                    control={form.control}
+                    name="assigneeRole"
+                    label="System role"
+                    options={ASSIGNEE_ROLE_OPTIONS}
+                  />
+                </>
+              )}
 
-            {action === "email" && (
-              <Field>
-                <FieldLabel>Subject</FieldLabel>
-                <Input
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  className="h-10"
-                />
-              </Field>
-            )}
+              {action === "email" && (
+                <TextFormField control={form.control} name="subject" label="Subject" />
+              )}
 
-            {(action === "comment" || action === "email" || action === "sms") && (
-              <Field>
-                <FieldLabel>
-                  {action === "comment" ? "Comment" : action === "email" ? "Message" : "SMS text"}
-                </FieldLabel>
-                <Textarea
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
+              {(action === "comment" || action === "email" || action === "sms") && (
+                <TextareaFormField
+                  control={form.control}
+                  name="body"
+                  label={
+                    action === "comment" ? "Comment" : action === "email" ? "Message" : "SMS text"
+                  }
                   rows={action === "sms" ? 3 : 5}
                   maxLength={action === "sms" ? 320 : 2000}
                   placeholder={
@@ -204,12 +219,12 @@ export function VisitorFollowUpDialogs({
                         ? "Hi — so glad you joined us…"
                         : "Thanks for visiting! Can we schedule a coffee?"
                   }
-                  className="min-h-[96px] resize-y shadow-xs"
+                  textareaClassName="min-h-[96px] resize-y shadow-xs"
                   autoFocus
                 />
-              </Field>
-            )}
-          </FieldGroup>
+              )}
+            </FieldGroup>
+          </Form>
 
           <DialogFooter>
             <Button type="button" variant="outline" className="h-9" onClick={onClose}>

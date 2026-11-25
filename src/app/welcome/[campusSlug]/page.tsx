@@ -2,12 +2,23 @@
 
 import * as React from "react"
 import { useParams } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Form } from "@/components/ui/form"
+import { TextFormField } from "@/components/form-fields"
 import { BrandMark } from "@/features/auth/components/brand-mark"
 import { CheckCircle2 } from "lucide-react"
+
+const connectionCardSchema = z.object({
+  name: z.string().trim().min(2, "Please enter your full name"),
+  email: z.union([z.literal(""), z.string().trim().email("Enter a valid email address")]),
+  phone: z.string().trim(),
+})
+
+type ConnectionCardValues = z.infer<typeof connectionCardSchema>
 
 function titleCase(slug: string): string {
   return slug
@@ -22,15 +33,17 @@ export default function WelcomePage() {
   const campusSlug = params.campusSlug
   const campusLabel = titleCase(decodeURIComponent(campusSlug ?? ""))
 
-  const [name, setName] = React.useState("")
-  const [email, setEmail] = React.useState("")
-  const [phone, setPhone] = React.useState("")
+  const form = useForm<ConnectionCardValues>({
+    resolver: zodResolver(connectionCardSchema),
+    defaultValues: { name: "", email: "", phone: "" },
+  })
+  const [submittedName, setSubmittedName] = React.useState("")
   const [pending, setPending] = React.useState(false)
   const [submitted, setSubmitted] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  async function handleSubmit(values: ConnectionCardValues) {
+    const { name, email, phone } = values
     setError(null)
     setPending(true)
     try {
@@ -51,6 +64,7 @@ export default function WelcomePage() {
         setError(json?.error?.message ?? "We couldn't save your details. Please try again.")
         return
       }
+      setSubmittedName(name.trim())
       setSubmitted(true)
     } catch {
       setError("Network error. Please try again.")
@@ -74,7 +88,7 @@ export default function WelcomePage() {
                 <CheckCircle2 className="size-8 text-brand" />
               </span>
               <h1 className="text-xl font-semibold tracking-tight text-slate-900">
-                Thank you, {name.trim().split(" ")[0]}!
+                Thank you, {submittedName.split(" ")[0]}!
               </h1>
               <p className="text-sm text-zinc-500">
                 We&apos;re so glad you joined us{campusLabel ? ` at ${campusLabel}` : ""}. Someone from our team will
@@ -92,44 +106,34 @@ export default function WelcomePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="name" className="text-slate-700">Full name</Label>
-                    <Input
-                      id="name"
-                      autoComplete="name"
-                      required
-                      minLength={2}
-                      placeholder="Jane Doe"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="h-10 rounded-lg bg-white"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email" className="text-slate-700">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      autoComplete="email"
-                      placeholder="jane@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="h-10 rounded-lg bg-white"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="phone" className="text-slate-700">Phone</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      autoComplete="tel"
-                      placeholder="+1 555 123 4567"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="h-10 rounded-lg bg-white"
-                    />
-                  </div>
+                <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                  <TextFormField
+                    control={form.control}
+                    name="name"
+                    label="Full name"
+                    autoComplete="name"
+                    placeholder="Jane Doe"
+                    inputClassName="h-10 rounded-lg bg-white"
+                  />
+                  <TextFormField
+                    control={form.control}
+                    name="email"
+                    label="Email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="jane@example.com"
+                    inputClassName="h-10 rounded-lg bg-white"
+                  />
+                  <TextFormField
+                    control={form.control}
+                    name="phone"
+                    label="Phone"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="+1 555 123 4567"
+                    inputClassName="h-10 rounded-lg bg-white"
+                  />
                   {error && (
                     <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
                       {error}
@@ -143,6 +147,7 @@ export default function WelcomePage() {
                     {pending ? "Submitting…" : "Say hello"}
                   </Button>
                 </form>
+                </Form>
               </CardContent>
             </>
           )}

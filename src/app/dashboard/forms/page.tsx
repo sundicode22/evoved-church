@@ -2,12 +2,13 @@
 
 import * as React from "react"
 import { ClipboardList, Plus } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -18,7 +19,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
+import { Form } from "@/components/ui/form"
+import { TextFormField, TextareaFormField } from "@/components/form-fields"
 import {
   Empty,
   EmptyDescription,
@@ -42,7 +45,19 @@ import {
   useForms,
   usePublishForm,
 } from "@/features/forms/hooks/use-forms"
-import type { ChurchForm } from "@/features/forms/schemas"
+import { createFormSchema, type ChurchForm } from "@/features/forms/schemas"
+
+const formBuilderSchema = createFormSchema
+  .pick({ title: true, description: true })
+  .extend({
+    slug: z
+      .string()
+      .refine((v) => !v || v.trim().length >= 2, "Slug must be at least 2 characters"),
+  })
+
+type FormBuilderValues = z.infer<typeof formBuilderSchema>
+
+const emptyForm: FormBuilderValues = { title: "", slug: "", description: "" }
 
 export default function FormsPage() {
   const { data, isLoading } = useForms()
@@ -50,25 +65,28 @@ export default function FormsPage() {
   const publish = usePublishForm()
   const [open, setOpen] = React.useState(false)
   const [confirmPublish, setConfirmPublish] = React.useState<ChurchForm | null>(null)
-  const [title, setTitle] = React.useState("")
-  const [slug, setSlug] = React.useState("")
-  const [description, setDescription] = React.useState("")
+  const form = useForm<FormBuilderValues>({
+    resolver: zodResolver(formBuilderSchema),
+    defaultValues: emptyForm,
+  })
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function openCreate() {
+    form.reset(emptyForm)
+    setOpen(true)
+  }
+
+  function submit(values: FormBuilderValues) {
     create.mutate(
       {
-        title,
-        slug: slug || undefined,
-        description,
+        title: values.title,
+        slug: values.slug.trim() || undefined,
+        description: values.description ?? "",
         status: "draft",
       },
       {
         onSuccess: () => {
           setOpen(false)
-          setTitle("")
-          setSlug("")
-          setDescription("")
+          form.reset(emptyForm)
         },
       }
     )
@@ -88,7 +106,7 @@ export default function FormsPage() {
             actions={
               <Can permission="forms.write">
                 <Button
-                  onClick={() => setOpen(true)}
+                  onClick={openCreate}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
                   New form
@@ -177,7 +195,8 @@ export default function FormsPage() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetContent side="right" inset size="md" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
+              <Form {...form}>
+              <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
                 <SheetHeader className="pr-12">
                   <SheetTitle>New form</SheetTitle>
                   <SheetDescription>
@@ -186,46 +205,30 @@ export default function FormsPage() {
                 </SheetHeader>
                 <SheetBody>
                   <FieldGroup>
-                    <Field>
-                      <FieldLabel>Title</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        required
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Slug</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={slug}
-                        onChange={(e) => setSlug(e.target.value)}
-                        placeholder="auto from title"
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Description</FieldLabel>
-                      <Textarea
-                        className="min-h-16"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                      />
-                    </Field>
+                    <TextFormField control={form.control} name="title" label="Title" />
+                    <TextFormField
+                      control={form.control}
+                      name="slug"
+                      label="Slug"
+                      placeholder="auto from title"
+                    />
+                    <TextareaFormField
+                      control={form.control}
+                      name="description"
+                      label="Description"
+                    />
                   </FieldGroup>
                 </SheetBody>
                 <SheetFooter>
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending || title.trim().length < 2}
-                  >
+                  <Button type="submit" variant="primary" disabled={create.isPending}>
                     Create draft
                   </Button>
                 </SheetFooter>
               </form>
+              </Form>
             </SheetContent>
           </Sheet>
 

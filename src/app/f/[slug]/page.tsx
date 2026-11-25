@@ -2,49 +2,141 @@
 
 import * as React from "react"
 import { useParams } from "next/navigation"
+import { useForm, type Resolver } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import { Form } from "@/components/ui/form"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  SelectFormField,
+  TextFormField,
+  TextareaFormField,
+} from "@/components/form-fields"
 import { usePublicForm, useSubmitForm } from "@/features/forms/hooks/use-forms"
+import type { ChurchForm, ChurchFormField } from "@/features/forms/schemas"
+
+type AnswerValues = Record<string, string>
+
+/** Build a Zod schema from the form's configured fields (required + email checks). */
+function buildAnswersSchema(fields: ChurchFormField[]) {
+  const shape: Record<string, z.ZodType<string>> = {}
+  for (const field of fields) {
+    let base: z.ZodType<string> = z.string()
+    if (field.fieldType === "email") {
+      base = z.string().refine(
+        (v) => !v.trim() || z.string().email().safeParse(v.trim()).success,
+        "Enter a valid email address"
+      )
+    }
+    shape[field.id] = field.required
+      ? base.refine((v) => v.trim().length > 0, "This field is required")
+      : base
+  }
+  return z.object(shape)
+}
+
+function inputType(fieldType: ChurchFormField["fieldType"]) {
+  switch (fieldType) {
+    case "email":
+      return "email"
+    case "number":
+      return "number"
+    case "date":
+      return "date"
+    case "phone":
+      return "tel"
+    default:
+      return "text"
+  }
+}
+
+function PublicFormBody({
+  church,
+  pending,
+  onSubmit,
+}: {
+  church: ChurchForm
+  pending: boolean
+  onSubmit: (answers: AnswerValues) => void
+}) {
+  const schema = React.useMemo(() => buildAnswersSchema(church.fields), [church.fields])
+  const defaultValues = React.useMemo(
+    () => Object.fromEntries(church.fields.map((f) => [f.id, ""])) as AnswerValues,
+    [church.fields]
+  )
+  const form = useForm<AnswerValues>({
+    resolver: zodResolver(schema) as Resolver<AnswerValues>,
+    defaultValues,
+  })
+
+  return (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit((values) => onSubmit(values))}
+        className="mt-4 space-y-5 rounded-lg border border-zinc-200/80 bg-white p-6 shadow-xs"
+      >
+        <div>
+          <h1 className="text-xl font-medium text-zinc-900">{church.title}</h1>
+          {church.description && (
+            <p className="mt-1 text-sm text-zinc-500">{church.description}</p>
+          )}
+        </div>
+        {church.fields.map((field) => {
+          const label = `${field.label}${field.required ? " *" : ""}`
+          if (field.fieldType === "long_text") {
+            return (
+              <TextareaFormField
+                key={field.id}
+                control={form.control}
+                name={field.id}
+                label={label}
+                rows={4}
+              />
+            )
+          }
+          if (field.fieldType === "multiple_choice") {
+            return (
+              <SelectFormField
+                key={field.id}
+                control={form.control}
+                name={field.id}
+                label={label}
+                options={field.options.map((o) => ({ value: o, label: o }))}
+              />
+            )
+          }
+          return (
+            <TextFormField
+              key={field.id}
+              control={form.control}
+              name={field.id}
+              label={label}
+              type={inputType(field.fieldType)}
+            />
+          )
+        })}
+        <Button
+          type="submit"
+          disabled={pending}
+          className="w-full bg-accent-cta text-white hover:bg-accent-cta"
+        >
+          Submit
+        </Button>
+      </form>
+    </Form>
+  )
+}
 
 export default function PublicFormPage() {
   const params = useParams<{ slug: string }>()
   const slug = params.slug
   const { data: form, isLoading, error } = usePublicForm(slug)
   const submit = useSubmitForm(slug)
-  const [answers, setAnswers] = React.useState<Record<string, string>>({})
   const [done, setDone] = React.useState(false)
 
-  function setAnswer(fieldId: string, value: string) {
-    setAnswers((prev) => ({ ...prev, [fieldId]: value }))
-  }
-
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!form) return
-    for (const field of form.fields) {
-      if (field.required && !String(answers[field.id] || "").trim()) {
-        return
-      }
-    }
-    submit.mutate(
-      { answers },
-      {
-        onSuccess: () => {
-          setDone(true)
-          setAnswers({})
-        },
-      }
-    )
+  function onSubmit(answers: AnswerValues) {
+    submit.mutate({ answers }, { onSuccess: () => setDone(true) })
   }
 
   return (
@@ -65,75 +157,7 @@ export default function PublicFormPage() {
           </div>
         )}
         {form && !done && (
-          <form
-            onSubmit={onSubmit}
-            className="mt-4 space-y-5 rounded-lg border border-zinc-200/80 bg-white p-6 shadow-xs"
-          >
-            <div>
-              <h1 className="text-xl font-medium text-zinc-900">{form.title}</h1>
-              {form.description && (
-                <p className="mt-1 text-sm text-zinc-500">{form.description}</p>
-              )}
-            </div>
-            {form.fields.map((field) => (
-              <div key={field.id} className="space-y-1.5">
-                <Label className="text-xs font-medium">
-                  {field.label}
-                  {field.required ? " *" : ""}
-                </Label>
-                {field.fieldType === "long_text" ? (
-                  <Textarea
-                    className="min-h-24"
-                    value={answers[field.id] || ""}
-                    onChange={(e) => setAnswer(field.id, e.target.value)}
-                    required={field.required}
-                  />
-                ) : field.fieldType === "multiple_choice" ? (
-                  <Select
-                    value={answers[field.id] || ""}
-                    items={field.options.map((o) => ({ value: o, label: o }))}
-                    onValueChange={(v) => v && setAnswer(field.id, v)}
-                  >
-                    <SelectTrigger className="h-9 w-full">
-                      <SelectValue placeholder="Select…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {field.options.map((o) => (
-                        <SelectItem key={o} value={o}>
-                          {o}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    type={
-                      field.fieldType === "email"
-                        ? "email"
-                        : field.fieldType === "number"
-                          ? "number"
-                          : field.fieldType === "date"
-                            ? "date"
-                            : field.fieldType === "phone"
-                              ? "tel"
-                              : "text"
-                    }
-                    className="h-9"
-                    value={answers[field.id] || ""}
-                    onChange={(e) => setAnswer(field.id, e.target.value)}
-                    required={field.required}
-                  />
-                )}
-              </div>
-            ))}
-            <Button
-              type="submit"
-              disabled={submit.isPending}
-              className="w-full bg-accent-cta text-white hover:bg-accent-cta"
-            >
-              Submit
-            </Button>
-          </form>
+          <PublicFormBody church={form} pending={submit.isPending} onSubmit={onSubmit} />
         )}
         {done && (
           <div className="mt-8 rounded-lg border border-emerald-200 bg-white p-8 text-center shadow-xs">

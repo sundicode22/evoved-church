@@ -1,17 +1,14 @@
 "use client"
 
 import * as React from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Form } from "@/components/ui/form"
+import { FieldGroup } from "@/components/ui/field"
+import { SelectFormField, TextFormField } from "@/components/form-fields"
 import {
   Sheet,
   SheetBody,
@@ -22,8 +19,34 @@ import {
 } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty"
+import { createCustomFieldSchema } from "@/features/settings/schemas"
 import { apiClient, type ApiResponse } from "@/lib/axios"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+
+type CustomFieldFormInput = z.input<typeof createCustomFieldSchema>
+type CustomFieldFormOutput = z.output<typeof createCustomFieldSchema>
+
+const ENTITY_OPTIONS = [
+  { value: "member", label: "Member" },
+  { value: "visitor", label: "Visitor" },
+  { value: "group", label: "Group" },
+]
+
+const FIELD_TYPE_OPTIONS = [
+  { value: "text", label: "Text" },
+  { value: "number", label: "Number" },
+  { value: "date", label: "Date" },
+  { value: "select", label: "Select" },
+]
+
+const EMPTY_FIELD: CustomFieldFormInput = {
+  entityType: "member",
+  fieldKey: "",
+  fieldLabel: "",
+  fieldType: "text",
+  isRequired: false,
+  isConfidential: false,
+}
 
 type CustomField = {
   id: string
@@ -37,10 +60,10 @@ type CustomField = {
 export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
   const qc = useQueryClient()
   const [open, setOpen] = React.useState(false)
-  const [entityType, setEntityType] = React.useState("member")
-  const [fieldKey, setFieldKey] = React.useState("")
-  const [fieldLabel, setFieldLabel] = React.useState("")
-  const [fieldType, setFieldType] = React.useState("text")
+  const form = useForm<CustomFieldFormInput, unknown, CustomFieldFormOutput>({
+    resolver: zodResolver(createCustomFieldSchema),
+    defaultValues: EMPTY_FIELD,
+  })
 
   const { data: fields = [] } = useQuery({
     queryKey: ["custom-fields"],
@@ -51,22 +74,14 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
   })
 
   const create = useMutation({
-    mutationFn: async () => {
-      await apiClient.post("/settings/custom-fields", {
-        entityType,
-        fieldKey,
-        fieldLabel,
-        fieldType,
-        isRequired: false,
-        isConfidential: false,
-      })
+    mutationFn: async (input: CustomFieldFormOutput) => {
+      await apiClient.post("/settings/custom-fields", input)
     },
     onSuccess: () => {
       toast.success("Custom field created")
       qc.invalidateQueries({ queryKey: ["custom-fields"] })
       setOpen(false)
-      setFieldKey("")
-      setFieldLabel("")
+      form.reset(EMPTY_FIELD)
     },
     onError: (e: Error) => toast.error(e.message),
   })
@@ -79,9 +94,7 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
           <p className="text-xs text-zinc-500">Extend members, visitors, and groups with your own fields.</p>
         </div>
         {canEdit ? (
-          <Button
-            onClick={() => setOpen(true)}
-          >
+          <Button variant="primary" onClick={() => setOpen(true)}>
             Add field
           </Button>
         ) : null}
@@ -119,63 +132,48 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" inset size="sm" className="p-0">
-          <SheetHeader>
-            <SheetTitle>Add custom field</SheetTitle>
-          </SheetHeader>
-          <SheetBody>
-            <FieldGroup className="gap-4">
-              <Field>
-                <FieldLabel>Entity</FieldLabel>
-                <Select value={entityType} onValueChange={setEntityType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="member">Member</SelectItem>
-                    <SelectItem value="visitor">Visitor</SelectItem>
-                    <SelectItem value="group">Group</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel>Label</FieldLabel>
-                <Input value={fieldLabel} onChange={(e) => setFieldLabel(e.target.value)} />
-              </Field>
-              <Field>
-                <FieldLabel>Key</FieldLabel>
-                <Input
-                  value={fieldKey}
-                  onChange={(e) => setFieldKey(e.target.value.replace(/\s+/g, "_").toLowerCase())}
-                  placeholder="allergy_notes"
-                />
-              </Field>
-              <Field>
-                <FieldLabel>Type</FieldLabel>
-                <Select value={fieldType} onValueChange={setFieldType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="text">Text</SelectItem>
-                    <SelectItem value="number">Number</SelectItem>
-                    <SelectItem value="date">Date</SelectItem>
-                    <SelectItem value="select">Select</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-            </FieldGroup>
-          </SheetBody>
-          <SheetFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              disabled={!fieldKey || !fieldLabel || create.isPending}
-              onClick={() => create.mutate()}
-            >
-              Save field
-            </Button>
-          </SheetFooter>
+          <form
+            onSubmit={form.handleSubmit((values) => create.mutate(values))}
+            className="flex h-full flex-col"
+          >
+            <SheetHeader>
+              <SheetTitle>Add custom field</SheetTitle>
+            </SheetHeader>
+            <SheetBody>
+              <Form {...form}>
+                <FieldGroup className="gap-4">
+                  <SelectFormField
+                    control={form.control}
+                    name="entityType"
+                    label="Entity"
+                    options={ENTITY_OPTIONS}
+                  />
+                  <TextFormField control={form.control} name="fieldLabel" label="Label" />
+                  <TextFormField
+                    control={form.control}
+                    name="fieldKey"
+                    label="Key"
+                    placeholder="allergy_notes"
+                    transform={(v) => v.replace(/\s+/g, "_").toLowerCase()}
+                  />
+                  <SelectFormField
+                    control={form.control}
+                    name="fieldType"
+                    label="Type"
+                    options={FIELD_TYPE_OPTIONS}
+                  />
+                </FieldGroup>
+              </Form>
+            </SheetBody>
+            <SheetFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" disabled={create.isPending}>
+                Save field
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
     </div>

@@ -36,10 +36,10 @@ export const createAccountSchema = z.object({
 export const createBudgetLineSchema = z.object({
   fundId: z.string().min(1, "Fund is required"),
   accountId: z.string().optional(),
-  fiscalYear: z.number().int().min(2000).max(2100),
+  fiscalYear: z.number({ error: "Fiscal year is required" }).int().min(2000).max(2100),
   department: z.string().optional(),
   label: z.string().min(2, "Line label is required"),
-  allocatedAmount: z.number().nonnegative("Allocated amount cannot be negative"),
+  allocatedAmount: z.number({ error: "Allocated amount is required" }).nonnegative("Allocated amount cannot be negative"),
   notes: z.string().optional(),
   campusId: z.string().optional(),
 })
@@ -48,7 +48,7 @@ export const createRequisitionSchema = z.object({
   fundId: z.string().min(1, "Fund is required"),
   accountId: z.string().min(1, "Chart of account is required"),
   vendorName: z.string().min(2, "Vendor name is required"),
-  amount: z.number().positive("Amount must be greater than zero"),
+  amount: z.number({ error: "Amount is required" }).positive("Amount must be greater than zero"),
   description: z.string().min(5, "A descriptive purpose is required"),
   receiptUrl: z.string().url("Valid receipt URL required").optional().or(z.literal("")),
   campusId: z.string().optional(),

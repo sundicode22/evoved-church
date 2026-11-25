@@ -3,8 +3,12 @@
 import * as React from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { Form } from "@/components/ui/form"
+import { FieldGroup } from "@/components/ui/field"
+import { TextFormField } from "@/components/form-fields"
 import {
   Sheet,
   SheetBody,
@@ -18,6 +22,15 @@ import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty"
 import { apiClient, type ApiResponse } from "@/lib/axios"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { slugify } from "@/features/onboarding/presets"
+import { createCampusSchema } from "@/features/campuses/schemas"
+
+const addLocationFormSchema = createCampusSchema
+  .pick({ name: true, slug: true })
+  .extend({ city: z.string() })
+
+type AddLocationFormValues = z.infer<typeof addLocationFormSchema>
+
+const ADD_LOCATION_DEFAULTS: AddLocationFormValues = { name: "", city: "", slug: "" }
 
 type Campus = {
   id: string
@@ -31,9 +44,22 @@ type Campus = {
 export function LocationsTab({ canEdit }: { canEdit: boolean }) {
   const qc = useQueryClient()
   const [open, setOpen] = React.useState(false)
-  const [name, setName] = React.useState("")
-  const [city, setCity] = React.useState("")
-  const [slug, setSlug] = React.useState("")
+  const form = useForm<AddLocationFormValues>({
+    resolver: zodResolver(addLocationFormSchema),
+    defaultValues: ADD_LOCATION_DEFAULTS,
+  })
+
+  React.useEffect(() => {
+    const sub = form.watch((values, { name: changed }) => {
+      if (changed === "name") {
+        form.setValue("slug", slugify(values.name ?? ""), { shouldValidate: form.formState.isSubmitted })
+      } else if (changed === "slug") {
+        const next = slugify(values.slug ?? "")
+        if (next !== values.slug) form.setValue("slug", next)
+      }
+    })
+    return () => sub.unsubscribe()
+  }, [form])
 
   const { data: locations = [] } = useQuery({
     queryKey: ["campuses"],
@@ -44,11 +70,11 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
   })
 
   const create = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (values: AddLocationFormValues) => {
       await apiClient.post("/campuses", {
-        name,
-        slug: slug || slugify(name),
-        city,
+        name: values.name.trim(),
+        slug: values.slug || slugify(values.name),
+        city: values.city.trim(),
         type: "regional",
       })
     },
@@ -57,9 +83,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
       qc.invalidateQueries({ queryKey: ["campuses"] })
       qc.invalidateQueries({ queryKey: ["accounting"] })
       setOpen(false)
-      setName("")
-      setCity("")
-      setSlug("")
+      form.reset(ADD_LOCATION_DEFAULTS)
     },
     onError: (e: Error) => toast.error(e.message),
   })
@@ -74,7 +98,13 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
           </p>
         </div>
         {canEdit ? (
-          <Button variant="primary" onClick={() => setOpen(true)}>
+          <Button
+            variant="primary"
+            onClick={() => {
+              form.reset(ADD_LOCATION_DEFAULTS)
+              setOpen(true)
+            }}
+          >
             Add location
           </Button>
         ) : null}
@@ -117,43 +147,36 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" inset size="sm" className="p-0">
-          <SheetHeader>
-            <SheetTitle>Add location</SheetTitle>
-          </SheetHeader>
-          <SheetBody>
-            <FieldGroup className="gap-4">
-              <Field>
-                <FieldLabel>Name</FieldLabel>
-                <Input
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value)
-                    setSlug(slugify(e.target.value))
-                  }}
-                  placeholder="North Location"
-                />
-              </Field>
-              <Field>
-                <FieldLabel>City</FieldLabel>
-                <Input value={city} onChange={(e) => setCity(e.target.value)} />
-              </Field>
-              <Field>
-                <FieldLabel>Slug</FieldLabel>
-                <Input value={slug} onChange={(e) => setSlug(slugify(e.target.value))} />
-              </Field>
-            </FieldGroup>
-          </SheetBody>
-          <SheetFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              disabled={name.trim().length < 2 || create.isPending}
-              onClick={() => create.mutate()}
-            >
-              Save location
-            </Button>
-          </SheetFooter>
+          <form
+            onSubmit={form.handleSubmit((values) => create.mutate(values))}
+            className="flex h-full flex-col"
+          >
+            <SheetHeader>
+              <SheetTitle>Add location</SheetTitle>
+            </SheetHeader>
+            <SheetBody>
+              <Form {...form}>
+                <FieldGroup className="gap-4">
+                  <TextFormField
+                    control={form.control}
+                    name="name"
+                    label="Name"
+                    placeholder="North Location"
+                  />
+                  <TextFormField control={form.control} name="city" label="City" />
+                  <TextFormField control={form.control} name="slug" label="Slug" />
+                </FieldGroup>
+              </Form>
+            </SheetBody>
+            <SheetFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" disabled={create.isPending}>
+                Save location
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
     </div>

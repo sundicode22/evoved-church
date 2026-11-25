@@ -1,9 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Form } from "@/components/ui/form"
+import { FieldGroup } from "@/components/ui/field"
+import { TextFormField } from "@/components/form-fields"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -42,6 +46,7 @@ import {
   type PermissionRecord,
   type RoleRecord,
 } from "@/features/settings/hooks/use-rbac"
+import { createRoleFormSchema } from "@/features/settings/rbac-schemas"
 import { CheckCircle2, Info, Plus } from "lucide-react"
 
 function groupPermissions(perms: PermissionRecord[]) {
@@ -62,18 +67,18 @@ function CreateRoleSheet({
   onCreated: (role: RoleRecord) => void
 }) {
   const create = useCreateRole()
-  const [name, setName] = React.useState("")
-  const [description, setDescription] = React.useState("")
+  const form = useForm<z.infer<typeof createRoleFormSchema>>({
+    resolver: zodResolver(createRoleFormSchema),
+    defaultValues: { name: "", description: "" },
+  })
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function submit(values: z.infer<typeof createRoleFormSchema>) {
     create.mutate(
-      { name, description: description || undefined },
+      { name: values.name, description: values.description || undefined },
       {
         onSuccess: (role) => {
           onOpenChange(false)
-          setName("")
-          setDescription("")
+          form.reset()
           onCreated(role)
         },
       }
@@ -83,7 +88,7 @@ function CreateRoleSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" inset size="sm" className="p-0">
-        <form onSubmit={submit} className="flex h-full flex-col">
+        <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
           <SheetHeader className="pr-12">
             <SheetTitle>Create role</SheetTitle>
             <SheetDescription>
@@ -91,32 +96,18 @@ function CreateRoleSheet({
             </SheetDescription>
           </SheetHeader>
           <SheetBody>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Role name</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="h-9 text-xs"
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Description</Label>
-              <Input
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="h-9 text-xs"
-              />
-            </div>
+            <Form {...form}>
+              <FieldGroup className="gap-4">
+                <TextFormField control={form.control} name="name" label="Role name" />
+                <TextFormField control={form.control} name="description" label="Description" />
+              </FieldGroup>
+            </Form>
           </SheetBody>
           <SheetFooter>
             <Button type="button" variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={create.isPending || name.trim().length < 2}
-            >
+            <Button type="submit" variant="primary" disabled={create.isPending}>
               Create role
             </Button>
           </SheetFooter>
@@ -189,7 +180,7 @@ export function RolesPermissionsTab() {
       <TablePanel>
         <div className="flex justify-end px-1">
           <Can permission="settings.roles">
-            <Button onClick={() => setDialogOpen(true)}>
+            <Button variant="primary" onClick={() => setDialogOpen(true)}>
               <Plus className="size-4" />
               New role
             </Button>

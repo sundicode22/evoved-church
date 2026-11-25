@@ -7,15 +7,16 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Form } from "@/components/ui/form"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  NumberFormField,
+  SelectFormField,
+  TextFormField,
+} from "@/components/form-fields"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
   SheetBody,
@@ -25,7 +26,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
 import {
   Empty,
   EmptyDescription,
@@ -49,20 +50,42 @@ import {
 } from "@/features/appointments/hooks/use-appointments"
 import { SCHEDULE_STATUSES } from "@/features/appointments/schemas"
 
+const scheduleFormSchema = z.object({
+  name: z.string().trim().min(2, "Name is required"),
+  ownerDisplayName: z.string(),
+  durationMinutes: z
+    .number({ error: "Duration is required" })
+    .int("Duration must be a whole number")
+    .min(15, "Minimum 15 minutes")
+    .max(240, "Maximum 240 minutes"),
+  windowStart: z.string().min(1, "Window start is required"),
+  windowEnd: z.string().min(1, "Window end is required"),
+  status: z.enum(["open_for_bookings", "closed"]),
+})
+
+type ScheduleFormValues = z.infer<typeof scheduleFormSchema>
+
+const SCHEDULE_DEFAULTS: ScheduleFormValues = {
+  name: "",
+  ownerDisplayName: "",
+  durationMinutes: 30,
+  windowStart: "",
+  windowEnd: "",
+  status: "open_for_bookings",
+}
+
+const STATUS_OPTIONS = SCHEDULE_STATUSES.map((s) => ({ value: s.value, label: s.label }))
+
 export default function AppointmentsPage() {
   const { data: summary } = useAppointmentSummary()
   const { data: schedules, isLoading } = useAppointmentSchedules()
   const create = useCreateSchedule()
 
   const [open, setOpen] = React.useState(false)
-  const [name, setName] = React.useState("")
-  const [ownerDisplayName, setOwnerDisplayName] = React.useState("")
-  const [durationMinutes, setDurationMinutes] = React.useState("30")
-  const [windowStart, setWindowStart] = React.useState("")
-  const [windowEnd, setWindowEnd] = React.useState("")
-  const [status, setStatus] = React.useState<"open_for_bookings" | "closed">(
-    "open_for_bookings"
-  )
+  const form = useForm<ScheduleFormValues>({
+    resolver: zodResolver(scheduleFormSchema),
+    defaultValues: SCHEDULE_DEFAULTS,
+  })
 
   function openCreate() {
     const start = new Date()
@@ -70,29 +93,28 @@ export default function AppointmentsPage() {
     const end = new Date()
     end.setDate(end.getDate() + 14)
     end.setHours(17, 0, 0, 0)
-    setWindowStart(format(start, "yyyy-MM-dd'T'HH:mm"))
-    setWindowEnd(format(end, "yyyy-MM-dd'T'HH:mm"))
+    form.reset({
+      ...SCHEDULE_DEFAULTS,
+      windowStart: format(start, "yyyy-MM-dd'T'HH:mm"),
+      windowEnd: format(end, "yyyy-MM-dd'T'HH:mm"),
+    })
     setOpen(true)
   }
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function onSubmit(values: ScheduleFormValues) {
     create.mutate(
       {
-        name,
-        ownerDisplayName,
-        durationMinutes: Number(durationMinutes) || 30,
-        windowStart: new Date(windowStart).toISOString(),
-        windowEnd: new Date(windowEnd).toISOString(),
-        status,
+        name: values.name,
+        ownerDisplayName: values.ownerDisplayName,
+        durationMinutes: values.durationMinutes || 30,
+        windowStart: new Date(values.windowStart).toISOString(),
+        windowEnd: new Date(values.windowEnd).toISOString(),
+        status: values.status,
       },
       {
         onSuccess: () => {
           setOpen(false)
-          setName("")
-          setOwnerDisplayName("")
-          setDurationMinutes("30")
-          setStatus("open_for_bookings")
+          form.reset(SCHEDULE_DEFAULTS)
         },
       }
     )
@@ -204,104 +226,62 @@ export default function AppointmentsPage() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetContent side="right" inset size="md" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle>Create schedule</SheetTitle>
-                  <SheetDescription>
-                    Define who hosts, slot length, and the booking window.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel>Name</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Shepherd / host</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={ownerDisplayName}
-                        onChange={(e) => setOwnerDisplayName(e.target.value)}
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+                  <SheetHeader className="pr-12">
+                    <SheetTitle>Create schedule</SheetTitle>
+                    <SheetDescription>
+                      Define who hosts, slot length, and the booking window.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <TextFormField control={form.control} name="name" label="Name" />
+                      <TextFormField
+                        control={form.control}
+                        name="ownerDisplayName"
+                        label="Shepherd / host"
                         placeholder="Pastor name"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Duration (minutes)</FieldLabel>
-                      <Input
-                        type="number"
+                      <NumberFormField
+                        control={form.control}
+                        name="durationMinutes"
+                        label="Duration (minutes)"
                         min={15}
                         step={15}
-                        className="h-9"
-                        value={durationMinutes}
-                        onChange={(e) => setDurationMinutes(e.target.value)}
                       />
-                    </Field>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field>
-                        <FieldLabel>Window start</FieldLabel>
-                        <Input
+                      <div className="grid grid-cols-2 gap-3">
+                        <TextFormField
+                          control={form.control}
+                          name="windowStart"
+                          label="Window start"
                           type="datetime-local"
-                          className="h-9"
-                          value={windowStart}
-                          onChange={(e) => setWindowStart(e.target.value)}
-                          required
                         />
-                      </Field>
-                      <Field>
-                        <FieldLabel>Window end</FieldLabel>
-                        <Input
+                        <TextFormField
+                          control={form.control}
+                          name="windowEnd"
+                          label="Window end"
                           type="datetime-local"
-                          className="h-9"
-                          value={windowEnd}
-                          onChange={(e) => setWindowEnd(e.target.value)}
-                          required
                         />
-                      </Field>
-                    </div>
-                    <Field>
-                      <FieldLabel>Status</FieldLabel>
-                      <Select
-                        value={status}
-                        items={SCHEDULE_STATUSES.map((s) => ({
-                          value: s.value,
-                          label: s.label,
-                        }))}
-                        onValueChange={(v) =>
-                          v && setStatus(v as "open_for_bookings" | "closed")
-                        }
-                      >
-                        <SelectTrigger className="h-9 w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SCHEDULE_STATUSES.map((s) => (
-                            <SelectItem key={s.value} value={s.value}>
-                              {s.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  </FieldGroup>
-                </SheetBody>
-                <SheetFooter>
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending || name.trim().length < 2}
-                  >
-                    Save schedule
-                  </Button>
-                </SheetFooter>
-              </form>
+                      </div>
+                      <SelectFormField
+                        control={form.control}
+                        name="status"
+                        label="Status"
+                        options={STATUS_OPTIONS}
+                      />
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={create.isPending}>
+                      Save schedule
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
         </RequireAbility>

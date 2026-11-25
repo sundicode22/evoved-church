@@ -1,12 +1,23 @@
 "use client"
 
-import * as React from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Plus, X } from "lucide-react"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+const inviteDraftSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || EMAIL_RE.test(v), "Enter a valid email address."),
+})
+
+type InviteDraftValues = z.infer<typeof inviteDraftSchema>
 
 interface InviteStepProps {
   emails: string[]
@@ -14,54 +25,56 @@ interface InviteStepProps {
 }
 
 export function InviteStep({ emails, onChange }: InviteStepProps) {
-  const [draft, setDraft] = React.useState("")
-  const [error, setError] = React.useState<string | null>(null)
+  const form = useForm<InviteDraftValues>({
+    resolver: zodResolver(inviteDraftSchema),
+    defaultValues: { email: "" },
+  })
 
-  function add() {
-    const value = draft.trim().toLowerCase()
+  function add(values: InviteDraftValues) {
+    const value = values.email.trim().toLowerCase()
     if (!value) return
-    if (!EMAIL_RE.test(value)) return setError("Enter a valid email address.")
-    if (emails.includes(value)) return setError("That email is already added.")
+    if (emails.includes(value)) {
+      form.setError("email", { message: "That email is already added." })
+      return
+    }
     onChange([...emails, value])
-    setDraft("")
-    setError(null)
+    form.reset({ email: "" })
   }
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="invite" className="text-sm font-medium text-slate-800">
-          Invite your team
-        </Label>
-        <div className="flex gap-2">
-          <Input
-            id="invite"
-            type="email"
-            placeholder="teammate@yourchurch.org"
-            value={draft}
-            onChange={(e) => {
-              setDraft(e.target.value)
-              setError(null)
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault()
-                add()
-              }
-            }}
+      <Form {...form}>
+        <form noValidate onSubmit={form.handleSubmit(add)}>
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Invite your team</FormLabel>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="teammate@yourchurch.org"
+                      autoComplete="off"
+                    />
+                  </FormControl>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    className="h-10 gap-1 rounded-lg px-3.5 text-sm shadow-xs"
+                  >
+                    <Plus className="size-4" />
+                    Add
+                  </Button>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={add}
-            className="h-10 gap-1 rounded-lg px-3.5 text-sm shadow-xs"
-          >
-            <Plus className="size-4" />
-            Add
-          </Button>
-        </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-      </div>
+        </form>
+      </Form>
       {emails.length > 0 ? (
         <ul className="flex flex-wrap gap-2">
           {emails.map((email) => (

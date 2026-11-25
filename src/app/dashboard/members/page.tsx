@@ -7,7 +7,11 @@ import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { Form } from "@/components/ui/form"
+import { TextFormField, SelectFormField } from "@/components/form-fields"
 import {
   Sheet,
   SheetBody,
@@ -17,14 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { FieldGroup } from "@/components/ui/field"
 import {
   Table,
   TableBody,
@@ -38,6 +35,8 @@ import { MemberDrawer } from "@/components/members/member-drawer"
 import { Can, RequireAbility } from "@/components/auth/can"
 import {
   HOUSEHOLD_ROLE_LABELS,
+  createMemberSchema,
+  personTypeEnumSchema,
   type HouseholdRole,
   type PersonType,
 } from "@/features/members/schemas"
@@ -82,6 +81,31 @@ const PERSON_TYPES: { value: PersonType; label: string }[] = [
   { value: "donor_only", label: "Donor only" },
 ]
 
+const addPersonFormSchema = createMemberSchema
+  .pick({
+    firstName: true,
+    lastName: true,
+    email: true,
+    phoneNumber: true,
+    recordedTitle: true,
+  })
+  .extend({
+    personType: personTypeEnumSchema,
+  })
+
+type AddPersonFormValues = z.infer<typeof addPersonFormSchema>
+
+const ADD_PERSON_DEFAULTS: AddPersonFormValues = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phoneNumber: "",
+  personType: "covenant_member",
+  recordedTitle: "",
+}
+
+const PERSON_TYPE_OPTIONS = PERSON_TYPES.map((t) => ({ value: t.value, label: t.label }))
+
 export default function MembersPage() {
   const [activeTab, setActiveTab] = React.useState("all")
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -89,12 +113,10 @@ export default function MembersPage() {
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(10)
   const [sheetOpen, setSheetOpen] = React.useState(false)
-  const [firstName, setFirstName] = React.useState("")
-  const [lastName, setLastName] = React.useState("")
-  const [email, setEmail] = React.useState("")
-  const [phoneNumber, setPhoneNumber] = React.useState("")
-  const [personType, setPersonType] = React.useState<PersonType>("covenant_member")
-  const [recordedTitle, setRecordedTitle] = React.useState("")
+  const form = useForm<AddPersonFormValues>({
+    resolver: zodResolver(addPersonFormSchema),
+    defaultValues: ADD_PERSON_DEFAULTS,
+  })
 
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
   const createMember = useCreateMember()
@@ -106,40 +128,30 @@ export default function MembersPage() {
   const members = membersResponse?.data || []
   const pageRows = members.slice((page - 1) * pageSize, page * pageSize)
 
-  function resetForm() {
-    setFirstName("")
-    setLastName("")
-    setEmail("")
-    setPhoneNumber("")
-    setPersonType("covenant_member")
-    setRecordedTitle("")
-  }
-
   function openCreate() {
-    resetForm()
+    form.reset(ADD_PERSON_DEFAULTS)
     setSheetOpen(true)
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
+  const submit = form.handleSubmit(async (values) => {
     try {
       await createMember.mutateAsync({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim(),
-        phoneNumber: phoneNumber.trim() || undefined,
-        personType,
-        recordedTitle: recordedTitle.trim() || undefined,
+        firstName: values.firstName.trim(),
+        lastName: values.lastName.trim(),
+        email: values.email?.trim() ?? "",
+        phoneNumber: values.phoneNumber?.trim() || undefined,
+        personType: values.personType,
+        recordedTitle: values.recordedTitle?.trim() || undefined,
         ministryRoles: [],
         backgroundCheckStatus: "none",
       })
       setSheetOpen(false)
-      resetForm()
+      form.reset(ADD_PERSON_DEFAULTS)
       await refetch()
     } catch {
       /* toast in hook */
     }
-  }
+  })
 
   return (
     <SidebarProvider
@@ -370,68 +382,42 @@ export default function MembersPage() {
                   </SheetDescription>
                 </SheetHeader>
                 <SheetBody>
-                  <FieldGroup className="gap-4">
-                    <Field>
-                      <FieldLabel>First name</FieldLabel>
-                      <Input
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
+                  <Form {...form}>
+                    <FieldGroup className="gap-4">
+                      <TextFormField
+                        control={form.control}
+                        name="firstName"
+                        label="First name"
                         autoFocus
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Last name</FieldLabel>
-                      <Input
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        required
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Email</FieldLabel>
-                      <Input
+                      <TextFormField control={form.control} name="lastName" label="Last name" />
+                      <TextFormField
+                        control={form.control}
+                        name="email"
+                        label="Email"
                         type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
                         placeholder="optional"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Phone</FieldLabel>
-                      <Input
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
+                      <TextFormField
+                        control={form.control}
+                        name="phoneNumber"
+                        label="Phone"
                         placeholder="optional"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Lifecycle</FieldLabel>
-                      <Select
-                        value={personType}
-                        onValueChange={(v) => v && setPersonType(v as PersonType)}
-                      >
-                        <SelectTrigger className="h-[39px] w-full shadow-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PERSON_TYPES.map((t) => (
-                            <SelectItem key={t.value} value={t.value}>
-                              {t.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Title (optional)</FieldLabel>
-                      <Input
-                        value={recordedTitle}
-                        onChange={(e) => setRecordedTitle(e.target.value)}
+                      <SelectFormField
+                        control={form.control}
+                        name="personType"
+                        label="Lifecycle"
+                        options={PERSON_TYPE_OPTIONS}
+                      />
+                      <TextFormField
+                        control={form.control}
+                        name="recordedTitle"
+                        label="Title (optional)"
                         placeholder="e.g. Elder, Deaconess"
                       />
-                    </Field>
-                  </FieldGroup>
+                    </FieldGroup>
+                  </Form>
                 </SheetBody>
                 <SheetFooter>
                   <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>

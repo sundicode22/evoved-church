@@ -1,10 +1,15 @@
 "use client"
 
 import * as React from "react"
+import { useForm, useWatch } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
+import { SelectFormField } from "@/components/form-fields"
 import {
   Sheet,
   SheetBody,
@@ -35,6 +40,16 @@ import {
 import { Download, HeartHandshake, Upload, Users } from "lucide-react"
 
 type ImportKind = "members" | "giving"
+
+const importFormSchema = z.object({
+  kind: z.enum(["members", "giving"]),
+  files: z
+    .array(z.custom<AttachmentFile>())
+    .min(1, "Upload a CSV first")
+    .max(1, "Attach a single CSV file"),
+})
+
+type ImportFormValues = z.infer<typeof importFormSchema>
 
 const IMPORT_TYPES: {
   id: ImportKind
@@ -116,31 +131,47 @@ function buildBody(kind: ImportKind, mode: "dry_run" | "apply", rows: Record<str
 
 export function ImportTab({ canEdit }: { canEdit: boolean }) {
   const [sheetOpen, setSheetOpen] = React.useState(false)
-  const [kind, setKind] = React.useState<ImportKind>("members")
-  const [files, setFiles] = React.useState<AttachmentFile[]>([])
-  const [rows, setRows] = React.useState<Record<string, string>[]>([])
-  const [report, setReport] = React.useState<ImportReport | null>(null)
+  const form = useForm<ImportFormValues>({
+    resolver: zodResolver(importFormSchema),
+    defaultValues: { kind: "members", files: [] },
+  })
+  const kind = useWatch({ control: form.control, name: "kind" })
+  const files = useWatch({ control: form.control, name: "files" })
+  const [parsedRows, setRows] = React.useState<Record<string, string>[]>([])
+  const [rawReport, setReport] = React.useState<ImportReport | null>(null)
   const [confirmApply, setConfirmApply] = React.useState(false)
   const [busy, setBusy] = React.useState(false)
 
   const active = IMPORT_TYPES.find((t) => t.id === kind)!
 
+  const hasFile = Boolean(files[0]?.file)
+  const rows = hasFile ? parsedRows : []
+  const report = hasFile ? rawReport : null
+
   React.useEffect(() => {
     const file = files[0]?.file
-    if (!file) {
-      setRows([])
-      setReport(null)
-      return
-    }
+    if (!file) return
+    let cancelled = false
     void file.text().then((text) => {
+      if (cancelled) return
       setRows(parseCsv(text))
       setReport(null)
     })
+    return () => {
+      cancelled = true
+    }
   }, [files])
 
+  // Switching import type invalidates any attached file.
+  const lastKind = React.useRef(kind)
+  React.useEffect(() => {
+    if (lastKind.current === kind) return
+    lastKind.current = kind
+    form.setValue("files", [])
+  }, [kind, form])
+
   function openImport(next: ImportKind) {
-    setKind(next)
-    setFiles([])
+    form.reset({ kind: next, files: [] })
     setRows([])
     setReport(null)
     setSheetOpen(true)
@@ -148,7 +179,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
 
   async function dryRun() {
     if (rows.length === 0) {
-      toast.error("Upload a CSV first")
+      toast.error("CSV has no data rows")
       return
     }
     setBusy(true)
@@ -259,12 +290,11 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" inset size="sm" className="p-0 sm:max-w-lg">
+          <Form {...form}>
           <form
             className="flex h-full flex-col"
-            onSubmit={(e) => {
-              e.preventDefault()
-              void dryRun()
-            }}
+            noValidate
+            onSubmit={form.handleSubmit(() => dryRun())}
           >
             <SheetHeader className="pr-12">
               <SheetTitle className="font-medium">Import {active.title}</SheetTitle>
@@ -276,6 +306,14 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
 
             <SheetBody className="space-y-5">
               <FieldGroup className="gap-4">
+                <SelectFormField
+                  control={form.control}
+                  name="kind"
+                  label="Import type"
+                  disabled={!canEdit || busy}
+                  options={IMPORT_TYPES.map((t) => ({ value: t.id, label: t.title }))}
+                />
+
                 <Field>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <FieldLabel>Template</FieldLabel>
@@ -295,18 +333,27 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
                   </p>
                 </Field>
 
-                <Field>
-                  <FileAttachment
-                    value={files}
-                    onChange={setFiles}
-                    multiple={false}
-                    maxFiles={1}
-                    accept=".csv,text/csv"
-                    label="CSV file"
-                    hint="UTF-8 CSV · max 5,000 rows"
-                    disabled={!canEdit}
-                  />
-                </Field>
+                <FormField
+                  control={form.control}
+                  name="files"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <FileAttachment
+                          value={field.value}
+                          onChange={field.onChange}
+                          multiple={false}
+                          maxFiles={1}
+                          accept=".csv,text/csv"
+                          label="CSV file"
+                          hint="UTF-8 CSV · max 5,000 rows"
+                          disabled={!canEdit}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </FieldGroup>
 
               {rows.length > 0 && (
@@ -393,6 +440,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
               </Button>
             </SheetFooter>
           </form>
+          </Form>
         </SheetContent>
       </Sheet>
 

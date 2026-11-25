@@ -6,16 +6,17 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Form } from "@/components/ui/form"
+import { useForm, useWatch } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  NumberFormField,
+  SelectFormField,
+  TextareaFormField,
+  TextFormField,
+} from "@/components/form-fields"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
   SheetBody,
@@ -25,7 +26,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
 import {
   Empty,
   EmptyDescription,
@@ -40,6 +41,39 @@ import {
 } from "@/features/drips/hooks/use-drips"
 import { DRIP_TRIGGERS } from "@/features/drips/schemas"
 
+const sequenceFormSchema = z.object({
+  name: z.string().trim().min(2, "Name is required"),
+  triggerEvent: z.string().min(1, "Trigger is required"),
+})
+
+type SequenceFormValues = z.infer<typeof sequenceFormSchema>
+
+const SEQUENCE_DEFAULTS: SequenceFormValues = { name: "", triggerEvent: "first_visit" }
+
+const stepFormSchema = z.object({
+  delayHours: z
+    .number({ error: "Delay is required" })
+    .min(0, "Delay cannot be negative"),
+  channel: z.enum(["email", "sms"]),
+  subject: z.string(),
+  body: z.string().trim().min(1, "Body is required"),
+})
+
+type StepFormValues = z.infer<typeof stepFormSchema>
+
+const STEP_DEFAULTS: Partial<StepFormValues> = {
+  delayHours: 24,
+  channel: "email",
+  subject: "",
+  body: "",
+}
+
+const TRIGGER_OPTIONS = DRIP_TRIGGERS.map((t) => ({ value: t.value, label: t.label }))
+const STEP_CHANNEL_OPTIONS = [
+  { value: "email", label: "Email" },
+  { value: "sms", label: "SMS" },
+]
+
 export default function CommunicationsPage() {
   const { data: sequences, isLoading } = useDripSequences()
   const createSeq = useCreateDripSequence()
@@ -48,12 +82,24 @@ export default function CommunicationsPage() {
   const [activeId, setActiveId] = React.useState<string | null>(null)
   const [seqOpen, setSeqOpen] = React.useState(false)
   const [stepOpen, setStepOpen] = React.useState(false)
-  const [name, setName] = React.useState("")
-  const [triggerEvent, setTriggerEvent] = React.useState("first_visit")
-  const [delayHours, setDelayHours] = React.useState("24")
-  const [channel, setChannel] = React.useState<"email" | "sms">("email")
-  const [subject, setSubject] = React.useState("")
-  const [body, setBody] = React.useState("")
+
+  const seqForm = useForm<SequenceFormValues>({
+    resolver: zodResolver(sequenceFormSchema),
+    defaultValues: SEQUENCE_DEFAULTS,
+  })
+  const stepForm = useForm<StepFormValues>({
+    resolver: zodResolver(stepFormSchema),
+    defaultValues: STEP_DEFAULTS,
+  })
+  const stepChannel = useWatch({ control: stepForm.control, name: "channel" })
+
+  React.useEffect(() => {
+    if (seqOpen) seqForm.reset(SEQUENCE_DEFAULTS)
+  }, [seqOpen, seqForm])
+
+  React.useEffect(() => {
+    if (stepOpen) stepForm.reset(STEP_DEFAULTS)
+  }, [stepOpen, stepForm])
 
   React.useEffect(() => {
     if (!activeId && sequences?.[0]) setActiveId(sequences[0].id)
@@ -61,38 +107,33 @@ export default function CommunicationsPage() {
 
   const active = sequences?.find((s) => s.id === activeId) || sequences?.[0]
 
-  function submitSequence(e: React.FormEvent) {
-    e.preventDefault()
+  function onSubmitSequence(values: SequenceFormValues) {
     createSeq.mutate(
-      { name, triggerEvent, isActive: true },
+      { name: values.name, triggerEvent: values.triggerEvent, isActive: true },
       {
         onSuccess: (seq) => {
           setSeqOpen(false)
-          setName("")
+          seqForm.reset(SEQUENCE_DEFAULTS)
           setActiveId(seq.id)
         },
       }
     )
   }
 
-  function submitStep(e: React.FormEvent) {
-    e.preventDefault()
+  function onSubmitStep(values: StepFormValues) {
     if (!active) return
     addStep.mutate(
       {
         sequenceId: active.id,
-        delayHours: Number(delayHours) || 0,
-        channel,
-        subject,
-        body,
+        delayHours: values.delayHours || 0,
+        channel: values.channel,
+        subject: values.subject,
+        body: values.body,
       },
       {
         onSuccess: () => {
           setStepOpen(false)
-          setSubject("")
-          setBody("")
-          setDelayHours("24")
-          setChannel("email")
+          stepForm.reset(STEP_DEFAULTS)
         },
       }
     )
@@ -220,138 +261,92 @@ export default function CommunicationsPage() {
 
           <Sheet open={seqOpen} onOpenChange={setSeqOpen}>
             <SheetContent side="right" inset size="md" className="p-0">
-              <form onSubmit={submitSequence} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle>New drip sequence</SheetTitle>
-                  <SheetDescription>
-                    Name the sequence and choose what triggers enrollment.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel>Name</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
+              <Form {...seqForm}>
+                <form
+                  onSubmit={seqForm.handleSubmit(onSubmitSequence)}
+                  className="flex h-full flex-col"
+                >
+                  <SheetHeader className="pr-12">
+                    <SheetTitle>New drip sequence</SheetTitle>
+                    <SheetDescription>
+                      Name the sequence and choose what triggers enrollment.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <TextFormField control={seqForm.control} name="name" label="Name" />
+                      <SelectFormField
+                        control={seqForm.control}
+                        name="triggerEvent"
+                        label="Trigger"
+                        options={TRIGGER_OPTIONS}
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Trigger</FieldLabel>
-                      <Select
-                        value={triggerEvent}
-                        items={DRIP_TRIGGERS.map((t) => ({
-                          value: t.value,
-                          label: t.label,
-                        }))}
-                        onValueChange={(v) => v && setTriggerEvent(v)}
-                      >
-                        <SelectTrigger className="h-9 w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DRIP_TRIGGERS.map((t) => (
-                            <SelectItem key={t.value} value={t.value}>
-                              {t.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  </FieldGroup>
-                </SheetBody>
-                <SheetFooter>
-                  <Button type="button" variant="outline" onClick={() => setSeqOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createSeq.isPending || name.trim().length < 2}
-                  >
-                    Create sequence
-                  </Button>
-                </SheetFooter>
-              </form>
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button type="button" variant="outline" onClick={() => setSeqOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={createSeq.isPending}>
+                      Create sequence
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
 
           <Sheet open={stepOpen} onOpenChange={setStepOpen}>
             <SheetContent side="right" inset size="md" className="p-0">
-              <form onSubmit={submitStep} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle>Add drip step</SheetTitle>
-                  <SheetDescription>
-                    Delay, channel, and message for {active?.name || "this sequence"}.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <FieldGroup>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field>
-                        <FieldLabel>Delay (hours)</FieldLabel>
-                        <Input
-                          type="number"
+              <Form {...stepForm}>
+                <form
+                  onSubmit={stepForm.handleSubmit(onSubmitStep)}
+                  className="flex h-full flex-col"
+                >
+                  <SheetHeader className="pr-12">
+                    <SheetTitle>Add drip step</SheetTitle>
+                    <SheetDescription>
+                      Delay, channel, and message for {active?.name || "this sequence"}.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <div className="grid grid-cols-2 gap-3">
+                        <NumberFormField
+                          control={stepForm.control}
+                          name="delayHours"
+                          label="Delay (hours)"
                           min={0}
-                          className="h-9"
-                          value={delayHours}
-                          onChange={(e) => setDelayHours(e.target.value)}
+                          step={1}
                         />
-                      </Field>
-                      <Field>
-                        <FieldLabel>Channel</FieldLabel>
-                        <Select
-                          value={channel}
-                          items={[
-                            { value: "email", label: "Email" },
-                            { value: "sms", label: "SMS" },
-                          ]}
-                          onValueChange={(v) => v && setChannel(v as "email" | "sms")}
-                        >
-                          <SelectTrigger className="h-9 w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="email">Email</SelectItem>
-                            <SelectItem value="sms">SMS</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                    </div>
-                    {channel === "email" && (
-                      <Field>
-                        <FieldLabel>Subject</FieldLabel>
-                        <Input
-                          className="h-9"
-                          value={subject}
-                          onChange={(e) => setSubject(e.target.value)}
+                        <SelectFormField
+                          control={stepForm.control}
+                          name="channel"
+                          label="Channel"
+                          options={STEP_CHANNEL_OPTIONS}
                         />
-                      </Field>
-                    )}
-                    <Field>
-                      <FieldLabel>Body</FieldLabel>
-                      <Textarea
-                        className="min-h-24"
-                        value={body}
-                        onChange={(e) => setBody(e.target.value)}
-                        required
+                      </div>
+                      {stepChannel === "email" && (
+                        <TextFormField control={stepForm.control} name="subject" label="Subject" />
+                      )}
+                      <TextareaFormField
+                        control={stepForm.control}
+                        name="body"
+                        label="Body"
+                        rows={5}
                       />
-                    </Field>
-                  </FieldGroup>
-                </SheetBody>
-                <SheetFooter>
-                  <Button type="button" variant="outline" onClick={() => setStepOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={addStep.isPending || body.trim().length < 1}
-                  >
-                    Save step
-                  </Button>
-                </SheetFooter>
-              </form>
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button type="button" variant="outline" onClick={() => setStepOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={addStep.isPending}>
+                      Save step
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
         </RequireAbility>

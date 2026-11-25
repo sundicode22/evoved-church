@@ -6,7 +6,11 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Form } from "@/components/ui/form"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { TextFormField } from "@/components/form-fields"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -17,7 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
 import {
   Table,
   TableBody,
@@ -48,6 +52,18 @@ import {
 import type { GivingBatch } from "@/features/giving/schemas"
 import { formatDate, formatMoney } from "@/lib/format"
 
+const todayISO = () => new Date().toISOString().slice(0, 10)
+
+const batchFormSchema = z.object({
+  name: z.string().trim().min(1, "Name is required"),
+  batchDate: z.string().min(1, "Batch date is required"),
+  notes: z.string(),
+})
+
+type BatchFormValues = z.infer<typeof batchFormSchema>
+
+const batchDefaults = (): BatchFormValues => ({ name: "", batchDate: todayISO(), notes: "" })
+
 const COLUMNS: ColumnOption[] = [
   { id: "name", label: "Batch" },
   { id: "date", label: "Date" },
@@ -67,9 +83,15 @@ export default function BatchesPage() {
   const [sheetOpen, setSheetOpen] = React.useState(false)
   const [deleteTarget, setDeleteTarget] = React.useState<GivingBatch | null>(null)
 
-  const [name, setName] = React.useState("")
-  const [batchDate, setBatchDate] = React.useState(() => new Date().toISOString().slice(0, 10))
-  const [notes, setNotes] = React.useState("")
+  const form = useForm<BatchFormValues>({
+    resolver: zodResolver(batchFormSchema),
+    defaultValues: batchDefaults(),
+  })
+
+  React.useEffect(() => {
+    if (sheetOpen) form.reset(batchDefaults())
+  }, [sheetOpen, form])
+
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
 
   const rows = data ?? []
@@ -81,20 +103,17 @@ export default function BatchesPage() {
   )
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function onSubmit(values: BatchFormValues) {
     create.mutate(
       {
-        name,
-        batchDate: new Date(batchDate).toISOString(),
-        notes: notes || null,
+        name: values.name,
+        batchDate: new Date(values.batchDate).toISOString(),
+        notes: values.notes || null,
       },
       {
         onSuccess: () => {
           setSheetOpen(false)
-          setName("")
-          setNotes("")
-          setBatchDate(new Date().toISOString().slice(0, 10))
+          form.reset(batchDefaults())
         },
       }
     )
@@ -236,61 +255,41 @@ export default function BatchesPage() {
 
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle className="font-medium">New batch</SheetTitle>
-                  <SheetDescription>
-                    Create a counting batch for Sunday envelopes or online deposits.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel>Name</FieldLabel>
-                      <Input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="h-9 text-sm"
-                        required
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Batch date</FieldLabel>
-                      <Input
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+                  <SheetHeader className="pr-12">
+                    <SheetTitle className="font-medium">New batch</SheetTitle>
+                    <SheetDescription>
+                      Create a counting batch for Sunday envelopes or online deposits.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <TextFormField control={form.control} name="name" label="Name" />
+                      <TextFormField
+                        control={form.control}
+                        name="batchDate"
+                        label="Batch date"
                         type="date"
-                        value={batchDate}
-                        onChange={(e) => setBatchDate(e.target.value)}
-                        className="h-9 text-sm"
-                        required
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Notes</FieldLabel>
-                      <Input
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        className="h-9 text-sm"
-                      />
-                    </Field>
-                  </FieldGroup>
-                </SheetBody>
-                <SheetFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-9"
-                    onClick={() => setSheetOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending}
-                  >
-                    {create.isPending ? "Saving…" : "Create batch"}
-                  </Button>
-                </SheetFooter>
-              </form>
+                      <TextFormField control={form.control} name="notes" label="Notes" />
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9"
+                      onClick={() => setSheetOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={create.isPending}>
+                      {create.isPending ? "Saving…" : "Create batch"}
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
 

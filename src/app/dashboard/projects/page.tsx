@@ -7,8 +7,12 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Form } from "@/components/ui/form"
+import { FieldGroup } from "@/components/ui/field"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { TextFormField } from "@/components/form-fields"
 import {
   Sheet,
   SheetBody,
@@ -50,6 +54,15 @@ import {
 } from "@/features/projects/hooks/use-projects"
 import type { ProjectStage } from "@/features/projects/schemas"
 
+const projectTaskFormSchema = z.object({
+  title: z.string().trim().min(2, "Title is required"),
+  projectName: z.string(),
+})
+
+type ProjectTaskFormValues = z.infer<typeof projectTaskFormSchema>
+
+const PROJECT_TASK_DEFAULTS: ProjectTaskFormValues = { title: "", projectName: "" }
+
 const COLUMNS: ColumnOption[] = [
   { id: "title", label: "Task" },
   { id: "project", label: "Project" },
@@ -79,8 +92,14 @@ export default function ProjectsPage() {
   const [view, setView] = React.useState<"table" | "board">("table")
   const [search, setSearch] = React.useState("")
   const [open, setOpen] = React.useState(false)
-  const [title, setTitle] = React.useState("")
-  const [projectName, setProjectName] = React.useState("")
+  const form = useForm<ProjectTaskFormValues>({
+    resolver: zodResolver(projectTaskFormSchema),
+    defaultValues: PROJECT_TASK_DEFAULTS,
+  })
+
+  React.useEffect(() => {
+    if (open) form.reset(PROJECT_TASK_DEFAULTS)
+  }, [open, form])
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(10)
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
@@ -128,15 +147,13 @@ export default function ProjectsPage() {
   const total = data?.totalCards ?? 0
   const doneCount = data?.columns.find((c) => c.id === "done")?.cards.length ?? 0
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function onSubmit(values: ProjectTaskFormValues) {
     createCard.mutate(
-      { title, projectName: projectName || "General" },
+      { title: values.title, projectName: values.projectName.trim() || "General" },
       {
         onSuccess: () => {
           setOpen(false)
-          setTitle("")
-          setProjectName("")
+          form.reset(PROJECT_TASK_DEFAULTS)
         },
       }
     )
@@ -285,43 +302,33 @@ export default function ProjectsPage() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle className="font-medium">Add project task</SheetTitle>
-                  <SheetDescription>New tasks start in Backlog.</SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">Title</Label>
-                    <Input
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      className="h-9 text-sm"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">Project</Label>
-                    <Input
-                      value={projectName}
-                      onChange={(e) => setProjectName(e.target.value)}
-                      placeholder="e.g. Easter Outreach"
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                </SheetBody>
-                <SheetFooter>
-                  <Button type="button" variant="outline" className="h-9" onClick={() => setOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createCard.isPending || title.trim().length < 2}
-                  >
-                    Add task
-                  </Button>
-                </SheetFooter>
-              </form>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+                  <SheetHeader className="pr-12">
+                    <SheetTitle className="font-medium">Add project task</SheetTitle>
+                    <SheetDescription>New tasks start in Backlog.</SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup className="gap-4">
+                      <TextFormField control={form.control} name="title" label="Title" />
+                      <TextFormField
+                        control={form.control}
+                        name="projectName"
+                        label="Project"
+                        placeholder="e.g. Easter Outreach"
+                      />
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button type="button" variant="outline" className="h-9" onClick={() => setOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={createCard.isPending}>
+                      Add task
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
         </RequireAbility>

@@ -6,7 +6,11 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { SelectFormField, TextFormField } from "@/components/form-fields"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -17,7 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
 import {
   Empty,
   EmptyDescription,
@@ -46,19 +50,24 @@ import {
   useColumnVisibility,
   type ColumnOption,
 } from "@/components/table-panel"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useCreateGroup, useGroups } from "@/features/groups/hooks/use-groups"
 import {
   GROUP_TYPE_LABELS,
   GROUP_TYPES,
-  type GroupType,
+  groupTypeSchema,
 } from "@/features/groups/schemas"
+
+const groupFormSchema = z.object({
+  name: z.string().trim().min(2, "Group name is required"),
+  type: groupTypeSchema,
+  imageUrl: z.string(),
+})
+
+type GroupFormValues = z.infer<typeof groupFormSchema>
+
+const GROUP_FORM_DEFAULTS: GroupFormValues = { name: "", type: "public", imageUrl: "" }
+
+const GROUP_TYPE_OPTIONS = GROUP_TYPES.map((t) => ({ value: t, label: GROUP_TYPE_LABELS[t] }))
 
 const COLUMNS: ColumnOption[] = [
   { id: "name", label: "Group" },
@@ -78,9 +87,14 @@ export default function GroupsPage() {
   const [sheetOpen, setSheetOpen] = React.useState(false)
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
 
-  const [name, setName] = React.useState("")
-  const [type, setType] = React.useState<GroupType>("public")
-  const [imageUrl, setImageUrl] = React.useState("")
+  const form = useForm<GroupFormValues>({
+    resolver: zodResolver(groupFormSchema),
+    defaultValues: GROUP_FORM_DEFAULTS,
+  })
+
+  React.useEffect(() => {
+    if (sheetOpen) form.reset(GROUP_FORM_DEFAULTS)
+  }, [sheetOpen, form])
 
   const rows = data ?? []
   const filtered = rows.filter(
@@ -92,20 +106,17 @@ export default function GroupsPage() {
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
   const isEmpty = !isLoading && rows.length === 0
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function onSubmit(values: GroupFormValues) {
     create.mutate(
       {
-        name,
-        type,
-        imageUrl: imageUrl.trim() || null,
+        name: values.name,
+        type: values.type,
+        imageUrl: values.imageUrl.trim() || null,
       },
       {
         onSuccess: () => {
           setSheetOpen(false)
-          setName("")
-          setType("public")
-          setImageUrl("")
+          form.reset(GROUP_FORM_DEFAULTS)
         },
       }
     )
@@ -269,68 +280,52 @@ export default function GroupsPage() {
 
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle className="font-medium">Create group</SheetTitle>
-                  <SheetDescription>
-                    Name the group, choose a type, and upload an optional cover image.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel>Name</FieldLabel>
-                      <Input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="h-10 text-sm"
-                        required
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+                  <SheetHeader className="pr-12">
+                    <SheetTitle className="font-medium">Create group</SheetTitle>
+                    <SheetDescription>
+                      Name the group, choose a type, and upload an optional cover image.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <TextFormField control={form.control} name="name" label="Name" />
+                      <SelectFormField
+                        control={form.control}
+                        name="type"
+                        label="Group type"
+                        placeholder="Select group type"
+                        options={GROUP_TYPE_OPTIONS}
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Group type</FieldLabel>
-                      <Select
-                        value={type}
-                        onValueChange={(v) => v && setType(v as GroupType)}
-                      >
-                        <SelectTrigger className="h-10 w-full shadow-xs">
-                          <SelectValue placeholder="Select group type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {GROUP_TYPES.map((t) => (
-                            <SelectItem key={t} value={t}>
-                              {GROUP_TYPE_LABELS[t]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <ImageUpload
-                        label="Group image (optional)"
-                        value={imageUrl}
-                        onChange={setImageUrl}
-                        previewClassName="aspect-square max-h-48 object-cover"
+                      <FormField
+                        control={form.control}
+                        name="imageUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <ImageUpload
+                                label="Group image (optional)"
+                                value={field.value}
+                                onChange={field.onChange}
+                                previewClassName="aspect-square max-h-48 object-cover"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
                       />
-                    </Field>
-                  </FieldGroup>
-                </SheetBody>
-                <SheetFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setSheetOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending}
-                  >
-                    {create.isPending ? "Saving…" : "Create group"}
-                  </Button>
-                </SheetFooter>
-              </form>
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={create.isPending}>
+                      {create.isPending ? "Saving…" : "Create group"}
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
         </RequireAbility>

@@ -1,10 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Form } from "@/components/ui/form"
+import { FieldGroup } from "@/components/ui/field"
+import { TextFormField } from "@/components/form-fields"
 import {
   Sheet,
   SheetBody,
@@ -18,6 +21,12 @@ import {
   useNomenclatureQuery,
   useUpdateNomenclature,
 } from "@/features/settings/hooks/use-nomenclature-api"
+import {
+  churchContactFormSchema,
+  churchDetailsFormSchema,
+  type ChurchContactFormValues,
+  type ChurchDetailsFormValues,
+} from "@/features/settings/schemas"
 
 function dash(v?: string | null) {
   return v && v.trim() ? v : "—"
@@ -30,14 +39,53 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
 
   const [churchOpen, setChurchOpen] = React.useState(false)
   const [contactOpen, setContactOpen] = React.useState(false)
-  const [draft, setDraft] = React.useState(nomenclature)
+
+  const churchForm = useForm<ChurchDetailsFormValues>({
+    resolver: zodResolver(churchDetailsFormSchema),
+    defaultValues: {
+      churchName: nomenclature.churchName,
+      churchEmail: nomenclature.churchEmail,
+      logoUrl: nomenclature.logoUrl,
+    },
+  })
+  const contactForm = useForm<ChurchContactFormValues>({
+    resolver: zodResolver(churchContactFormSchema),
+    defaultValues: {
+      churchPhone: nomenclature.churchPhone,
+      churchAddress: nomenclature.churchAddress,
+      churchCity: nomenclature.churchCity,
+      churchState: nomenclature.churchState,
+      churchZip: nomenclature.churchZip,
+    },
+  })
+
+  // Re-sync each form from the stored settings whenever its sheet opens.
+  React.useEffect(() => {
+    if (!churchOpen) return
+    churchForm.reset({
+      churchName: nomenclature.churchName,
+      churchEmail: nomenclature.churchEmail,
+      logoUrl: nomenclature.logoUrl,
+    })
+  }, [churchOpen, nomenclature, churchForm])
 
   React.useEffect(() => {
-    setDraft(nomenclature)
-  }, [nomenclature, churchOpen, contactOpen])
+    if (!contactOpen) return
+    contactForm.reset({
+      churchPhone: nomenclature.churchPhone,
+      churchAddress: nomenclature.churchAddress,
+      churchCity: nomenclature.churchCity,
+      churchState: nomenclature.churchState,
+      churchZip: nomenclature.churchZip,
+    })
+  }, [contactOpen, nomenclature, contactForm])
 
-  function saveDraft(close: () => void) {
-    save.mutate(draft, { onSuccess: () => close() })
+  function saveChurch(values: ChurchDetailsFormValues) {
+    save.mutate(values, { onSuccess: () => setChurchOpen(false) })
+  }
+
+  function saveContact(values: ChurchContactFormValues) {
+    save.mutate(values, { onSuccess: () => setContactOpen(false) })
   }
 
   return (
@@ -113,105 +161,81 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
 
       <Sheet open={churchOpen} onOpenChange={setChurchOpen}>
         <SheetContent side="right" inset size="sm" className="p-0">
-          <SheetHeader>
-            <SheetTitle>Edit church details</SheetTitle>
-          </SheetHeader>
-          <SheetBody>
-            <FieldGroup className="gap-4">
-              <Field>
-                <FieldLabel>Church name</FieldLabel>
-                <Input
-                  value={draft.churchName}
-                  onChange={(e) => setDraft({ ...draft, churchName: e.target.value })}
-                />
-              </Field>
-              <Field>
-                <FieldLabel>Email</FieldLabel>
-                <Input
-                  type="email"
-                  value={draft.churchEmail}
-                  onChange={(e) => setDraft({ ...draft, churchEmail: e.target.value })}
-                />
-              </Field>
-              <Field>
-                <FieldLabel>Logo URL</FieldLabel>
-                <Input
-                  value={draft.logoUrl}
-                  onChange={(e) => setDraft({ ...draft, logoUrl: e.target.value })}
-                  placeholder="https://…"
-                />
-              </Field>
-            </FieldGroup>
-          </SheetBody>
-          <SheetFooter>
-            <Button variant="outline" onClick={() => setChurchOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              disabled={save.isPending}
-              onClick={() => saveDraft(() => setChurchOpen(false))}
-            >
-              Save
-            </Button>
-          </SheetFooter>
+          <form
+            onSubmit={churchForm.handleSubmit(saveChurch)}
+            className="flex h-full flex-col"
+          >
+            <SheetHeader>
+              <SheetTitle>Edit church details</SheetTitle>
+            </SheetHeader>
+            <SheetBody>
+              <Form {...churchForm}>
+                <FieldGroup className="gap-4">
+                  <TextFormField
+                    control={churchForm.control}
+                    name="churchName"
+                    label="Church name"
+                  />
+                  <TextFormField
+                    control={churchForm.control}
+                    name="churchEmail"
+                    label="Email"
+                    type="email"
+                  />
+                  <TextFormField
+                    control={churchForm.control}
+                    name="logoUrl"
+                    label="Logo URL"
+                    placeholder="https://…"
+                  />
+                </FieldGroup>
+              </Form>
+            </SheetBody>
+            <SheetFooter>
+              <Button type="button" variant="outline" onClick={() => setChurchOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" disabled={save.isPending}>
+                Save
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
 
       <Sheet open={contactOpen} onOpenChange={setContactOpen}>
         <SheetContent side="right" inset size="sm" className="p-0">
-          <SheetHeader>
-            <SheetTitle>Edit contact details</SheetTitle>
-          </SheetHeader>
-          <SheetBody>
-            <FieldGroup className="gap-4">
-              <Field>
-                <FieldLabel>Phone</FieldLabel>
-                <Input
-                  value={draft.churchPhone}
-                  onChange={(e) => setDraft({ ...draft, churchPhone: e.target.value })}
-                />
-              </Field>
-              <Field>
-                <FieldLabel>Address</FieldLabel>
-                <Input
-                  value={draft.churchAddress}
-                  onChange={(e) => setDraft({ ...draft, churchAddress: e.target.value })}
-                />
-              </Field>
-              <Field>
-                <FieldLabel>City</FieldLabel>
-                <Input
-                  value={draft.churchCity}
-                  onChange={(e) => setDraft({ ...draft, churchCity: e.target.value })}
-                />
-              </Field>
-              <Field>
-                <FieldLabel>State</FieldLabel>
-                <Input
-                  value={draft.churchState}
-                  onChange={(e) => setDraft({ ...draft, churchState: e.target.value })}
-                />
-              </Field>
-              <Field>
-                <FieldLabel>Zip code</FieldLabel>
-                <Input
-                  value={draft.churchZip}
-                  onChange={(e) => setDraft({ ...draft, churchZip: e.target.value })}
-                />
-              </Field>
-            </FieldGroup>
-          </SheetBody>
-          <SheetFooter>
-            <Button variant="outline" onClick={() => setContactOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              disabled={save.isPending}
-              onClick={() => saveDraft(() => setContactOpen(false))}
-            >
-              Save
-            </Button>
-          </SheetFooter>
+          <form
+            onSubmit={contactForm.handleSubmit(saveContact)}
+            className="flex h-full flex-col"
+          >
+            <SheetHeader>
+              <SheetTitle>Edit contact details</SheetTitle>
+            </SheetHeader>
+            <SheetBody>
+              <Form {...contactForm}>
+                <FieldGroup className="gap-4">
+                  <TextFormField control={contactForm.control} name="churchPhone" label="Phone" />
+                  <TextFormField
+                    control={contactForm.control}
+                    name="churchAddress"
+                    label="Address"
+                  />
+                  <TextFormField control={contactForm.control} name="churchCity" label="City" />
+                  <TextFormField control={contactForm.control} name="churchState" label="State" />
+                  <TextFormField control={contactForm.control} name="churchZip" label="Zip code" />
+                </FieldGroup>
+              </Form>
+            </SheetBody>
+            <SheetFooter>
+              <Button type="button" variant="outline" onClick={() => setContactOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" disabled={save.isPending}>
+                Save
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
     </div>

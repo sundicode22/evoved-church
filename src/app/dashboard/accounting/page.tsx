@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { toast } from "sonner"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -17,13 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Sheet,
   SheetBody,
@@ -41,14 +35,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Form } from "@/components/ui/form"
+import { FieldGroup, FieldSet, FieldLegend } from "@/components/ui/field"
 import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldSet,
-  FieldLegend,
-} from "@/components/ui/field"
+  NumberFormField,
+  SelectFormField,
+  TextFormField,
+  TextareaFormField,
+} from "@/components/form-fields"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -93,7 +87,12 @@ import {
   useBudgetLines,
   useCreateBudgetLine,
 } from "@/features/accounting/hooks/use-funds"
-import type { CreateAccountInput, CreateFundInput } from "@/features/accounting/schemas"
+import {
+  createAccountSchema,
+  createBudgetLineSchema,
+  createFundSchema,
+  createRequisitionSchema,
+} from "@/features/accounting/schemas"
 import { PageHeader } from "@/components/page-header"
 import { Coins, Plus, Receipt as Receipt, Shield } from "lucide-react"
 
@@ -141,33 +140,62 @@ export default function AccountingPage() {
   const [pendingPostId, setPendingPostId] = React.useState<string | null>(null)
   const [attachments, setAttachments] = React.useState<AttachmentFile[]>([])
 
-  const [reqForm, setReqForm] = React.useState({
-    fundId: "",
-    accountId: "",
-    vendorName: "",
-    amount: "",
-    description: "",
+  const reqForm = useForm<
+    z.input<typeof createRequisitionSchema>,
+    unknown,
+    z.output<typeof createRequisitionSchema>
+  >({
+    resolver: zodResolver(createRequisitionSchema),
+    defaultValues: {
+      fundId: "",
+      accountId: "",
+      vendorName: "",
+      amount: undefined,
+      description: "",
+      receiptUrl: "",
+    },
   })
-  const [fundForm, setFundForm] = React.useState<CreateFundInput>({
-    name: "",
-    code: "",
-    type: "unrestricted",
-    budgetAmount: 0,
-    description: "",
+  const fundForm = useForm<
+    z.input<typeof createFundSchema>,
+    unknown,
+    z.output<typeof createFundSchema>
+  >({
+    resolver: zodResolver(createFundSchema),
+    defaultValues: {
+      name: "",
+      code: "",
+      type: "unrestricted",
+      budgetAmount: 0,
+      description: "",
+    },
   })
-  const [accountForm, setAccountForm] = React.useState<CreateAccountInput>({
-    accountName: "",
-    accountNumber: "",
-    category: "expense",
-    description: "",
-    openingBalance: 0,
+  const accountForm = useForm<
+    z.input<typeof createAccountSchema>,
+    unknown,
+    z.output<typeof createAccountSchema>
+  >({
+    resolver: zodResolver(createAccountSchema),
+    defaultValues: {
+      accountName: "",
+      accountNumber: "",
+      category: "expense",
+      description: "",
+      openingBalance: 0,
+    },
   })
-  const [lineForm, setLineForm] = React.useState({
-    fundId: "",
-    label: "",
-    department: "",
-    allocatedAmount: "",
-    fiscalYear: String(new Date().getFullYear()),
+  const lineForm = useForm<
+    z.input<typeof createBudgetLineSchema>,
+    unknown,
+    z.output<typeof createBudgetLineSchema>
+  >({
+    resolver: zodResolver(createBudgetLineSchema),
+    defaultValues: {
+      fundId: "",
+      label: "",
+      department: "",
+      allocatedAmount: undefined,
+      fiscalYear: new Date().getFullYear(),
+    },
   })
 
   const funds = fundsData || []
@@ -247,93 +275,73 @@ export default function AccountingPage() {
     toast.success("Budget lines exported")
   }
 
-  function submitRequisition(e: React.FormEvent) {
-    e.preventDefault()
+  function submitRequisition(values: z.output<typeof createRequisitionSchema>) {
     createReq.mutate(
       {
-        fundId: reqForm.fundId,
-        accountId: reqForm.accountId,
-        vendorName: reqForm.vendorName,
-        amount: Number(reqForm.amount),
-        description: reqForm.description,
+        fundId: values.fundId,
+        accountId: values.accountId,
+        vendorName: values.vendorName.trim(),
+        amount: values.amount,
+        description: values.description.trim(),
         receiptUrl: attachments[0]?.url.startsWith("http") ? attachments[0].url : undefined,
       },
       {
         onSuccess: () => {
           setReqSheetOpen(false)
-          setReqForm({
-            fundId: "",
-            accountId: "",
-            vendorName: "",
-            amount: "",
-            description: "",
-          })
+          reqForm.reset()
           setAttachments([])
         },
       }
     )
   }
 
-  function submitFund(e: React.FormEvent) {
-    e.preventDefault()
-    createFund.mutate(fundForm, {
-      onSuccess: () => {
-        setFundDialogOpen(false)
-        setFundForm({
-          name: "",
-          code: "",
-          type: "unrestricted",
-          budgetAmount: 0,
-          description: "",
-        })
-      },
-    })
-  }
-
-  function submitAccount(e: React.FormEvent) {
-    e.preventDefault()
-    createAccount.mutate(
+  function submitFund(values: z.output<typeof createFundSchema>) {
+    createFund.mutate(
       {
-        ...accountForm,
-        accountName: accountForm.accountName.trim(),
-        accountNumber: accountForm.accountNumber.trim(),
-        description: accountForm.description?.trim() || undefined,
+        ...values,
+        name: values.name.trim(),
+        code: values.code.trim(),
+        description: values.description?.trim() || undefined,
       },
       {
         onSuccess: () => {
-          setAccountSheetOpen(false)
-          setAccountForm({
-            accountName: "",
-            accountNumber: "",
-            category: "expense",
-            description: "",
-            openingBalance: 0,
-          })
+          setFundDialogOpen(false)
+          fundForm.reset()
         },
       }
     )
   }
 
-  function submitLine(e: React.FormEvent) {
-    e.preventDefault()
+  function submitAccount(values: z.output<typeof createAccountSchema>) {
+    createAccount.mutate(
+      {
+        ...values,
+        accountName: values.accountName.trim(),
+        accountNumber: values.accountNumber.trim(),
+        description: values.description?.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          setAccountSheetOpen(false)
+          accountForm.reset()
+        },
+      }
+    )
+  }
+
+  function submitLine(values: z.output<typeof createBudgetLineSchema>) {
     createLine.mutate(
       {
-        fundId: lineForm.fundId,
-        label: lineForm.label,
-        department: lineForm.department || undefined,
-        allocatedAmount: Number(lineForm.allocatedAmount),
-        fiscalYear: Number(lineForm.fiscalYear),
+        fundId: values.fundId,
+        label: values.label.trim(),
+        department: values.department?.trim() || undefined,
+        allocatedAmount: values.allocatedAmount,
+        fiscalYear: values.fiscalYear,
       },
       {
         onSuccess: () => {
           setLineSheetOpen(false)
-          setLineForm({
-            fundId: "",
-            label: "",
-            department: "",
-            allocatedAmount: "",
-            fiscalYear: String(new Date().getFullYear()),
-          })
+          lineForm.reset()
         },
       }
     )
@@ -419,7 +427,7 @@ export default function AccountingPage() {
                   </Button>
                 </Can>
                 <Can permission="accounting.requisitions">
-                  <Button onClick={() => setReqSheetOpen(true)}>
+                  <Button variant="primary" onClick={() => setReqSheetOpen(true)}>
                     <Plus strokeWidth={2} className="size-4" />
                     New requisition
                   </Button>
@@ -579,7 +587,7 @@ export default function AccountingPage() {
                     ]}
                     primaryAction={
                       <Can permission="accounting.budgets">
-                        <Button onClick={() => setLineSheetOpen(true)}>
+                        <Button variant="primary" onClick={() => setLineSheetOpen(true)}>
                           Add line
                         </Button>
                       </Can>
@@ -957,7 +965,10 @@ export default function AccountingPage() {
           {/* Requisition Sheet — Field + FileAttachment */}
           <Sheet open={reqSheetOpen} onOpenChange={setReqSheetOpen}>
             <SheetContent side="right" inset size="md" className="p-0">
-              <form onSubmit={submitRequisition} className="flex h-full flex-col">
+              <form
+                onSubmit={reqForm.handleSubmit(submitRequisition)}
+                className="flex h-full flex-col"
+              >
                 <SheetHeader className="pr-12">
                   <SheetTitle>Expense requisition</SheetTitle>
                   <SheetDescription>
@@ -965,110 +976,60 @@ export default function AccountingPage() {
                   </SheetDescription>
                 </SheetHeader>
                 <SheetBody>
-                  <FieldSet>
-                    <FieldLegend>Request details</FieldLegend>
-                    <FieldGroup>
-                      <Field>
-                        <FieldLabel>Fund</FieldLabel>
-                        <Select
-                          value={reqForm.fundId}
-                          items={fundItems}
-                          onValueChange={(v) =>
-                            v && setReqForm((f) => ({ ...f, fundId: v }))
-                          }
-                        >
-                          <SelectTrigger className="h-9 w-full">
-                            <SelectValue placeholder="Select fund" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {fundItems.map((i) => (
-                              <SelectItem key={i.value} value={i.value}>
-                                {i.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FieldDescription>
-                          Available balance is checked before encumbrance.
-                        </FieldDescription>
-                      </Field>
-                      <Field>
-                        <FieldLabel>Expense account</FieldLabel>
-                        <Select
-                          value={reqForm.accountId}
-                          items={accountItems}
-                          onValueChange={(v) =>
-                            v && setReqForm((f) => ({ ...f, accountId: v }))
-                          }
-                        >
-                          <SelectTrigger className="h-9 w-full">
-                            <SelectValue placeholder="Select account" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {accountItems.map((i) => (
-                              <SelectItem key={i.value} value={i.value}>
-                                {i.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                      <Field>
-                        <FieldLabel>Vendor</FieldLabel>
-                        <Input
-                          className="h-9"
-                          value={reqForm.vendorName}
-                          onChange={(e) =>
-                            setReqForm((f) => ({ ...f, vendorName: e.target.value }))
-                          }
-                          required
+                  <Form {...reqForm}>
+                    <FieldSet>
+                      <FieldLegend>Request details</FieldLegend>
+                      <FieldGroup>
+                        <SelectFormField
+                          control={reqForm.control}
+                          name="fundId"
+                          label="Fund"
+                          placeholder="Select fund"
+                          options={fundItems}
+                          description="Available balance is checked before encumbrance."
                         />
-                      </Field>
-                      <Field>
-                        <FieldLabel>Amount</FieldLabel>
-                        <Input
-                          type="number"
+                        <SelectFormField
+                          control={reqForm.control}
+                          name="accountId"
+                          label="Expense account"
+                          placeholder="Select account"
+                          options={accountItems}
+                        />
+                        <TextFormField
+                          control={reqForm.control}
+                          name="vendorName"
+                          label="Vendor"
+                        />
+                        <NumberFormField
+                          control={reqForm.control}
+                          name="amount"
+                          label="Amount"
                           min={0.01}
                           step="0.01"
-                          className="h-9"
-                          value={reqForm.amount}
-                          onChange={(e) =>
-                            setReqForm((f) => ({ ...f, amount: e.target.value }))
-                          }
-                          required
                         />
-                      </Field>
-                      <Field>
-                        <FieldLabel>Ministry purpose</FieldLabel>
-                        <Textarea
-                          className="min-h-20"
-                          value={reqForm.description}
-                          onChange={(e) =>
-                            setReqForm((f) => ({ ...f, description: e.target.value }))
-                          }
-                          required
-                          minLength={5}
+                        <TextareaFormField
+                          control={reqForm.control}
+                          name="description"
+                          label="Ministry purpose"
+                          rows={4}
                         />
-                      </Field>
-                      <FileAttachment
-                        value={attachments}
-                        onChange={setAttachments}
-                        label="Receipt / quote"
-                        hint="PDF or image · optional"
-                        maxFiles={3}
-                        accept="image/*,.pdf"
-                      />
-                    </FieldGroup>
-                  </FieldSet>
+                        <FileAttachment
+                          value={attachments}
+                          onChange={setAttachments}
+                          label="Receipt / quote"
+                          hint="PDF or image · optional"
+                          maxFiles={3}
+                          accept="image/*,.pdf"
+                        />
+                      </FieldGroup>
+                    </FieldSet>
+                  </Form>
                 </SheetBody>
                 <SheetFooter>
                   <Button type="button" variant="outline" onClick={() => setReqSheetOpen(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={createReq.isPending || !reqForm.fundId || !reqForm.accountId}
-                  >
+                  <Button type="submit" variant="primary" disabled={createReq.isPending}>
                     Submit requisition
                   </Button>
                 </SheetFooter>
@@ -1078,7 +1039,10 @@ export default function AccountingPage() {
 
           <Sheet open={accountSheetOpen} onOpenChange={setAccountSheetOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
-              <form onSubmit={submitAccount} className="flex h-full flex-col">
+              <form
+                onSubmit={accountForm.handleSubmit(submitAccount)}
+                className="flex h-full flex-col"
+              >
                 <SheetHeader className="pr-12">
                   <SheetTitle className="font-medium">Add account</SheetTitle>
                   <SheetDescription>
@@ -1087,85 +1051,49 @@ export default function AccountingPage() {
                   </SheetDescription>
                 </SheetHeader>
                 <SheetBody>
-                  <FieldGroup className="gap-4">
-                    <Field>
-                      <FieldLabel>Account name</FieldLabel>
-                      <Input
-                        value={accountForm.accountName}
-                        onChange={(e) =>
-                          setAccountForm((f) => ({ ...f, accountName: e.target.value }))
-                        }
+                  <Form {...accountForm}>
+                    <FieldGroup className="gap-4">
+                      <TextFormField
+                        control={accountForm.control}
+                        name="accountName"
+                        label="Account name"
                         placeholder="e.g. Youth Camp Fees, Van Lease"
-                        required
                         autoFocus
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Account number</FieldLabel>
-                      <Input
-                        value={accountForm.accountNumber}
-                        onChange={(e) =>
-                          setAccountForm((f) => ({ ...f, accountNumber: e.target.value }))
-                        }
+                      <TextFormField
+                        control={accountForm.control}
+                        name="accountNumber"
+                        label="Account number"
                         placeholder="e.g. 5040"
-                        required
+                        description="Suggested ranges: 1xxx assets · 2xxx liabilities · 3xxx net assets · 4xxx revenue · 5xxx expense"
                       />
-                      <FieldDescription>
-                        Suggested ranges: 1xxx assets · 2xxx liabilities · 3xxx net assets · 4xxx
-                        revenue · 5xxx expense
-                      </FieldDescription>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Category</FieldLabel>
-                      <Select
-                        value={accountForm.category}
-                        onValueChange={(v) =>
-                          v &&
-                          setAccountForm((f) => ({
-                            ...f,
-                            category: v as CreateAccountInput["category"],
-                          }))
-                        }
-                      >
-                        <SelectTrigger className="h-[39px] w-full shadow-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="asset">Asset</SelectItem>
-                          <SelectItem value="liability">Liability</SelectItem>
-                          <SelectItem value="net_assets">Net assets</SelectItem>
-                          <SelectItem value="revenue">Revenue</SelectItem>
-                          <SelectItem value="expense">Expense</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Opening balance</FieldLabel>
-                      <Input
-                        type="number"
+                      <SelectFormField
+                        control={accountForm.control}
+                        name="category"
+                        label="Category"
+                        options={[
+                          { value: "asset", label: "Asset" },
+                          { value: "liability", label: "Liability" },
+                          { value: "net_assets", label: "Net assets" },
+                          { value: "revenue", label: "Revenue" },
+                          { value: "expense", label: "Expense" },
+                        ]}
+                      />
+                      <NumberFormField
+                        control={accountForm.control}
+                        name="openingBalance"
+                        label="Opening balance"
                         min={0}
                         step="0.01"
-                        value={accountForm.openingBalance}
-                        onChange={(e) =>
-                          setAccountForm((f) => ({
-                            ...f,
-                            openingBalance: Number(e.target.value) || 0,
-                          }))
-                        }
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Description (optional)</FieldLabel>
-                      <Textarea
-                        value={accountForm.description || ""}
-                        onChange={(e) =>
-                          setAccountForm((f) => ({ ...f, description: e.target.value }))
-                        }
-                        rows={3}
+                      <TextareaFormField
+                        control={accountForm.control}
+                        name="description"
+                        label="Description (optional)"
                         placeholder="What this account tracks"
                       />
-                    </Field>
-                  </FieldGroup>
+                    </FieldGroup>
+                  </Form>
                 </SheetBody>
                 <SheetFooter>
                   <Button type="button" variant="outline" onClick={() => setAccountSheetOpen(false)}>
@@ -1181,7 +1109,7 @@ export default function AccountingPage() {
 
           <Dialog open={fundDialogOpen} onOpenChange={setFundDialogOpen}>
             <DialogContent className="sm:max-w-md">
-              <form onSubmit={submitFund} className="grid gap-4">
+              <form onSubmit={fundForm.handleSubmit(submitFund)} className="grid gap-4">
                 <DialogHeader>
                   <DialogTitle>Create fund</DialogTitle>
                   <DialogDescription>
@@ -1189,81 +1117,31 @@ export default function AccountingPage() {
                     budget.
                   </DialogDescription>
                 </DialogHeader>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel>Name</FieldLabel>
-                    <Input
-                      className="h-9"
-                      value={fundForm.name}
-                      onChange={(e) => setFundForm((f) => ({ ...f, name: e.target.value }))}
-                      required
-                    />
-                  </Field>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field>
-                      <FieldLabel>Code</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={fundForm.code}
-                        onChange={(e) => setFundForm((f) => ({ ...f, code: e.target.value }))}
-                        required
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Budget</FieldLabel>
-                      <Input
-                        type="number"
+                <Form {...fundForm}>
+                  <FieldGroup className="gap-4">
+                    <TextFormField control={fundForm.control} name="name" label="Name" />
+                    <div className="grid grid-cols-2 gap-3">
+                      <TextFormField control={fundForm.control} name="code" label="Code" />
+                      <NumberFormField
+                        control={fundForm.control}
+                        name="budgetAmount"
+                        label="Budget"
                         min={0}
                         step="0.01"
-                        className="h-9"
-                        value={fundForm.budgetAmount}
-                        onChange={(e) =>
-                          setFundForm((f) => ({
-                            ...f,
-                            budgetAmount: Number(e.target.value),
-                          }))
-                        }
                       />
-                    </Field>
-                  </div>
-                  <Field>
-                    <FieldLabel>Restriction type</FieldLabel>
-                    <Select
-                      value={fundForm.type}
-                      items={[
+                    </div>
+                    <SelectFormField
+                      control={fundForm.control}
+                      name="type"
+                      label="Restriction type"
+                      options={[
                         { value: "unrestricted", label: "Unrestricted" },
-                        {
-                          value: "temporarily_restricted",
-                          label: "Temporarily restricted",
-                        },
-                        {
-                          value: "permanently_restricted",
-                          label: "Permanently restricted",
-                        },
+                        { value: "temporarily_restricted", label: "Temporarily restricted" },
+                        { value: "permanently_restricted", label: "Permanently restricted" },
                       ]}
-                      onValueChange={(v) =>
-                        v &&
-                        setFundForm((f) => ({
-                          ...f,
-                          type: v as CreateFundInput["type"],
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="h-9 w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unrestricted">Unrestricted</SelectItem>
-                        <SelectItem value="temporarily_restricted">
-                          Temporarily restricted
-                        </SelectItem>
-                        <SelectItem value="permanently_restricted">
-                          Permanently restricted
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                </FieldGroup>
+                    />
+                  </FieldGroup>
+                </Form>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setFundDialogOpen(false)}>
                     Cancel
@@ -1278,7 +1156,10 @@ export default function AccountingPage() {
 
           <Sheet open={lineSheetOpen} onOpenChange={setLineSheetOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
-              <form onSubmit={submitLine} className="flex h-full flex-col">
+              <form
+                onSubmit={lineForm.handleSubmit(submitLine)}
+                className="flex h-full flex-col"
+              >
                 <SheetHeader className="pr-12">
                   <SheetTitle>Budget line</SheetTitle>
                   <SheetDescription>
@@ -1286,89 +1167,44 @@ export default function AccountingPage() {
                   </SheetDescription>
                 </SheetHeader>
                 <SheetBody>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel>Fund</FieldLabel>
-                      <Select
-                        value={lineForm.fundId}
-                        items={fundItems}
-                        onValueChange={(v) =>
-                          v && setLineForm((f) => ({ ...f, fundId: v }))
-                        }
-                      >
-                        <SelectTrigger className="h-9 w-full">
-                          <SelectValue placeholder="Select fund" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {fundItems.map((i) => (
-                            <SelectItem key={i.value} value={i.value}>
-                              {i.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Label</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={lineForm.label}
-                        onChange={(e) =>
-                          setLineForm((f) => ({ ...f, label: e.target.value }))
-                        }
-                        required
+                  <Form {...lineForm}>
+                    <FieldGroup>
+                      <SelectFormField
+                        control={lineForm.control}
+                        name="fundId"
+                        label="Fund"
+                        placeholder="Select fund"
+                        options={fundItems}
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Department</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={lineForm.department}
-                        onChange={(e) =>
-                          setLineForm((f) => ({ ...f, department: e.target.value }))
-                        }
+                      <TextFormField control={lineForm.control} name="label" label="Label" />
+                      <TextFormField
+                        control={lineForm.control}
+                        name="department"
+                        label="Department"
                       />
-                    </Field>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field>
-                        <FieldLabel>Fiscal year</FieldLabel>
-                        <Input
-                          type="number"
-                          className="h-9"
-                          value={lineForm.fiscalYear}
-                          onChange={(e) =>
-                            setLineForm((f) => ({ ...f, fiscalYear: e.target.value }))
-                          }
+                      <div className="grid grid-cols-2 gap-3">
+                        <NumberFormField
+                          control={lineForm.control}
+                          name="fiscalYear"
+                          label="Fiscal year"
+                          step={1}
                         />
-                      </Field>
-                      <Field>
-                        <FieldLabel>Allocated</FieldLabel>
-                        <Input
-                          type="number"
+                        <NumberFormField
+                          control={lineForm.control}
+                          name="allocatedAmount"
+                          label="Allocated"
                           min={0}
                           step="0.01"
-                          className="h-9"
-                          value={lineForm.allocatedAmount}
-                          onChange={(e) =>
-                            setLineForm((f) => ({
-                              ...f,
-                              allocatedAmount: e.target.value,
-                            }))
-                          }
-                          required
                         />
-                      </Field>
-                    </div>
-                  </FieldGroup>
+                      </div>
+                    </FieldGroup>
+                  </Form>
                 </SheetBody>
                 <SheetFooter>
                   <Button type="button" variant="outline" onClick={() => setLineSheetOpen(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={createLine.isPending || !lineForm.fundId}
-                  >
+                  <Button type="submit" variant="primary" disabled={createLine.isPending}>
                     Add line
                   </Button>
                 </SheetFooter>

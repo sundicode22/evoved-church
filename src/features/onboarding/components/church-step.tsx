@@ -1,45 +1,61 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { Form } from "@/components/ui/form"
+import { FieldGroup } from "@/components/ui/field"
+import { SelectFormField, TextFormField } from "@/components/form-fields"
 import { DENOMINATIONS } from "@/features/onboarding/presets"
 
+export const ONBOARDING_STEP_FORM_ID = "onboarding-step-form"
+
+export const churchStepSchema = z.object({
+  churchName: z.string().trim().min(2, "Enter your church name (at least 2 characters)."),
+  denomination: z.string().min(1, "Select a denomination."),
+})
+
+export type ChurchStepValues = z.infer<typeof churchStepSchema>
+
 interface ChurchStepProps {
-  churchName: string
-  denomination: string
-  onChange: (patch: { churchName?: string; denomination?: string }) => void
+  defaultValues: ChurchStepValues
+  onContinue: (values: ChurchStepValues) => void
 }
 
-export function ChurchStep({ churchName, denomination, onChange }: ChurchStepProps) {
+const DENOMINATION_OPTIONS = DENOMINATIONS.map((d) => ({ value: d, label: d }))
+
+export function ChurchStep({ defaultValues, onContinue }: ChurchStepProps) {
+  const form = useForm<ChurchStepValues>({
+    resolver: zodResolver(churchStepSchema),
+    defaultValues,
+  })
+
   return (
-    <div className="space-y-5">
-      <div className="space-y-2">
-        <Label htmlFor="churchName" className="text-sm font-medium text-slate-800">
-          Church name
-        </Label>
-        <Input
-          id="churchName"
-          placeholder="Grace Community Church"
-          value={churchName}
-          onChange={(e) => onChange({ churchName: e.target.value })}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-slate-800">Denomination</Label>
-        <Select value={denomination} onValueChange={(v) => onChange({ denomination: v ?? "" })}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a denomination" />
-          </SelectTrigger>
-          <SelectContent>
-            {DENOMINATIONS.map((d) => (
-              <SelectItem key={d} value={d}>
-                {d}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <Form {...form}>
+      <form
+        id={ONBOARDING_STEP_FORM_ID}
+        noValidate
+        onSubmit={form.handleSubmit((values) =>
+          onContinue({ ...values, churchName: values.churchName.trim() })
+        )}
+      >
+        <FieldGroup>
+          <TextFormField
+            control={form.control}
+            name="churchName"
+            label="Church name"
+            placeholder="Grace Community Church"
+            autoFocus
+          />
+          <SelectFormField
+            control={form.control}
+            name="denomination"
+            label="Denomination"
+            placeholder="Select a denomination"
+            options={DENOMINATION_OPTIONS}
+          />
+        </FieldGroup>
+      </form>
+    </Form>
   )
 }

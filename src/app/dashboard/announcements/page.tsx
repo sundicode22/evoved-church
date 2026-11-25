@@ -3,11 +3,13 @@
 import * as React from "react"
 import { format, parseISO } from "date-fns"
 import { Megaphone, Plus } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -20,6 +22,14 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { TextFormField } from "@/components/form-fields"
 import {
   Empty,
   EmptyDescription,
@@ -44,7 +54,22 @@ import {
   useCreateAnnouncement,
   usePublishAnnouncement,
 } from "@/features/announcements/hooks/use-announcements"
-import type { Announcement } from "@/features/announcements/schemas"
+import {
+  createAnnouncementSchema,
+  type Announcement,
+} from "@/features/announcements/schemas"
+
+const announcementFormSchema = createAnnouncementSchema
+  .pick({ title: true, bodyHtml: true })
+  .extend({ isPinned: z.boolean() })
+
+type AnnouncementFormValues = z.infer<typeof announcementFormSchema>
+
+const emptyForm: AnnouncementFormValues = {
+  title: "",
+  bodyHtml: "<p></p>",
+  isPinned: false,
+}
 
 export default function AnnouncementsPage() {
   const { data, isLoading } = useAnnouncements()
@@ -53,20 +78,23 @@ export default function AnnouncementsPage() {
 
   const [open, setOpen] = React.useState(false)
   const [confirmPublish, setConfirmPublish] = React.useState<Announcement | null>(null)
-  const [title, setTitle] = React.useState("")
-  const [bodyHtml, setBodyHtml] = React.useState("<p></p>")
-  const [isPinned, setIsPinned] = React.useState(false)
+  const form = useForm<AnnouncementFormValues>({
+    resolver: zodResolver(announcementFormSchema),
+    defaultValues: emptyForm,
+  })
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function openCreate() {
+    form.reset(emptyForm)
+    setOpen(true)
+  }
+
+  function submit(values: AnnouncementFormValues) {
     create.mutate(
-      { title, bodyHtml, isPinned, status: "draft" },
+      { ...values, status: "draft" },
       {
         onSuccess: () => {
           setOpen(false)
-          setTitle("")
-          setBodyHtml("<p></p>")
-          setIsPinned(false)
+          form.reset(emptyForm)
         },
       }
     )
@@ -86,7 +114,7 @@ export default function AnnouncementsPage() {
             actions={
               <Can permission="announcements.write">
                 <Button
-                  onClick={() => setOpen(true)}
+                  onClick={openCreate}
                 >
                   <Plus strokeWidth={2} className="size-3.5" />
                   New announcement
@@ -188,7 +216,8 @@ export default function AnnouncementsPage() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetContent side="right" inset size="xl" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
+              <Form {...form}>
+              <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
                 <SheetHeader className="pr-12">
                   <SheetTitle>Post announcement</SheetTitle>
                   <SheetDescription>
@@ -197,37 +226,44 @@ export default function AnnouncementsPage() {
                 </SheetHeader>
                 <SheetBody>
                   <FieldGroup>
-                    <Field>
-                      <FieldLabel>Title</FieldLabel>
-                      <Input
-                        className="h-9"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        required
-                      />
-                    </Field>
-                    <Field className="flex flex-row items-center justify-between gap-3">
-                      <FieldLabel>Pin to top</FieldLabel>
-                      <Switch checked={isPinned} onCheckedChange={setIsPinned} />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Body</FieldLabel>
-                      <RichTextEditor value={bodyHtml} onChange={setBodyHtml} minHeight="280px" />
-                    </Field>
+                    <TextFormField control={form.control} name="title" label="Title" />
+                    <FormField
+                      control={form.control}
+                      name="isPinned"
+                      render={({ field }) => (
+                        <Field className="flex flex-row items-center justify-between gap-3">
+                          <FieldLabel>Pin to top</FieldLabel>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </Field>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bodyHtml"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Body</FormLabel>
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(html) => field.onChange(html)}
+                            minHeight="280px"
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </FieldGroup>
                 </SheetBody>
                 <SheetFooter>
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={create.isPending || title.trim().length < 2}
-                  >
+                  <Button type="submit" variant="primary" disabled={create.isPending}>
                     Save draft
                   </Button>
                 </SheetFooter>
               </form>
+              </Form>
             </SheetContent>
           </Sheet>
 

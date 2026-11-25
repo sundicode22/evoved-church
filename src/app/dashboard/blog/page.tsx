@@ -4,11 +4,13 @@ import * as React from "react"
 import Link from "next/link"
 import { format, parseISO } from "date-fns"
 import { BookOpen, ExternalLink, Plus } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -19,7 +21,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { TextFormField } from "@/components/form-fields"
 import {
   Empty,
   EmptyDescription,
@@ -47,9 +57,19 @@ import {
   usePublishBlogPost,
   useUpdateBlogPost,
 } from "@/features/blog/hooks/use-blog"
-import type { BlogPost } from "@/features/blog/schemas"
+import { createBlogPostSchema, type BlogPost } from "@/features/blog/schemas"
 
-const emptyForm = {
+const blogFormSchema = createBlogPostSchema.pick({
+  title: true,
+  excerpt: true,
+  coverImageUrl: true,
+  authorName: true,
+  bodyHtml: true,
+})
+
+type BlogFormValues = z.infer<typeof blogFormSchema>
+
+const emptyForm: BlogFormValues = {
   title: "",
   excerpt: "",
   coverImageUrl: "",
@@ -67,17 +87,20 @@ export default function BlogDashboardPage() {
   const [open, setOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<BlogPost | null>(null)
   const [confirmPublish, setConfirmPublish] = React.useState<BlogPost | null>(null)
-  const [form, setForm] = React.useState(emptyForm)
+  const form = useForm<BlogFormValues>({
+    resolver: zodResolver(blogFormSchema),
+    defaultValues: emptyForm,
+  })
 
   function openCreate() {
     setEditing(null)
-    setForm(emptyForm)
+    form.reset(emptyForm)
     setOpen(true)
   }
 
   function openEdit(post: BlogPost) {
     setEditing(post)
-    setForm({
+    form.reset({
       title: post.title,
       excerpt: post.excerpt,
       coverImageUrl: post.coverImageUrl || "",
@@ -87,14 +110,13 @@ export default function BlogDashboardPage() {
     setOpen(true)
   }
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function submit(values: BlogFormValues) {
     const payload = {
-      title: form.title.trim(),
-      excerpt: form.excerpt.trim(),
-      coverImageUrl: form.coverImageUrl.trim(),
-      authorName: form.authorName.trim() || "Staff",
-      bodyHtml: form.bodyHtml,
+      title: values.title.trim(),
+      excerpt: (values.excerpt ?? "").trim(),
+      coverImageUrl: (values.coverImageUrl ?? "").trim(),
+      authorName: (values.authorName ?? "").trim() || "Staff",
+      bodyHtml: values.bodyHtml,
     }
     if (editing) {
       update.mutate(
@@ -112,7 +134,7 @@ export default function BlogDashboardPage() {
         {
           onSuccess: () => {
             setOpen(false)
-            setForm(emptyForm)
+            form.reset(emptyForm)
           },
         }
       )
@@ -282,7 +304,8 @@ export default function BlogDashboardPage() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetContent side="right" inset size="lg" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
+              <Form {...form}>
+              <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
                 <SheetHeader className="pr-12">
                   <SheetTitle className="font-medium">
                     {editing ? "Edit post" : "New blog post"}
@@ -293,52 +316,56 @@ export default function BlogDashboardPage() {
                 </SheetHeader>
                 <SheetBody>
                   <FieldGroup className="gap-4">
-                    <Field>
-                      <FieldLabel htmlFor="blog-title">Title</FieldLabel>
-                      <Input
-                        id="blog-title"
-                        value={form.title}
-                        onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                        placeholder="Sunday welcome story"
-                        required
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="blog-excerpt">Excerpt</FieldLabel>
-                      <Input
-                        id="blog-excerpt"
-                        value={form.excerpt}
-                        onChange={(e) => setForm((f) => ({ ...f, excerpt: e.target.value }))}
-                        placeholder="Short preview shown on the portal grid"
-                      />
-                    </Field>
-                    <Field>
-                      <ImageUpload
-                        label="Cover image (optional)"
-                        value={form.coverImageUrl}
-                        onChange={(url) => setForm((f) => ({ ...f, coverImageUrl: url }))}
-                        previewClassName="aspect-[21/9] w-full object-cover"
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="blog-author">Author</FieldLabel>
-                      <Input
-                        id="blog-author"
-                        value={form.authorName}
-                        onChange={(e) => setForm((f) => ({ ...f, authorName: e.target.value }))}
-                        placeholder="Pastor name"
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Body</FieldLabel>
-                      <RichTextEditor
-                        value={form.bodyHtml}
-                        onChange={(html) => setForm((f) => ({ ...f, bodyHtml: html }))}
-                        placeholder="Write the story… use the image button to insert photos inline."
-                        minHeight="280px"
-                        enableImages
-                      />
-                    </Field>
+                    <TextFormField
+                      control={form.control}
+                      name="title"
+                      label="Title"
+                      placeholder="Sunday welcome story"
+                    />
+                    <TextFormField
+                      control={form.control}
+                      name="excerpt"
+                      label="Excerpt"
+                      placeholder="Short preview shown on the portal grid"
+                    />
+                    <FormField
+                      control={form.control}
+                      name="coverImageUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <ImageUpload
+                            label="Cover image (optional)"
+                            value={field.value ?? ""}
+                            onChange={(url) => field.onChange(url)}
+                            previewClassName="aspect-[21/9] w-full object-cover"
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <TextFormField
+                      control={form.control}
+                      name="authorName"
+                      label="Author"
+                      placeholder="Pastor name"
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bodyHtml"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Body</FormLabel>
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(html) => field.onChange(html)}
+                            placeholder="Write the story… use the image button to insert photos inline."
+                            minHeight="280px"
+                            enableImages
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </FieldGroup>
                 </SheetBody>
                 <SheetFooter>
@@ -347,12 +374,14 @@ export default function BlogDashboardPage() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={create.isPending || update.isPending || !form.title.trim()}
+                    variant="primary"
+                    disabled={create.isPending || update.isPending}
                   >
                     {editing ? "Save changes" : "Save draft"}
                   </Button>
                 </SheetFooter>
               </form>
+              </Form>
             </SheetContent>
           </Sheet>
 

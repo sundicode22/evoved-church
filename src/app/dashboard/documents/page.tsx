@@ -3,11 +3,22 @@
 import * as React from "react"
 import { format } from "date-fns"
 import { toast } from "sonner"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { SelectFormField, TextFormField } from "@/components/form-fields"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import {
@@ -30,6 +41,7 @@ import {
 import { apiClient, type ApiResponse } from "@/lib/axios"
 import { useBranchStore } from "@/store/use-branch-store"
 import {
+  createFolderSchema,
   documentRoles,
   type ChurchDocumentDto,
   type DocumentFolderDto,
@@ -73,8 +85,33 @@ function formatSize(bytes: number | null) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-const selectClass =
-  "h-9 w-full rounded-lg border border-zinc-200 bg-white px-3 text-xs outline-none focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/20"
+const UNFILED = "__unfiled__"
+
+const folderFormSchema = createFolderSchema
+  .pick({ name: true })
+  .extend({ minRoleRequired: z.enum(documentRoles) })
+
+type FolderFormValues = z.infer<typeof folderFormSchema>
+
+const emptyFolderForm: FolderFormValues = { name: "", minRoleRequired: "member" }
+
+const uploadFormSchema = z.object({
+  file: z.custom<File>((v) => typeof File !== "undefined" && v instanceof File, {
+    message: "Choose a file to upload.",
+  }),
+  folderId: z.string(),
+  minRoleRequired: z.enum(documentRoles),
+})
+
+type UploadFormValues = z.infer<typeof uploadFormSchema>
+
+const emptyUploadForm = {
+  file: undefined,
+  folderId: UNFILED,
+  minRoleRequired: "member",
+} as unknown as UploadFormValues
+
+const roleOptions = documentRoles.map((r) => ({ value: r, label: ROLE_LABELS[r] }))
 
 interface SignedUpload {
   stub: boolean
@@ -96,14 +133,29 @@ export default function DocumentsPage() {
   const [selectedFolderId, setSelectedFolderId] = React.useState<string | null>(null)
 
   const [folderDialog, setFolderDialog] = React.useState(false)
-  const [folderForm, setFolderForm] = React.useState({ name: "", minRoleRequired: "member" })
+  const folderForm = useForm<FolderFormValues>({
+    resolver: zodResolver(folderFormSchema),
+    defaultValues: emptyFolderForm,
+  })
 
   const [uploadDialog, setUploadDialog] = React.useState(false)
   const [uploading, setUploading] = React.useState(false)
-  const [uploadFile, setUploadFile] = React.useState<File | null>(null)
-  const [uploadRole, setUploadRole] = React.useState("member")
-  const [uploadFolderId, setUploadFolderId] = React.useState<string>("")
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const uploadForm = useForm<UploadFormValues>({
+    resolver: zodResolver(uploadFormSchema),
+    defaultValues: emptyUploadForm,
+  })
+  const [fileInputKey, setFileInputKey] = React.useState(0)
+
+  function openFolderDialog() {
+    folderForm.reset(emptyFolderForm)
+    setFolderDialog(true)
+  }
+
+  function openUploadDialog() {
+    uploadForm.reset(emptyUploadForm)
+    setFileInputKey((k) => k + 1)
+    setUploadDialog(true)
+  }
 
   React.useEffect(() => {
     let cancelled = false
@@ -138,29 +190,25 @@ export default function DocumentsPage() {
   const folderName = (id: string | null) => folders.find((f) => f.id === id)?.name ?? "Unfiled"
   const selectedFolder = folders.find((f) => f.id === selectedFolderId)
 
-  async function handleCreateFolder(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleCreateFolder(values: FolderFormValues) {
     try {
       const res = await apiClient.post<ApiResponse<DocumentFolderDto>>("/documents/folders", {
-        name: folderForm.name,
-        minRoleRequired: folderForm.minRoleRequired,
+        name: values.name,
+        minRoleRequired: values.minRoleRequired,
         campusId: null,
       })
       setFolders((prev) => [res.data.data, ...prev])
       setFolderDialog(false)
-      setFolderForm({ name: "", minRoleRequired: "member" })
+      folderForm.reset(emptyFolderForm)
       toast.success("Folder created")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't create the folder.")
     }
   }
 
-  async function handleUpload(e: React.FormEvent) {
-    e.preventDefault()
-    if (!uploadFile) {
-      toast.error("Choose a file to upload.")
-      return
-    }
+  async function handleUpload(values: UploadFormValues) {
+    const uploadFile = values.file
+    const uploadFolderId = values.folderId === UNFILED ? "" : values.folderId
     setUploading(true)
     try {
       const signRes = await apiClient.post<ApiResponse<SignedUpload>>("/documents/sign-upload", {
@@ -194,7 +242,7 @@ export default function DocumentsPage() {
         cloudinaryUrl: url,
         format: ext?.slice(0, 20),
         fileSizeBytes: uploadFile.size,
-        minRoleRequired: uploadRole,
+        minRoleRequired: values.minRoleRequired,
       })
       setDocuments((prev) => [res.data.data, ...prev])
       if (uploadFolderId) {
@@ -203,8 +251,8 @@ export default function DocumentsPage() {
         )
       }
       setUploadDialog(false)
-      setUploadFile(null)
-      setUploadFolderId("")
+      uploadForm.reset(emptyUploadForm)
+      setFileInputKey((k) => k + 1)
       toast.success(`${uploadFile.name} uploaded`)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed.")
@@ -239,11 +287,11 @@ export default function DocumentsPage() {
                   className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
                 />
               </div>
-              <TableAddButton onClick={() => setFolderDialog(true)}>
+              <TableAddButton onClick={openFolderDialog}>
                 <Plus className="size-3.5 text-zinc-500" strokeWidth={1.75} />
                 New Folder
               </TableAddButton>
-              <TableAddButton onClick={() => setUploadDialog(true)}>
+              <TableAddButton onClick={openUploadDialog}>
                 <Upload className="size-3.5 text-zinc-500" strokeWidth={1.75} />
                 Upload
               </TableAddButton>
@@ -369,45 +417,28 @@ export default function DocumentsPage() {
 
         <Sheet open={folderDialog} onOpenChange={setFolderDialog}>
           <SheetContent side="right" inset size="sm" className="p-0">
-            <form onSubmit={handleCreateFolder} className="flex h-full flex-col">
+            <Form {...folderForm}>
+            <form
+              onSubmit={folderForm.handleSubmit(handleCreateFolder)}
+              className="flex h-full flex-col"
+            >
               <SheetHeader className="pr-12">
                 <SheetTitle>New folder</SheetTitle>
                 <SheetDescription>Choose who is allowed to open files inside it.</SheetDescription>
               </SheetHeader>
               <SheetBody>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="folder-name" className="text-xs font-medium text-zinc-700">
-                    Name
-                  </Label>
-                  <Input
-                    id="folder-name"
-                    value={folderForm.name}
-                    onChange={(e) => setFolderForm({ ...folderForm, name: e.target.value })}
-                    placeholder="Youth Ministry Resources"
-                    className="h-9 rounded-lg"
-                    required
-                    minLength={2}
-                  />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="folder-role" className="text-xs font-medium text-zinc-700">
-                    Who can view
-                  </Label>
-                  <select
-                    id="folder-role"
-                    value={folderForm.minRoleRequired}
-                    onChange={(e) =>
-                      setFolderForm({ ...folderForm, minRoleRequired: e.target.value })
-                    }
-                    className={selectClass}
-                  >
-                    {documentRoles.map((r) => (
-                      <option key={r} value={r}>
-                        {ROLE_LABELS[r]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <TextFormField
+                  control={folderForm.control}
+                  name="name"
+                  label="Name"
+                  placeholder="Youth Ministry Resources"
+                />
+                <SelectFormField
+                  control={folderForm.control}
+                  name="minRoleRequired"
+                  label="Who can view"
+                  options={roleOptions}
+                />
               </SheetBody>
               <SheetFooter>
                 <Button
@@ -422,17 +453,23 @@ export default function DocumentsPage() {
                   type="submit"
                   variant="primary"
                   className="h-9 rounded-lg px-4 font-normal"
+                  disabled={folderForm.formState.isSubmitting}
                 >
                   Create folder
                 </Button>
               </SheetFooter>
             </form>
+            </Form>
           </SheetContent>
         </Sheet>
 
         <Sheet open={uploadDialog} onOpenChange={setUploadDialog}>
           <SheetContent side="right" inset size="sm" className="p-0">
-            <form onSubmit={handleUpload} className="flex h-full flex-col">
+            <Form {...uploadForm}>
+            <form
+              onSubmit={uploadForm.handleSubmit(handleUpload)}
+              className="flex h-full flex-col"
+            >
               <SheetHeader className="pr-12">
                 <SheetTitle>Upload a file</SheetTitle>
                 <SheetDescription>
@@ -440,51 +477,43 @@ export default function DocumentsPage() {
                 </SheetDescription>
               </SheetHeader>
               <SheetBody>
-                <div className="grid gap-1.5">
-                  <Label className="text-xs font-medium text-zinc-700">File</Label>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
-                    className="block w-full cursor-pointer rounded-lg border border-dashed border-zinc-300 bg-[#f8faf9] p-3 text-xs text-zinc-600 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-emerald-700"
-                  />
-                </div>
+                <FormField
+                  control={uploadForm.control}
+                  name="file"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>File</FormLabel>
+                      <FormControl>
+                        <input
+                          key={fileInputKey}
+                          type="file"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          onChange={(e) => field.onChange(e.target.files?.[0])}
+                          className="block w-full cursor-pointer rounded-lg border border-dashed border-zinc-300 bg-[#f8faf9] p-3 text-xs text-zinc-600 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-emerald-700"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="upload-folder" className="text-xs font-medium text-zinc-700">
-                      Folder
-                    </Label>
-                    <select
-                      id="upload-folder"
-                      value={uploadFolderId}
-                      onChange={(e) => setUploadFolderId(e.target.value)}
-                      className={selectClass}
-                    >
-                      <option value="">Unfiled</option>
-                      {folders.map((f) => (
-                        <option key={f.id} value={f.id}>
-                          {f.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="upload-role" className="text-xs font-medium text-zinc-700">
-                      Who can view
-                    </Label>
-                    <select
-                      id="upload-role"
-                      value={uploadRole}
-                      onChange={(e) => setUploadRole(e.target.value)}
-                      className={selectClass}
-                    >
-                      {documentRoles.map((r) => (
-                        <option key={r} value={r}>
-                          {ROLE_LABELS[r]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <SelectFormField
+                    control={uploadForm.control}
+                    name="folderId"
+                    label="Folder"
+                    options={[
+                      { value: UNFILED, label: "Unfiled" },
+                      ...folders.map((f) => ({ value: f.id, label: f.name })),
+                    ]}
+                  />
+                  <SelectFormField
+                    control={uploadForm.control}
+                    name="minRoleRequired"
+                    label="Who can view"
+                    options={roleOptions}
+                  />
                 </div>
               </SheetBody>
               <SheetFooter>
@@ -498,6 +527,7 @@ export default function DocumentsPage() {
                 </Button>
                 <Button
                   type="submit"
+                  variant="primary"
                   disabled={uploading}
                   className="h-9 rounded-lg px-4 font-normal"
                 >
@@ -505,6 +535,7 @@ export default function DocumentsPage() {
                 </Button>
               </SheetFooter>
             </form>
+            </Form>
           </SheetContent>
         </Sheet>
       </SidebarInset>

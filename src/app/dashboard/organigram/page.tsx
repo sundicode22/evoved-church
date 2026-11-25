@@ -14,11 +14,13 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core"
 import { toast } from "sonner"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Sheet,
   SheetBody,
@@ -28,14 +30,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
+import { Form } from "@/components/ui/form"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  NumberFormField,
+  SelectFormField,
+  TextFormField,
+} from "@/components/form-fields"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -101,20 +102,22 @@ function collectDescendants(id: string, children: Map<string | null, OrgNode[]>)
   return out
 }
 
-type FormState = {
-  title: string
-  name: string
-  department: string
-  parentId: string | null
-  spanOfCare: string
-}
+const orgRoleFormSchema = z.object({
+  title: z.string().trim().min(2, "Role title is required"),
+  name: z.string().trim().min(2, "Person name is required"),
+  department: z.string().min(1, "Department is required"),
+  parentId: z.string(),
+  spanOfCare: z.number().int().min(0).optional(),
+})
 
-const emptyForm = (): FormState => ({
+type OrgRoleFormValues = z.infer<typeof orgRoleFormSchema>
+
+const emptyForm = (): OrgRoleFormValues => ({
   title: "",
   name: "",
   department: "Pastoral Care",
-  parentId: null,
-  spanOfCare: "0",
+  parentId: NO_PARENT,
+  spanOfCare: 0,
 })
 
 function NodeCard({
@@ -329,7 +332,10 @@ export default function OrganigramPage() {
   const [activeNode, setActiveNode] = React.useState<OrgNode | null>(null)
   const [sheetOpen, setSheetOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<OrgNode | null>(null)
-  const [form, setForm] = React.useState<FormState>(emptyForm)
+  const form = useForm<OrgRoleFormValues>({
+    resolver: zodResolver(orgRoleFormSchema),
+    defaultValues: emptyForm(),
+  })
   const [deleteTarget, setDeleteTarget] = React.useState<OrgNode | null>(null)
 
   React.useEffect(() => {
@@ -360,49 +366,49 @@ export default function OrganigramPage() {
 
   function openCreate() {
     setEditing(null)
-    setForm(emptyForm())
+    form.reset(emptyForm())
     setSheetOpen(true)
   }
 
   function openEdit(node: OrgNode) {
     setEditing(node)
-    setForm({
+    form.reset({
       title: node.title,
       name: node.name,
       department: node.department || "Other",
-      parentId: node.parentId,
-      spanOfCare: String(node.spanOfCare ?? 0),
+      parentId: node.parentId ?? NO_PARENT,
+      spanOfCare: node.spanOfCare ?? 0,
     })
     setSheetOpen(true)
   }
 
-  async function submitForm(e: React.FormEvent) {
-    e.preventDefault()
-    const span = Number(form.spanOfCare) || 0
+  async function submitForm(values: OrgRoleFormValues) {
+    const span = values.spanOfCare ?? 0
+    const parentId = values.parentId === NO_PARENT ? null : values.parentId
     try {
       if (editing) {
         await updateNode.mutateAsync({
           id: editing.id,
-          title: form.title.trim(),
-          name: form.name.trim(),
-          department: form.department,
-          parentId: form.parentId,
+          title: values.title.trim(),
+          name: values.name.trim(),
+          department: values.department,
+          parentId,
           spanOfCare: span,
         })
         toast.success("Role updated")
       } else {
         await createNode.mutateAsync({
-          title: form.title.trim(),
-          name: form.name.trim(),
-          department: form.department,
-          parentId: form.parentId,
+          title: values.title.trim(),
+          name: values.name.trim(),
+          department: values.department,
+          parentId,
           spanOfCare: span,
         })
         toast.success("Role added")
       }
       setSheetOpen(false)
       setEditing(null)
-      setForm(emptyForm())
+      form.reset(emptyForm())
       await refetch()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't save role")
@@ -563,7 +569,8 @@ export default function OrganigramPage() {
 
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
-              <form onSubmit={submitForm} className="flex h-full flex-col">
+              <Form {...form}>
+              <form onSubmit={form.handleSubmit(submitForm)} className="flex h-full flex-col">
                 <SheetHeader className="pr-12">
                   <SheetTitle className="font-medium">
                     {editing ? "Edit role" : "Add role"}
@@ -576,83 +583,45 @@ export default function OrganigramPage() {
                 </SheetHeader>
                 <SheetBody>
                   <FieldGroup className="gap-4">
-                    <Field>
-                      <FieldLabel>Role title</FieldLabel>
-                      <Input
-                        value={form.title}
-                        onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                        placeholder="e.g. Campus Pastor"
-                        className="h-10"
-                        required
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Person name</FieldLabel>
-                      <Input
-                        value={form.name}
-                        onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                        placeholder="e.g. Jane Cooper"
-                        className="h-10"
-                        required
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Department</FieldLabel>
-                      <Select
-                        value={form.department}
-                        onValueChange={(v) =>
-                          v && setForm((f) => ({ ...f, department: v }))
-                        }
-                      >
-                        <SelectTrigger className="h-10 w-full shadow-xs">
-                          <SelectValue placeholder="Select department" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DEPARTMENTS.map((d) => (
-                            <SelectItem key={d} value={d}>
-                              {d}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Reports to</FieldLabel>
-                      <Select
-                        value={form.parentId ?? NO_PARENT}
-                        onValueChange={(v) =>
-                          setForm((f) => ({
-                            ...f,
-                            parentId: !v || v === NO_PARENT ? null : v,
-                          }))
-                        }
-                      >
-                        <SelectTrigger className="h-10 w-full shadow-xs">
-                          <SelectValue placeholder="Top-level role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={NO_PARENT}>Top-level (no manager)</SelectItem>
-                          {parentOptions.map((n) => (
-                            <SelectItem key={n.id} value={n.id}>
-                              {n.title}
-                              {n.name && n.name !== n.title ? ` — ${n.name}` : ""}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field>
-                      <FieldLabel>Span of care</FieldLabel>
-                      <Input
-                        type="number"
-                        min={0}
-                        value={form.spanOfCare}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, spanOfCare: e.target.value }))
-                        }
-                        className="h-10"
-                      />
-                    </Field>
+                    <TextFormField
+                      control={form.control}
+                      name="title"
+                      label="Role title"
+                      placeholder="e.g. Campus Pastor"
+                    />
+                    <TextFormField
+                      control={form.control}
+                      name="name"
+                      label="Person name"
+                      placeholder="e.g. Jane Cooper"
+                    />
+                    <SelectFormField
+                      control={form.control}
+                      name="department"
+                      label="Department"
+                      placeholder="Select department"
+                      options={DEPARTMENTS.map((d) => ({ value: d, label: d }))}
+                    />
+                    <SelectFormField
+                      control={form.control}
+                      name="parentId"
+                      label="Reports to"
+                      placeholder="Top-level role"
+                      options={[
+                        { value: NO_PARENT, label: "Top-level (no manager)" },
+                        ...parentOptions.map((n) => ({
+                          value: n.id,
+                          label: `${n.title}${n.name && n.name !== n.title ? ` — ${n.name}` : ""}`,
+                        })),
+                      ]}
+                    />
+                    <NumberFormField
+                      control={form.control}
+                      name="spanOfCare"
+                      label="Span of care"
+                      min={0}
+                      step={1}
+                    />
                   </FieldGroup>
                 </SheetBody>
                 <SheetFooter>
@@ -665,12 +634,14 @@ export default function OrganigramPage() {
                   </Button>
                   <Button
                     type="submit"
+                    variant="primary"
                     disabled={saving}
                   >
                     {saving ? "Saving…" : editing ? "Save changes" : "Add role"}
                   </Button>
                 </SheetFooter>
               </form>
+              </Form>
             </SheetContent>
           </Sheet>
 

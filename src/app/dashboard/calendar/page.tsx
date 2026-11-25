@@ -5,17 +5,17 @@ import { format, isSameDay, parseISO, startOfMonth, endOfMonth } from "date-fns"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Form } from "@/components/ui/form"
+import { useForm, useWatch } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import {
+  SelectFormField,
+  TextareaFormField,
+  TextFormField,
+} from "@/components/form-fields"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Sheet,
   SheetBody,
@@ -25,11 +25,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { FieldGroup } from "@/components/ui/field"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Empty,
@@ -51,6 +47,50 @@ import type { CalendarOccurrence } from "@/features/calendar/schemas"
 import { PageHeader } from "@/components/page-header"
 import { Calendar as CalendarIcon, Plus } from "lucide-react"
 
+const eventFormSchema = z
+  .object({
+    mode: z.enum(["existing", "new"]),
+    programId: z.string(),
+    newTitle: z.string(),
+    newType: z.string(),
+    locationLabel: z.string(),
+    startsAt: z.string().min(1, "Start date and time is required"),
+    endsAt: z.string(),
+    assigneeName: z.string(),
+    assigneeRole: z.enum(["lead", "volunteer", "speaker"]),
+    notes: z.string(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.mode === "existing" && !v.programId) {
+      ctx.addIssue({ code: "custom", path: ["programId"], message: "Select a program" })
+    }
+    if (v.mode === "new" && v.newTitle.trim().length < 2) {
+      ctx.addIssue({ code: "custom", path: ["newTitle"], message: "Title is required" })
+    }
+  })
+
+type EventFormValues = z.infer<typeof eventFormSchema>
+
+const EVENT_FORM_DEFAULTS: EventFormValues = {
+  mode: "existing",
+  programId: "",
+  newTitle: "",
+  newType: "ministry",
+  locationLabel: "",
+  startsAt: "",
+  endsAt: "",
+  assigneeName: "",
+  assigneeRole: "lead",
+  notes: "",
+}
+
+const PROGRAM_SOURCE_OPTIONS = [
+  { value: "existing", label: "Existing program" },
+  { value: "new", label: "Create new program" },
+]
+const PROGRAM_TYPE_OPTIONS = PROGRAM_TYPES.map((t) => ({ value: t.value, label: t.label }))
+const ASSIGNEE_ROLE_OPTIONS = ASSIGNEE_ROLES.map((r) => ({ value: r.value, label: r.label }))
+
 export default function ChurchCalendarPage() {
   const [month, setMonth] = React.useState<Date>(new Date())
   const [selectedDay, setSelectedDay] = React.useState<Date>(new Date())
@@ -66,18 +106,11 @@ export default function ChurchCalendarPage() {
   const [sheetOpen, setSheetOpen] = React.useState(false)
   const [confirmDelete, setConfirmDelete] = React.useState<CalendarOccurrence | null>(null)
 
-  const [mode, setMode] = React.useState<"existing" | "new">("existing")
-  const [programId, setProgramId] = React.useState("")
-  const [newTitle, setNewTitle] = React.useState("")
-  const [newType, setNewType] = React.useState("ministry")
-  const [locationLabel, setLocationLabel] = React.useState("")
-  const [startsAt, setStartsAt] = React.useState("")
-  const [endsAt, setEndsAt] = React.useState("")
-  const [assigneeName, setAssigneeName] = React.useState("")
-  const [assigneeRole, setAssigneeRole] = React.useState<"lead" | "volunteer" | "speaker">(
-    "lead"
-  )
-  const [notes, setNotes] = React.useState("")
+  const form = useForm<EventFormValues>({
+    resolver: zodResolver(eventFormSchema),
+    defaultValues: EVENT_FORM_DEFAULTS,
+  })
+  const mode = useWatch({ control: form.control, name: "mode" })
 
   const dayEvents =
     occurrences?.filter((o) => isSameDay(parseISO(o.startsAt), selectedDay)) ?? []
@@ -95,39 +128,39 @@ export default function ChurchCalendarPage() {
     base.setHours(10, 0, 0, 0)
     const end = new Date(base)
     end.setHours(12, 0, 0, 0)
-    setStartsAt(format(base, "yyyy-MM-dd'T'HH:mm"))
-    setEndsAt(format(end, "yyyy-MM-dd'T'HH:mm"))
-    setProgramId(programs?.[0]?.id || "")
-    setMode(programs?.length ? "existing" : "new")
+    form.reset({
+      ...EVENT_FORM_DEFAULTS,
+      startsAt: format(base, "yyyy-MM-dd'T'HH:mm"),
+      endsAt: format(end, "yyyy-MM-dd'T'HH:mm"),
+      programId: programs?.[0]?.id || "",
+      mode: programs?.length ? "existing" : "new",
+    })
     setSheetOpen(true)
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    let pid = programId
-    if (mode === "new") {
+  async function onSubmit(values: EventFormValues) {
+    let pid = values.programId
+    if (values.mode === "new") {
       const p = await createProgram.mutateAsync({
-        title: newTitle,
-        type: newType,
-        locationLabel,
+        title: values.newTitle.trim(),
+        type: values.newType,
+        locationLabel: values.locationLabel,
       })
       pid = p.id
     }
     await createOcc.mutateAsync({
       programId: pid,
-      startsAt: new Date(startsAt).toISOString(),
-      endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
+      startsAt: new Date(values.startsAt).toISOString(),
+      endsAt: values.endsAt ? new Date(values.endsAt).toISOString() : undefined,
       allDay: false,
       status: "scheduled",
-      notes,
-      assignees: assigneeName.trim()
-        ? [{ displayName: assigneeName.trim(), roleLabel: assigneeRole }]
+      notes: values.notes,
+      assignees: values.assigneeName.trim()
+        ? [{ displayName: values.assigneeName.trim(), roleLabel: values.assigneeRole }]
         : [],
     })
     setSheetOpen(false)
-    setNewTitle("")
-    setAssigneeName("")
-    setNotes("")
+    form.reset(EVENT_FORM_DEFAULTS)
   }
 
   const programItems =
@@ -264,179 +297,95 @@ export default function ChurchCalendarPage() {
 
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetContent side="right" inset size="md" className="p-0">
-              <form onSubmit={submit} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle>Schedule program</SheetTitle>
-                  <SheetDescription>
-                    Pick an existing program or create one, set date/time, and assign caregivers.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel>Program source</FieldLabel>
-                      <Select
-                        value={mode}
-                        items={[
-                          { value: "existing", label: "Existing program" },
-                          { value: "new", label: "Create new program" },
-                        ]}
-                        onValueChange={(v) => v && setMode(v as "existing" | "new")}
-                      >
-                        <SelectTrigger className="h-9 w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="existing">Existing program</SelectItem>
-                          <SelectItem value="new">Create new program</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </Field>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+                  <SheetHeader className="pr-12">
+                    <SheetTitle>Schedule program</SheetTitle>
+                    <SheetDescription>
+                      Pick an existing program or create one, set date/time, and assign caregivers.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <SelectFormField
+                        control={form.control}
+                        name="mode"
+                        label="Program source"
+                        options={PROGRAM_SOURCE_OPTIONS}
+                      />
 
-                    {mode === "existing" ? (
-                      <Field>
-                        <FieldLabel>Program</FieldLabel>
-                        <Select
-                          value={programId}
-                          items={programItems}
-                          onValueChange={(v) => v && setProgramId(v)}
-                        >
-                          <SelectTrigger className="h-9 w-full">
-                            <SelectValue placeholder="Select program" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {programItems.map((p) => (
-                              <SelectItem key={p.value} value={p.value}>
-                                {p.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                    ) : (
-                      <>
-                        <Field>
-                          <FieldLabel>Title</FieldLabel>
-                          <Input
-                            className="h-9"
-                            value={newTitle}
-                            onChange={(e) => setNewTitle(e.target.value)}
-                            required
-                          />
-                        </Field>
-                        <Field>
-                          <FieldLabel>Type</FieldLabel>
-                          <Select
-                            value={newType}
-                            items={PROGRAM_TYPES.map((t) => ({
-                              value: t.value,
-                              label: t.label,
-                            }))}
-                            onValueChange={(v) => v && setNewType(v)}
-                          >
-                            <SelectTrigger className="h-9 w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PROGRAM_TYPES.map((t) => (
-                                <SelectItem key={t.value} value={t.value}>
-                                  {t.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </Field>
-                        <Field>
-                          <FieldLabel>Location</FieldLabel>
-                          <Input
-                            className="h-9"
-                            value={locationLabel}
-                            onChange={(e) => setLocationLabel(e.target.value)}
-                          />
-                        </Field>
-                      </>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field>
-                        <FieldLabel>Starts</FieldLabel>
-                        <Input
-                          type="datetime-local"
-                          className="h-9"
-                          value={startsAt}
-                          onChange={(e) => setStartsAt(e.target.value)}
-                          required
+                      {mode === "existing" ? (
+                        <SelectFormField
+                          control={form.control}
+                          name="programId"
+                          label="Program"
+                          placeholder="Select program"
+                          options={programItems}
                         />
-                      </Field>
-                      <Field>
-                        <FieldLabel>Ends</FieldLabel>
-                        <Input
-                          type="datetime-local"
-                          className="h-9"
-                          value={endsAt}
-                          onChange={(e) => setEndsAt(e.target.value)}
-                        />
-                      </Field>
-                    </div>
+                      ) : (
+                        <>
+                          <TextFormField control={form.control} name="newTitle" label="Title" />
+                          <SelectFormField
+                            control={form.control}
+                            name="newType"
+                            label="Type"
+                            options={PROGRAM_TYPE_OPTIONS}
+                          />
+                          <TextFormField
+                            control={form.control}
+                            name="locationLabel"
+                            label="Location"
+                          />
+                        </>
+                      )}
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field>
-                        <FieldLabel>Assignee</FieldLabel>
-                        <Input
-                          className="h-9"
-                          value={assigneeName}
-                          onChange={(e) => setAssigneeName(e.target.value)}
+                      <div className="grid grid-cols-2 gap-3">
+                        <TextFormField
+                          control={form.control}
+                          name="startsAt"
+                          label="Starts"
+                          type="datetime-local"
+                        />
+                        <TextFormField
+                          control={form.control}
+                          name="endsAt"
+                          label="Ends"
+                          type="datetime-local"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <TextFormField
+                          control={form.control}
+                          name="assigneeName"
+                          label="Assignee"
                           placeholder="Who takes care of this?"
                         />
-                      </Field>
-                      <Field>
-                        <FieldLabel>Role</FieldLabel>
-                        <Select
-                          value={assigneeRole}
-                          items={ASSIGNEE_ROLES.map((r) => ({
-                            value: r.value,
-                            label: r.label,
-                          }))}
-                          onValueChange={(v) =>
-                            v && setAssigneeRole(v as "lead" | "volunteer" | "speaker")
-                          }
-                        >
-                          <SelectTrigger className="h-9 w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ASSIGNEE_ROLES.map((r) => (
-                              <SelectItem key={r.value} value={r.value}>
-                                {r.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                    </div>
+                        <SelectFormField
+                          control={form.control}
+                          name="assigneeRole"
+                          label="Role"
+                          options={ASSIGNEE_ROLE_OPTIONS}
+                        />
+                      </div>
 
-                    <Field>
-                      <FieldLabel>Notes</FieldLabel>
-                      <Textarea
-                        className="min-h-16"
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                      />
-                    </Field>
-                  </FieldGroup>
-                </SheetBody>
-                <SheetFooter>
-                  <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createOcc.isPending || createProgram.isPending}
-                  >
-                    Save event
-                  </Button>
-                </SheetFooter>
-              </form>
+                      <TextareaFormField control={form.control} name="notes" label="Notes" />
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      disabled={createOcc.isPending || createProgram.isPending}
+                    >
+                      Save event
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </SheetContent>
           </Sheet>
 
