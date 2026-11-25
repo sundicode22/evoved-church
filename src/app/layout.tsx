@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { QueryProvider } from "@/lib/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import NextTopLoader from "nextjs-toploader";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={cn(inter.variable, inter.className, "h-full antialiased font-sans")}
     >
       <body className={cn(inter.className, "min-h-full flex flex-col bg-white font-sans font-normal text-zinc-900 antialiased")}>
+        <NextTopLoader color="#16a34a" height={3} showSpinner={false} />
         <TooltipProvider>
           <QueryProvider>{children}</QueryProvider>
           <Toaster richColors position="top-right" />

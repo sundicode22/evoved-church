@@ -31,12 +31,12 @@ export function PageHeader({
 }) {
   return (
     <>
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear">
+      <header className="flex h-12 shrink-0 items-center gap-2 bg-white transition-[width,height] ease-linear">
         <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-1 h-4" />
           <Breadcrumb>
-            <BreadcrumbList className="text-sm">
+            <BreadcrumbList className="text-base text-zinc-800">
               <BreadcrumbItem className="hidden md:block">
                 <BreadcrumbLink render={<Link href="/dashboard" />}>
                   Home

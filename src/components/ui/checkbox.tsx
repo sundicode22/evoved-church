@@ -2,7 +2,7 @@
 
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
 import { cn } from "cn"
-import { Check } from "lucide-react"
+import { Check, Minus } from "lucide-react"
 
 function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
   return (
@@ -18,7 +18,8 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
         data-slot="checkbox-indicator"
         className="grid place-content-center text-current transition-none [&>svg]:size-3.5"
       >
-        <Check />
+        <Check className="in-data-indeterminate:hidden" />
+        <Minus className="hidden in-data-indeterminate:block" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

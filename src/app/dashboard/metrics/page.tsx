@@ -13,7 +13,6 @@ import {
   YAxis,
 } from "recharts"
 import {
-  BarChart3,
   CalendarClock,
   Church,
   Coins,
@@ -113,15 +112,19 @@ export default function MetricsPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-[#fbfcfb]">
+      <SidebarInset className="min-h-screen bg-white">
         <RequireAbility permission="reports.read">
-          <PageHeader
-            title="Reports & Metrics"
-            description={`Live church health for ${activeCampus.name}.`}
-            icon={<BarChart3 className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
-          />
+          <PageHeader title="Reports & Metrics" />
 
-          <div className="space-y-6 p-6 md:p-8">
+          <div className="space-y-6 bg-white p-6 md:p-8">
+            <section className="rounded-xl bg-white">
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
+                Reports & Metrics
+              </h1>
+              <p className="mt-1 text-base text-zinc-700">
+                Live church health for {activeCampus.name}.
+              </p>
+            </section>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
               <StatTile
                 title="Attendance"
@@ -250,6 +253,58 @@ export default function MetricsPage() {
                       dot={false}
                     />
                   </LineChart>
+                </ChartContainer>
+              </ChartCard>
+            </div>
+
+            <div className="grid gap-4 xl:grid-cols-2">
+              <ChartCard title="Visitor funnel" description="Leads by stage — where guests stall">
+                <ChartContainer config={funnelConfig} className="aspect-[16/10] w-full">
+                  <BarChart
+                    data={funnelBars}
+                    layout="vertical"
+                    margin={{ left: 8, right: 16, top: 8, bottom: 8 }}
+                  >
+                    <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+                    <XAxis type="number" tickLine={false} axisLine={false} />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={120}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                    <Bar dataKey="count" fill="var(--color-count)" radius={4} />
+                  </BarChart>
+                </ChartContainer>
+              </ChartCard>
+              <ChartCard
+                title="Budget vs actual"
+                description="Planned spend, expended, and what is still available"
+              >
+                <ChartContainer config={fundConfig} className="aspect-[16/10] w-full">
+                  <BarChart data={fundBars} margin={{ left: 8, right: 8, top: 8 }}>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      width={52}
+                      tickFormatter={(v) => formatCompact(Number(v))}
+                    />
+                    <ChartTooltip
+                      content={
+                        <ChartTooltipContent
+                          formatter={(value) => formatMoney(Number(value) || 0)}
+                        />
+                      }
+                    />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Bar dataKey="budget" fill="var(--color-budget)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="expended" fill="var(--color-expended)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="available" fill="var(--color-available)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
                 </ChartContainer>
               </ChartCard>
             </div>

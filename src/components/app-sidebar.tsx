@@ -51,7 +51,10 @@ type NavGroup = {
   items: SubItem[]
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  collapsible = "icon",
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   useNomenclatureQuery()
   const { nomenclature } = useNomenclatureStore()
@@ -151,7 +154,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   return (
-    <Sidebar {...props} collapsible="icon">
+    <Sidebar {...props} collapsible={collapsible}>
       <SidebarHeader>
         <CampusSwitcher />
       </SidebarHeader>

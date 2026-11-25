@@ -14,12 +14,12 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 
 export function SiteHeader() {
   return (
-    <header className="flex h-12 shrink-0 items-center gap-2 border-b bg-background">
+    <header className="flex h-12 shrink-0 items-center gap-2 bg-white">
       <div className="flex items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-1 h-4" />
         <Breadcrumb>
-          <BreadcrumbList className="text-sm">
+          <BreadcrumbList className="text-base text-zinc-800">
             <BreadcrumbItem className="hidden md:block">
               <BreadcrumbLink render={<Link href="/dashboard" />}>
                 Home

@@ -1,8 +1,17 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { Settings } from "lucide-react"
+import {
+  Building2,
+  ListPlus,
+  MapPin,
+  Plug,
+  Shield,
+  SlidersHorizontal,
+  Upload,
+} from "lucide-react"
 import { RequireAbility } from "@/components/auth/can"
 import { useAbility } from "@/features/auth/ability-context"
 import { ChurchDetailsTab } from "@/features/settings/components/church-details-tab"
@@ -12,7 +21,16 @@ import { ImportTab } from "@/features/settings/components/import-tab"
 import { CustomFieldsTab } from "@/features/settings/components/custom-fields-tab"
 import { LocationsTab } from "@/features/settings/components/locations-tab"
 import { NomenclatureTab } from "@/features/settings/components/nomenclature-tab"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar"
 import type { PermissionKey } from "@/features/auth/permissions-catalog"
 
 type SectionId =
@@ -24,15 +42,19 @@ type SectionId =
   | "roles"
   | "import"
 
-/** Only ship tabs that are implemented — no placeholder chrome. */
-const SECTIONS: { id: SectionId; label: string; permission?: PermissionKey }[] = [
-  { id: "church_details", label: "Church details" },
-  { id: "locations", label: "Locations" },
-  { id: "defaults", label: "Defaults" },
-  { id: "integrations", label: "Integrations" },
-  { id: "extra_fields", label: "Extra fields" },
-  { id: "roles", label: "Users and roles", permission: "settings.roles" },
-  { id: "import", label: "Import CSV", permission: "import.write" },
+const SECTIONS: {
+  id: SectionId
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  permission?: PermissionKey
+}[] = [
+  { id: "church_details", label: "Church details", icon: Building2 },
+  { id: "locations", label: "Locations", icon: MapPin },
+  { id: "defaults", label: "Defaults", icon: SlidersHorizontal },
+  { id: "integrations", label: "Integrations", icon: Plug },
+  { id: "extra_fields", label: "Extra fields", icon: ListPlus },
+  { id: "roles", label: "Users and roles", icon: Shield, permission: "settings.roles" },
+  { id: "import", label: "Import CSV", icon: Upload, permission: "import.write" },
 ]
 
 const TAB_ALIASES: Record<string, SectionId> = {
@@ -43,82 +65,79 @@ const TAB_ALIASES: Record<string, SectionId> = {
   locations: "locations",
   import: "import",
   church_details: "church_details",
+  extra_fields: "extra_fields",
+  defaults: "defaults",
 }
 
-export function SettingsClient() {
+function useSettingsSections() {
   const { can } = useAbility()
   const search = useSearchParams()
-  const rawTab = search.get("tab")
   const sections = SECTIONS.filter((section) => !section.permission || can(section.permission))
+  const rawTab = search.get("tab")
   const fromQuery = rawTab
     ? TAB_ALIASES[rawTab] || (sections.some((s) => s.id === rawTab) ? (rawTab as SectionId) : null)
     : null
-  const initial =
+  const active =
     fromQuery && sections.some((s) => s.id === fromQuery)
       ? fromQuery
       : sections[0]?.id || "church_details"
-  const [section, setSection] = React.useState<SectionId>(initial)
+  return { can, sections, active }
+}
 
-  React.useEffect(() => {
-    if (fromQuery && sections.some((s) => s.id === fromQuery)) setSection(fromQuery)
-  }, [fromQuery, sections])
+export function SettingsMenu() {
+  const { sections, active } = useSettingsSections()
 
-  const active = sections.some((item) => item.id === section)
-    ? section
-    : sections[0]?.id || "church_details"
+  return (
+    <Sidebar
+      collapsible="none"
+      className="sticky top-0 h-svh w-60 shrink-0 border-r bg-sidebar"
+    >
+      <SidebarHeader className="px-4 py-4">
+        <p className="text-sm font-medium text-zinc-900">Settings</p>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarMenu>
+            {sections.map((item) => {
+              const Icon = item.icon
+              return (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    render={<Link href={`/dashboard/settings?tab=${item.id}`} />}
+                    isActive={active === item.id}
+                  >
+                    <Icon />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  )
+}
+
+export function SettingsClient() {
+  const { can, active, sections } = useSettingsSections()
+  const current = sections.find((item) => item.id === active)
 
   return (
     <RequireAbility permission="settings.read">
-      <Tabs
-        value={active}
-        onValueChange={(v) => setSection(v as SectionId)}
-        className="flex min-h-0 flex-1 flex-col gap-0"
-      >
-        <div className="border-b bg-white px-4 py-4 md:px-6">
-          <div className="flex items-center gap-2">
-            <Settings className="size-5 text-zinc-700" strokeWidth={1.75} />
-            <h1 className="text-lg font-semibold tracking-tight text-zinc-900">Church Settings</h1>
-          </div>
-          <TabsList
-            variant="line"
-            className="mt-4 h-auto w-full justify-start gap-0 overflow-x-auto rounded-none border-b border-zinc-200 bg-transparent p-0"
-          >
-            {sections.map((item) => (
-              <TabsTrigger
-                key={item.id}
-                value={item.id}
-                className="rounded-none border-0 px-3 py-2.5 text-sm data-active:bg-transparent data-active:text-[var(--brand-ink)] data-active:shadow-none data-active:after:bg-[var(--brand)]"
-              >
-                {item.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+      <div className="min-w-0 flex-1 bg-white p-4 md:p-6">
+        <h1 className="text-2xl text-zinc-950">{current?.label ?? "Settings"}</h1>
+        <div className="mt-6">
+          {active === "church_details" ? <ChurchDetailsTab canEdit={can("settings.write")} /> : null}
+          {active === "locations" ? <LocationsTab canEdit={can("settings.write")} /> : null}
+          {active === "defaults" ? <NomenclatureTab canEdit={can("settings.write")} /> : null}
+          {active === "integrations" ? <IntegrationsTab canEdit={can("settings.write")} /> : null}
+          {active === "extra_fields" ? <CustomFieldsTab canEdit={can("settings.write")} /> : null}
+          {active === "roles" ? <RolesPermissionsTab /> : null}
+          {active === "import" ? <ImportTab canEdit={can("import.write") || can("settings.write")} /> : null}
         </div>
-
-        <div className="min-w-0 flex-1 bg-[#fbfcfb] p-4 md:p-6">
-          <TabsContent value="church_details" className="mt-0">
-            <ChurchDetailsTab canEdit={can("settings.write")} />
-          </TabsContent>
-          <TabsContent value="locations" className="mt-0">
-            <LocationsTab canEdit={can("settings.write")} />
-          </TabsContent>
-          <TabsContent value="defaults" className="mt-0">
-            <NomenclatureTab canEdit={can("settings.write")} />
-          </TabsContent>
-          <TabsContent value="integrations" className="mt-0">
-            <IntegrationsTab canEdit={can("settings.write")} />
-          </TabsContent>
-          <TabsContent value="extra_fields" className="mt-0">
-            <CustomFieldsTab canEdit={can("settings.write")} />
-          </TabsContent>
-          <TabsContent value="roles" className="mt-0">
-            <RolesPermissionsTab />
-          </TabsContent>
-          <TabsContent value="import" className="mt-0">
-            <ImportTab canEdit={can("import.write") || can("settings.write")} />
-          </TabsContent>
-        </div>
-      </Tabs>
+      </div>
     </RequireAbility>
   )
 }

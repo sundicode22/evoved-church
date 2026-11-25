@@ -35,14 +35,14 @@ export function StatTile({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase">{title}</p>
+        <p className="text-sm font-medium text-zinc-800">{title}</p>
         {icon ? (
           <span className="inline-flex size-8 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand-ink)]">
             {icon}
           </span>
         ) : null}
       </div>
-      <div className="mt-2 min-h-8 text-2xl font-semibold tracking-tight text-zinc-900">
+      <div className="mt-2 min-h-9 text-3xl font-semibold tracking-tight text-zinc-950">
         {loading ? <Skeleton className="h-7 w-24" /> : value}
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -66,7 +66,7 @@ export function StatTile({
             {deltaPct}%
           </span>
         ) : null}
-        {hint ? <span className="text-[11px] text-zinc-400">{hint}</span> : null}
+        {hint ? <span className="text-sm text-zinc-700">{hint}</span> : null}
       </div>
     </div>
   )

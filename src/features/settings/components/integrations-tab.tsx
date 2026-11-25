@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Clock, CreditCard } from "lucide-react"
+import { CreditCard, Mail, MessageSquare } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,54 +17,30 @@ import {
 import { apiClient } from "@/lib/axios"
 
 type IntegrationCard = {
-  id: string
+  id: "stripe" | "resend" | "twilio"
   name: string
   description: string
-  status: "connect" | "coming_soon" | "configure"
+  icon: React.ComponentType<{ className?: string }>
 }
 
 const CARDS: IntegrationCard[] = [
   {
-    id: "paypal",
-    name: "PayPal",
-    description: "Streamline giving with PayPal checkout on your portal.",
-    status: "coming_soon",
-  },
-  {
     id: "stripe",
     name: "Stripe",
     description: "Connect Stripe for secure online donations and recurring gifts.",
-    status: "connect",
+    icon: CreditCard,
   },
   {
     id: "resend",
     name: "Resend",
-    description: "Church email for drips, alerts, and campaigns (email only — not SMS).",
-    status: "configure",
+    description: "Church email for drips, alerts, and campaigns. Email only.",
+    icon: Mail,
   },
   {
     id: "twilio",
     name: "Twilio",
     description: "SMS for campaigns and reminders. Separate from Resend.",
-    status: "configure",
-  },
-  {
-    id: "quickbooks",
-    name: "Intuit QuickBooks",
-    description: "Sync funds and expenses with QuickBooks Online.",
-    status: "coming_soon",
-  },
-  {
-    id: "mailchimp",
-    name: "Mailchimp",
-    description: "Sync audiences for email marketing outside Evolve campaigns.",
-    status: "coming_soon",
-  },
-  {
-    id: "checkr",
-    name: "Checkr",
-    description: "Volunteer background screening for kids and safety ministries.",
-    status: "coming_soon",
+    icon: MessageSquare,
   },
 ]
 
@@ -92,66 +68,46 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-zinc-900">Integrations</h2>
-        <p className="mt-1 text-sm text-zinc-500">
-          Enhance Evolve by connecting third-party services to your account.
-        </p>
-      </div>
+      <p className="text-base text-zinc-700">
+        Connect Stripe for giving, Resend for email, and Twilio for SMS.
+      </p>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {CARDS.map((card) => (
-          <div
-            key={card.id}
-            className="flex flex-col rounded-xl border bg-white p-5 shadow-xs"
-          >
-            <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-[#eaf5ea] text-[#1b5e20]">
-              <CreditCard className="size-5" />
+        {CARDS.map((card) => {
+          const Icon = card.icon
+          return (
+            <div
+              key={card.id}
+              className="flex flex-col rounded-lg border bg-white p-5 shadow-xs"
+            >
+              <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-[#eaf5ea] text-[#1b5e20]">
+                <Icon className="size-5" />
+              </div>
+              <h3 className="text-sm font-semibold text-zinc-900">{card.name}</h3>
+              <p className="mt-1 flex-1 text-sm leading-relaxed text-zinc-600">{card.description}</p>
+              <div className="mt-4">
+                {card.id === "stripe" ? (
+                  <Button
+                    disabled={!canEdit}
+                    onClick={() => setSheet("stripe")}
+                    className="h-9 w-full rounded-lg bg-[var(--brand)] text-sm text-white hover:bg-[var(--brand-hover)]"
+                  >
+                    {stripeConnected ? "Manage Stripe" : "Connect your account"}
+                  </Button>
+                ) : (
+                  <Button
+                    disabled={!canEdit}
+                    variant="outline"
+                    onClick={() => setSheet(card.id)}
+                    className="h-9 w-full rounded-lg text-sm"
+                  >
+                    Configure
+                  </Button>
+                )}
+              </div>
             </div>
-            <h3 className="text-sm font-semibold text-zinc-900">{card.name}</h3>
-            <p className="mt-1 flex-1 text-xs leading-relaxed text-zinc-500">{card.description}</p>
-            <div className="mt-4">
-              {card.status === "coming_soon" ? (
-                <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700">
-                  <Clock className="size-3.5" />
-                  Coming Soon
-                </div>
-              ) : card.id === "stripe" ? (
-                <Button
-                  disabled={!canEdit}
-                  onClick={() => setSheet("stripe")}
-                  className="h-9 w-full rounded-lg bg-[var(--brand)] text-xs text-white hover:bg-[var(--brand-hover)]"
-                >
-                  {stripeConnected ? "Manage Stripe" : "Connect your account"}
-                </Button>
-              ) : (
-                <Button
-                  disabled={!canEdit}
-                  variant="outline"
-                  onClick={() => setSheet(card.id as "resend" | "twilio")}
-                  className="h-9 w-full rounded-lg text-xs"
-                >
-                  Configure
-                </Button>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex flex-col items-start justify-between gap-3 rounded-xl border bg-[#fbfcfb] p-5 sm:flex-row sm:items-center">
-        <div>
-          <p className="text-sm font-medium text-zinc-900">Missing an integration? Let us know</p>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            Tell us which tool you need and we will consider it for a future update.
-          </p>
-        </div>
-        <Button
-          className="h-9 shrink-0 rounded-lg bg-[var(--brand)] text-xs text-white hover:bg-[var(--brand-hover)]"
-          onClick={() => toast.success("Thanks — request noted (demo)")}
-        >
-          Request an Integration
-        </Button>
+          )
+        })}
       </div>
 
       <Sheet open={sheet === "stripe"} onOpenChange={(o) => !o && setSheet(null)}>

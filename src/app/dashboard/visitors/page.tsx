@@ -51,6 +51,16 @@ function stageTone(stage: string): "neutral" | "success" | "warning" | "info" {
   return "neutral"
 }
 
+function assigneeLabel(row: { assignedToName?: unknown; assignee?: unknown }) {
+  if (typeof row.assignedToName === "string" && row.assignedToName) return row.assignedToName
+  if (typeof row.assignee === "string" && row.assignee) return row.assignee
+  if (row.assignee && typeof row.assignee === "object" && "name" in row.assignee) {
+    const name = (row.assignee as { name?: unknown }).name
+    return typeof name === "string" ? name : ""
+  }
+  return ""
+}
+
 export default function VisitorsPage() {
   const [view, setView] = React.useState<"table" | "board">("table")
   const [search, setSearch] = React.useState("")
@@ -176,10 +186,10 @@ export default function VisitorsPage() {
                                   "flex size-6 items-center justify-center rounded-full text-[10px] font-medium text-white bg-emerald-500"
                                 )}
                               >
-                                {(row.assignedToName || row.assignee || "?").slice(0, 1)}
+                                {(assigneeLabel(row) || "?").slice(0, 1)}
                               </span>
                               <span className="text-sm text-zinc-600">
-                                {row.assignedToName || row.assignee || "Unassigned"}
+                                {assigneeLabel(row) || "Unassigned"}
                               </span>
                             </div>
                           </TableCell>
