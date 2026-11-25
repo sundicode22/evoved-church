@@ -16,16 +16,38 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities"
 import { useKanbanStore } from "@/store/use-kanban-store"
 import { VisitorDrawer } from "@/components/visitors/visitor-drawer"
+import {
+  FollowUpAction,
+  VisitorFollowUpDialogs,
+} from "@/components/visitors/visitor-follow-up"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   useVisitorBoard,
   useUpdateLeadStage,
 } from "@/features/visitors/hooks/use-visitor-leads"
 import type { VisitorStage } from "@/features/visitors/schemas"
-import { Calendar, Folder, ListTodo, MoreHorizontal, Plus, Search as Search, StickyNote } from "lucide-react"
+import {
+  Calendar,
+  Folder,
+  ListTodo,
+  Mail,
+  MessageSquare,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Smartphone,
+  StickyNote,
+  UserCog,
+} from "lucide-react"
 
 const AVATAR_COLORS = [
   "bg-blue-100 text-blue-700",
@@ -49,18 +71,23 @@ type LeadCard = {
   location?: string
   contactName: string
   contactAvatar?: string
+  contactEmail?: string
+  contactPhone?: string
   amount?: string
   elapsed?: string
   stage?: string
+  assignee?: { name: string; role?: "admin" | "user"; avatar?: string } | null
   metrics?: { calendar?: number; checklist?: number; files?: number; notes?: number }
 }
 
 function SortableCard({
   lead,
   onOpen,
+  onAction,
 }: {
   lead: LeadCard
   onOpen: (id: string) => void
+  onAction: (id: string, action: FollowUpAction, contactName: string) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: lead.id,
@@ -75,33 +102,101 @@ function SortableCard({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <Card
+      <div
         onClick={() => onOpen(lead.id)}
-        className="cursor-grab active:cursor-grabbing rounded-xl border-zinc-200/60 shadow-xs hover:border-zinc-300 transition-colors p-3.5 space-y-2.5 bg-white"
+        className="cursor-grab space-y-2.5 rounded-xl bg-white p-3.5 shadow-sm ring-0 transition-shadow hover:shadow-md active:cursor-grabbing"
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-zinc-900 truncate">{lead.title}</p>
-            <p className="text-xs text-zinc-500 truncate">{lead.location || "Main Sanctuary"}</p>
+            <p className="truncate text-sm font-semibold text-zinc-900">{lead.title}</p>
+            <p className="truncate text-xs text-zinc-500">{lead.location || "Main Sanctuary"}</p>
           </div>
-          <Badge variant="secondary" className="text-[10px] shrink-0 bg-zinc-100 text-zinc-600">
-            {lead.elapsed || "1m"}
-          </Badge>
+          <div className="flex shrink-0 items-center gap-1">
+            <Badge
+              variant="secondary"
+              className="bg-zinc-100/90 text-[10px] text-zinc-600 shadow-none"
+            >
+              {lead.elapsed || "1m"}
+            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="size-7 text-zinc-400 hover:text-zinc-700"
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                  />
+                }
+              >
+                <MoreHorizontal className="size-3.5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="min-w-44 shadow-lg"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <DropdownMenuItem
+                  onClick={() => onAction(lead.id, "assign", lead.contactName)}
+                >
+                  <UserCog className="size-3.5" />
+                  Assign Admin / User
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onAction(lead.id, "comment", lead.contactName)}
+                >
+                  <MessageSquare className="size-3.5" />
+                  Comment
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onAction(lead.id, "email", lead.contactName)}
+                >
+                  <Mail className="size-3.5" />
+                  Email follow-up
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onAction(lead.id, "sms", lead.contactName)}
+                >
+                  <Smartphone className="size-3.5" />
+                  SMS follow-up
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span
-              className={`size-7 rounded-full flex items-center justify-center text-xs font-semibold ${avatarColor(lead.contactName)}`}
+              className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold shadow-sm ${avatarColor(lead.contactName)}`}
             >
               {lead.contactAvatar || lead.contactName.charAt(0)}
             </span>
-            <span className="text-xs text-zinc-600 truncate max-w-[110px]">{lead.contactName}</span>
+            <span className="max-w-[110px] truncate text-xs text-zinc-600">{lead.contactName}</span>
           </div>
           {lead.amount && (
             <span className="text-sm font-semibold text-emerald-700">{lead.amount}</span>
           )}
         </div>
-        <div className="flex items-center gap-3 text-zinc-400 pt-1 border-t border-zinc-100">
+
+        {lead.assignee && (
+          <div className="flex items-center gap-2 rounded-lg bg-[#f6f8f6] px-2 py-1.5 shadow-xs">
+            <span
+              className={`flex size-5 items-center justify-center rounded-full text-[10px] font-semibold shadow-sm ${avatarColor(lead.assignee.name)}`}
+            >
+              {lead.assignee.avatar || lead.assignee.name.charAt(0)}
+            </span>
+            <span className="truncate text-[11px] text-zinc-600">{lead.assignee.name}</span>
+            <span className="ml-auto rounded-md bg-white px-1.5 py-0.5 text-[10px] font-medium capitalize text-zinc-500 shadow-xs">
+              {lead.assignee.role || "user"}
+            </span>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 pt-1 text-zinc-400">
           <span className="flex items-center gap-1 text-[11px]">
             <Calendar className="size-3.5" />
             {lead.metrics?.calendar ?? 0}
@@ -119,7 +214,7 @@ function SortableCard({
             {lead.metrics?.notes ?? 0}
           </span>
         </div>
-      </Card>
+      </div>
     </div>
   )
 }
@@ -130,26 +225,28 @@ function Column({
   count,
   leads,
   onOpen,
+  onAction,
 }: {
   id: string
   title: string
   count: number
   leads: LeadCard[]
   onOpen: (id: string) => void
+  onAction: (id: string, action: FollowUpAction, contactName: string) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id, data: { type: "column", stage: id } })
 
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col w-[300px] shrink-0 rounded-lg border ${
-        isOver ? "border-emerald-300 bg-emerald-50/40" : "border-zinc-200/70 bg-[#f8faf9]"
+      className={`flex w-[300px] shrink-0 flex-col rounded-2xl bg-[#f4f6f5] p-1 shadow-sm transition-shadow ${
+        isOver ? "bg-[#eaf5ea] shadow-md" : ""
       }`}
     >
       <div className="flex items-center justify-between px-3 py-3">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold tracking-wide text-zinc-700">{title}</span>
-          <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-white border border-zinc-200 text-zinc-600 font-medium">
+          <span className="rounded-full bg-white px-1.5 py-0.5 text-[11px] font-medium text-zinc-600 shadow-xs">
             {count}
           </span>
         </div>
@@ -158,9 +255,9 @@ function Column({
         </Button>
       </div>
       <SortableContext items={leads.map((l) => l.id)} strategy={verticalListSortingStrategy}>
-        <div className="flex flex-col gap-2.5 px-2.5 pb-3 min-h-[120px]">
+        <div className="flex min-h-[120px] flex-col gap-2.5 px-2 pb-3">
           {leads.map((lead) => (
-            <SortableCard key={lead.id} lead={lead} onOpen={onOpen} />
+            <SortableCard key={lead.id} lead={lead} onOpen={onOpen} onAction={onAction} />
           ))}
         </div>
       </SortableContext>
@@ -173,6 +270,11 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
   const { data, isLoading } = useVisitorBoard(searchQuery || undefined)
   const updateStage = useUpdateLeadStage()
   const [activeLead, setActiveLead] = React.useState<LeadCard | null>(null)
+  const [followUp, setFollowUp] = React.useState<{
+    id: string
+    action: FollowUpAction
+    contactName: string
+  } | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -220,6 +322,10 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
     })
   }
 
+  function onAction(id: string, action: FollowUpAction, contactName: string) {
+    setFollowUp({ id, action, contactName })
+  }
+
   const board = (
     <>
       {isLoading ? (
@@ -232,7 +338,7 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
           onDragEnd={onDragEnd}
         >
           <div className="flex min-w-max items-start gap-4">
-            {stages.map((col: any) => (
+            {stages.map((col: { id: string; title: string; leadCount?: number; leads?: LeadCard[] }) => (
               <Column
                 key={col.id}
                 id={col.id}
@@ -240,20 +346,27 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
                 count={col.leadCount || col.leads?.length || 0}
                 leads={col.leads || []}
                 onOpen={openLeadDrawer}
+                onAction={onAction}
               />
             ))}
           </div>
           <DragOverlay>
             {activeLead ? (
-              <Card className="w-[280px] rotate-1 rounded-xl border-zinc-200 bg-white p-3.5 shadow-xs">
+              <div className="w-[280px] rotate-1 space-y-1 rounded-xl bg-white p-3.5 shadow-lg">
                 <p className="text-sm font-semibold">{activeLead.title}</p>
                 <p className="text-xs text-zinc-500">{activeLead.contactName}</p>
-              </Card>
+              </div>
             ) : null}
           </DragOverlay>
         </DndContext>
       )}
       <VisitorDrawer />
+      <VisitorFollowUpDialogs
+        leadId={followUp?.id ?? null}
+        contactName={followUp?.contactName}
+        action={followUp?.action ?? null}
+        onClose={() => setFollowUp(null)}
+      />
     </>
   )
 
@@ -262,8 +375,8 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200/70 bg-white px-6 py-4">
+    <div className="flex h-full flex-col bg-[#fbfcfb]">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white px-6 py-4 shadow-sm">
         <div>
           <h1 className="text-xl font-medium tracking-tight text-zinc-900">Visitor Pipeline</h1>
           <p className="text-sm text-zinc-500">
@@ -277,10 +390,10 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search visitors..."
-              className="h-9 w-56 bg-white pl-8"
+              className="h-9 w-56 bg-white pl-8 shadow-xs"
             />
           </div>
-          <div className="flex rounded-lg border border-zinc-200 bg-zinc-50 p-0.5">
+          <div className="flex rounded-lg bg-zinc-100/80 p-0.5 shadow-xs">
             <button
               type="button"
               onClick={() => setActiveView("board")}
@@ -300,7 +413,7 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
               List
             </button>
           </div>
-          <Button className="h-9 bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]">
+          <Button className="h-9 bg-[var(--brand)] text-white shadow-sm hover:bg-[var(--brand-hover)]">
             <Plus className="size-4" />
             Add visitor
           </Button>

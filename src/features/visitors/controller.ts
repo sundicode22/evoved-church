@@ -1,6 +1,12 @@
 import { Elysia } from "elysia"
 import { visitorService } from "./service"
-import { createLeadSchema, updateLeadStageSchema } from "./schemas"
+import {
+  assignLeadSchema,
+  createLeadSchema,
+  updateLeadStageSchema,
+  visitorCommentSchema,
+  visitorOutreachSchema,
+} from "./schemas"
 import { formatErrorResponse } from "@/lib/errors"
 
 export const visitorController = new Elysia({ prefix: "/visitors" })
@@ -89,6 +95,52 @@ export const visitorController = new Elysia({ prefix: "/visitors" })
     try {
       const parsed = updateLeadStageSchema.parse(body)
       const updated = await visitorService.updateLeadStage(params.id, parsed)
+      return { success: true, data: updated }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
+  /**
+   * PATCH /api/visitors/:id/assign - Assign Admin or User staff owner
+   */
+  .patch("/:id/assign", async ({ params, body, set }) => {
+    try {
+      const parsed = assignLeadSchema.parse(body)
+      const updated = await visitorService.assignLead(params.id, parsed)
+      return { success: true, data: updated }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
+  /**
+   * POST /api/visitors/:id/comments - Pastoral / follow-up comment
+   */
+  .post("/:id/comments", async ({ params, body, set }) => {
+    try {
+      const parsed = visitorCommentSchema.parse(body)
+      const updated = await visitorService.addComment(params.id, parsed)
+      set.status = 201
+      return { success: true, data: updated }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
+  /**
+   * POST /api/visitors/:id/outreach - Email (Resend) or SMS follow-up
+   */
+  .post("/:id/outreach", async ({ params, body, set }) => {
+    try {
+      const parsed = visitorOutreachSchema.parse(body)
+      const updated = await visitorService.sendOutreach(params.id, parsed)
       return { success: true, data: updated }
     } catch (error) {
       const { status, body: errBody } = formatErrorResponse(error)

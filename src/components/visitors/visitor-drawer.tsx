@@ -29,14 +29,28 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
 import { Spinner } from "@/components/ui/spinner"
+import {
+  FollowUpAction,
+  VisitorFollowUpDialogs,
+} from "@/components/visitors/visitor-follow-up"
 import { useVisitorDetail } from "@/features/visitors/hooks/use-visitor-leads"
 import { VISITOR_STAGE_LABELS } from "@/features/visitors/schemas"
 import { useKanbanStore } from "@/store/use-kanban-store"
-import { Calendar, ListTodo, Mail, Smartphone, StickyNote, User } from "lucide-react"
+import {
+  Calendar,
+  ListTodo,
+  Mail,
+  MessageSquare,
+  Smartphone,
+  StickyNote,
+  User,
+  UserCog,
+} from "lucide-react"
 
 export function VisitorDrawer() {
   const { isDrawerOpen, selectedLeadId, closeLeadDrawer } = useKanbanStore()
   const { data: lead, isLoading } = useVisitorDetail(selectedLeadId)
+  const [followUp, setFollowUp] = React.useState<FollowUpAction | null>(null)
 
   const stages = (lead?.stages || []) as {
     id: string
@@ -58,7 +72,7 @@ export function VisitorDrawer() {
           </div>
         ) : (
           <div className="flex h-full min-h-0 flex-col">
-            <SheetHeader className="border-b border-zinc-100 pr-12">
+            <SheetHeader className="pr-12 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 space-y-1">
                   <SheetTitle className="text-lg text-zinc-900">{lead.title}</SheetTitle>
@@ -78,17 +92,60 @@ export function VisitorDrawer() {
                   </SheetDescription>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">
+                  <Badge className="border-0 bg-emerald-50 text-emerald-700 shadow-xs">
                     {VISITOR_STAGE_LABELS[lead.stage as keyof typeof VISITOR_STAGE_LABELS] ||
                       lead.stage}
                   </Badge>
                   <Button
                     size="sm"
-                    className="h-8 gap-1 bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
+                    className="h-8 gap-1 bg-[var(--brand)] text-white shadow-sm hover:bg-[var(--brand-hover)]"
                   >
                     Create appointment
                   </Button>
                 </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="h-8 gap-1.5 shadow-xs"
+                  onClick={() => setFollowUp("assign")}
+                >
+                  <UserCog className="size-3.5" />
+                  Assign
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="h-8 gap-1.5 shadow-xs"
+                  onClick={() => setFollowUp("comment")}
+                >
+                  <MessageSquare className="size-3.5" />
+                  Comment
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="h-8 gap-1.5 shadow-xs"
+                  onClick={() => setFollowUp("email")}
+                >
+                  <Mail className="size-3.5" />
+                  Email
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="h-8 gap-1.5 shadow-xs"
+                  onClick={() => setFollowUp("sms")}
+                >
+                  <Smartphone className="size-3.5" />
+                  SMS
+                </Button>
               </div>
 
               {stages.length > 0 && (
@@ -101,12 +158,12 @@ export function VisitorDrawer() {
                     {stages.map((s) => (
                       <span
                         key={s.id}
-                        className={`rounded-full border px-2.5 py-1 text-[11px] ${
+                        className={`rounded-full px-2.5 py-1 text-[11px] shadow-xs ${
                           s.active
-                            ? "border-emerald-200 bg-[#eaf5ea] font-semibold text-[#1b5e20]"
+                            ? "bg-[#eaf5ea] font-semibold text-[#1b5e20]"
                             : s.completed
-                              ? "border-zinc-200 bg-zinc-50 text-zinc-500"
-                              : "border-zinc-100 bg-white text-zinc-400"
+                              ? "bg-zinc-100 text-zinc-500"
+                              : "bg-white text-zinc-400"
                         }`}
                       >
                         {s.label}
@@ -117,7 +174,7 @@ export function VisitorDrawer() {
               )}
 
               {lead.activeSequence && (
-                <div className="mt-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2 text-xs text-emerald-800">
+                <div className="mt-2 rounded-xl bg-emerald-50/70 px-3 py-2 text-xs text-emerald-800 shadow-xs">
                   Active drip:{" "}
                   <strong>
                     {lead.activeSequence.title || lead.activeSequence}
@@ -128,6 +185,16 @@ export function VisitorDrawer() {
                       · Next: {lead.activeSequence.nextDrip}
                     </span>
                   )}
+                </div>
+              )}
+
+              {lead.assignee && (
+                <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#f6f8f6] px-3 py-2 text-xs text-zinc-600 shadow-xs">
+                  <User className="size-3.5 text-zinc-400" />
+                  Assigned to <strong>{lead.assignee.name}</strong>
+                  <span className="rounded-md bg-white px-1.5 py-0.5 text-[10px] font-medium capitalize shadow-xs">
+                    {lead.assignee.role || "user"}
+                  </span>
                 </div>
               )}
             </SheetHeader>
@@ -146,7 +213,7 @@ export function VisitorDrawer() {
                   <ScrollArea className="min-h-0 flex-1 pr-2">
                     <TabsContent value="activity" className="mt-0 space-y-0 pb-6">
                       {(lead.latestActivity || []).length === 0 ? (
-                        <Empty className="border border-dashed border-zinc-200 py-10">
+                        <Empty className="bg-[#f8faf9] py-10 shadow-xs">
                           <EmptyHeader>
                             <EmptyMedia variant="icon">
                               <Mail />
@@ -158,7 +225,7 @@ export function VisitorDrawer() {
                           </EmptyHeader>
                         </Empty>
                       ) : (
-                        <ol className="relative space-y-0 border-l border-dashed border-zinc-200 pl-5">
+                        <ol className="relative space-y-0 pl-5">
                           {(lead.latestActivity || []).map((act: {
                             id: string
                             title: string
@@ -168,8 +235,8 @@ export function VisitorDrawer() {
                             createdAt?: string | Date
                           }) => (
                             <li key={act.id} className="relative pb-5 last:pb-0">
-                              <span className="absolute -left-[1.4rem] top-1.5 size-2.5 rounded-full border-2 border-white bg-emerald-500 shadow-sm" />
-                              <div className="rounded-xl border border-zinc-200/70 bg-white p-3 shadow-xs">
+                              <span className="absolute -left-[0.85rem] top-1.5 size-2.5 rounded-full bg-emerald-500 shadow-sm ring-2 ring-white" />
+                              <div className="rounded-xl bg-white p-3 shadow-sm">
                                 <p className="text-sm font-medium text-zinc-900">{act.title}</p>
                                 {act.description && (
                                   <p className="mt-0.5 text-xs text-zinc-500">{act.description}</p>
@@ -188,7 +255,7 @@ export function VisitorDrawer() {
                     </TabsContent>
 
                     <TabsContent value="appointments" className="mt-0 pb-6">
-                      <Empty className="border border-dashed border-zinc-200 py-10">
+                      <Empty className="bg-[#f8faf9] py-10 shadow-xs">
                         <EmptyHeader>
                           <EmptyMedia variant="icon">
                             <Calendar />
@@ -202,7 +269,7 @@ export function VisitorDrawer() {
                     </TabsContent>
 
                     <TabsContent value="giving" className="mt-0 pb-6">
-                      <Empty className="border border-dashed border-zinc-200 py-10">
+                      <Empty className="bg-[#f8faf9] py-10 shadow-xs">
                         <EmptyHeader>
                           <EmptyTitle>No giving linked</EmptyTitle>
                           <EmptyDescription>
@@ -213,7 +280,7 @@ export function VisitorDrawer() {
                     </TabsContent>
 
                     <TabsContent value="notes" className="mt-0 pb-6">
-                      <Empty className="border border-dashed border-zinc-200 py-10">
+                      <Empty className="bg-[#f8faf9] py-10 shadow-xs">
                         <EmptyHeader>
                           <EmptyMedia variant="icon">
                             <StickyNote />
@@ -225,7 +292,7 @@ export function VisitorDrawer() {
                     </TabsContent>
 
                     <TabsContent value="tasks" className="mt-0 pb-6">
-                      <Empty className="border border-dashed border-zinc-200 py-10">
+                      <Empty className="bg-[#f8faf9] py-10 shadow-xs">
                         <EmptyHeader>
                           <EmptyMedia variant="icon">
                             <ListTodo />
@@ -239,7 +306,7 @@ export function VisitorDrawer() {
                 </Tabs>
               </SheetBody>
 
-              <aside className="flex flex-col gap-5 border-t border-zinc-100 bg-[#f8faf9] px-5 py-5 md:border-t-0 md:border-l">
+              <aside className="flex flex-col gap-5 bg-[#f8faf9] px-5 py-5 shadow-sm md:shadow-none">
                 <div className="space-y-3">
                   <p className="text-[11px] font-semibold tracking-wider text-zinc-400 uppercase">
                     Contact
@@ -304,6 +371,12 @@ export function VisitorDrawer() {
           </div>
         )}
       </SheetContent>
+      <VisitorFollowUpDialogs
+        leadId={selectedLeadId}
+        contactName={lead?.contact?.name || lead?.contactName}
+        action={followUp}
+        onClose={() => setFollowUp(null)}
+      />
     </Sheet>
   )
 }

@@ -2,7 +2,13 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient, ApiResponse } from "@/lib/axios"
-import { CreateLeadInput, UpdateLeadStageInput } from "../schemas"
+import {
+  AssignLeadInput,
+  CreateLeadInput,
+  UpdateLeadStageInput,
+  VisitorCommentInput,
+  VisitorOutreachInput,
+} from "../schemas"
 import { useBranchStore } from "@/store/use-branch-store"
 
 export const VISITOR_KEYS = {
@@ -101,6 +107,48 @@ export function useCreateLead() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.all })
+    },
+  })
+}
+
+export function useAssignLead() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...input }: AssignLeadInput & { id: string }) => {
+      const response = await apiClient.patch<ApiResponse<any>>(`/visitors/${id}/assign`, input)
+      return response.data.data
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.detail(vars.id) })
+    },
+  })
+}
+
+export function useVisitorComment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...input }: VisitorCommentInput & { id: string }) => {
+      const response = await apiClient.post<ApiResponse<any>>(`/visitors/${id}/comments`, input)
+      return response.data.data
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.detail(vars.id) })
+    },
+  })
+}
+
+export function useVisitorOutreach() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...input }: VisitorOutreachInput & { id: string }) => {
+      const response = await apiClient.post<ApiResponse<any>>(`/visitors/${id}/outreach`, input)
+      return response.data.data
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.detail(vars.id) })
     },
   })
 }

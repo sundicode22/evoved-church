@@ -16,7 +16,6 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { Calendar, MoreHorizontal } from "lucide-react"
 
 export interface KanbanCardData {
@@ -69,21 +68,21 @@ function CardView({
   onClick?: () => void
 }) {
   return (
-    <Card
+    <div
       onClick={onClick}
-      className={`space-y-2.5 rounded-xl border-zinc-200/60 bg-white p-3.5 shadow-sm transition-shadow hover:shadow-md ${
+      className={`space-y-2.5 rounded-xl bg-white p-3.5 shadow-sm transition-shadow hover:shadow-md ${
         overlay ? "rotate-1 cursor-grabbing shadow-lg" : "cursor-grab active:cursor-grabbing"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
         {card.label ? (
-          <span className="truncate rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+          <span className="truncate rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 shadow-xs">
             {card.label}
           </span>
         ) : (
           <span />
         )}
-        <Badge variant="secondary" className="shrink-0 bg-zinc-100 text-[10px] text-zinc-600">
+        <Badge variant="secondary" className="shrink-0 bg-zinc-100 text-[10px] text-zinc-600 shadow-none">
           {now === null ? "…" : formatElapsed(card.since, now)}
         </Badge>
       </div>
@@ -93,13 +92,13 @@ function CardView({
         {card.subtitle && <p className="mt-0.5 truncate text-xs text-zinc-500">{card.subtitle}</p>}
       </div>
 
-      <div className="flex items-center justify-between border-t border-zinc-100 pt-2.5 text-[11px] text-zinc-400">
+      <div className="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
         <div className="flex items-center gap-2">
           {card.badges?.map((b) => (
             <Badge
               key={b.text}
-              variant="outline"
-              className={`text-[10px] font-semibold capitalize ${b.className ?? ""}`}
+              variant="secondary"
+              className={`text-[10px] font-semibold capitalize shadow-none ${b.className ?? ""}`}
             >
               {b.text}
             </Badge>
@@ -112,12 +111,12 @@ function CardView({
           )}
         </div>
         {card.assignee && (
-          <span className="flex size-6 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-semibold text-white">
+          <span className="flex size-6 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-semibold text-white shadow-sm">
             {card.assignee}
           </span>
         )}
       </div>
-    </Card>
+    </div>
   )
 }
 
@@ -159,14 +158,14 @@ function Column({
   return (
     <div
       ref={setNodeRef}
-      className={`flex w-[300px] shrink-0 flex-col rounded-lg border transition-colors ${
-        isOver ? "border-emerald-300 bg-emerald-50/40" : "border-zinc-200/70 bg-[#f8faf9]"
+      className={`flex w-[300px] shrink-0 flex-col rounded-2xl bg-[#f4f6f5] p-1 shadow-sm transition-shadow ${
+        isOver ? "bg-[#eaf5ea] shadow-md" : ""
       }`}
     >
       <div className="flex items-center justify-between px-3 py-3">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold tracking-wide text-zinc-700">{column.title}</span>
-          <span className="rounded-full border border-zinc-200 bg-white px-1.5 py-0.5 text-[11px] font-medium text-zinc-600">
+          <span className="rounded-full bg-white px-1.5 py-0.5 text-[11px] font-medium text-zinc-600 shadow-xs">
             {column.cards.length}
           </span>
         </div>

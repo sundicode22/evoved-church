@@ -5,6 +5,7 @@ import { Building2, ChevronsUpDown, Plus } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -55,37 +56,41 @@ export function CampusSwitcher() {
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium tracking-wider text-zinc-400 uppercase">
-              Locations
-            </DropdownMenuLabel>
-            {availableCampuses.map((campus: Campus) => (
-              <DropdownMenuItem
-                key={campus.id}
-                onClick={() => setActiveCampus(campus)}
-                className={`gap-2 rounded-lg p-2 ${
-                  campus.id === activeCampus.id
-                    ? "bg-[var(--brand-soft)] text-[var(--brand-ink)]"
-                    : ""
-                }`}
-              >
-                <div className="flex size-6 items-center justify-center rounded-md border border-zinc-200 bg-white">
-                  <Building2 className="size-3.5 text-zinc-500" strokeWidth={1.75} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm">{campus.name}</span>
-                  <span className="text-[11px] text-zinc-400 capitalize">
-                    {campus.city} · {campus.type}
-                  </span>
-                </div>
-              </DropdownMenuItem>
-            ))}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium tracking-wider text-zinc-400 uppercase">
+                Locations
+              </DropdownMenuLabel>
+              {availableCampuses.map((campus: Campus) => (
+                <DropdownMenuItem
+                  key={campus.id}
+                  onClick={() => setActiveCampus(campus)}
+                  className={`gap-2 rounded-lg p-2 ${
+                    campus.id === activeCampus.id
+                      ? "bg-[var(--brand-soft)] text-[var(--brand-ink)]"
+                      : ""
+                  }`}
+                >
+                  <div className="flex size-6 items-center justify-center rounded-md border border-zinc-200 bg-white">
+                    <Building2 className="size-3.5 text-zinc-500" strokeWidth={1.75} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm">{campus.name}</span>
+                    <span className="text-[11px] text-zinc-400 capitalize">
+                      {campus.city} · {campus.type}
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 rounded-lg p-2 text-[var(--brand)]">
-              <div className="flex size-6 items-center justify-center rounded-md border border-dashed border-emerald-300 bg-emerald-50/60">
-                <Plus className="size-3.5" strokeWidth={1.75} />
-              </div>
-              <span className="text-xs font-medium">Add New {campusTermSingular}</span>
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuItem className="gap-2 rounded-lg p-2 text-[var(--brand)]">
+                <div className="flex size-6 items-center justify-center rounded-md border border-dashed border-emerald-300 bg-emerald-50/60">
+                  <Plus className="size-3.5" strokeWidth={1.75} />
+                </div>
+                <span className="text-xs font-medium">Add New {campusTermSingular}</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

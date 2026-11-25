@@ -1,16 +1,33 @@
 import { db } from "@/lib/db"
 import { visitorLeads, visitorActivities, campuses } from "@/lib/db/schema"
 import { eq, desc, and, or, ilike, sql } from "drizzle-orm"
-import { ValidationError } from "@/lib/errors"
+import { NotFoundError, ValidationError } from "@/lib/errors"
 import {
+  AssignLeadInput,
   CreateLeadInput,
   UpdateLeadStageInput,
+  VisitorCommentInput,
+  VisitorOutreachInput,
   VISITOR_STAGES,
   VISITOR_STAGE_LABELS,
   VisitorStage,
 } from "./schemas"
 import { emailService } from "@/features/communications/resend"
+import { smsService } from "@/features/communications/sms"
 import { DbPaginationResult } from "@/lib/db/pagination"
+
+/** In-memory assignee / activity when DB write is unavailable. */
+const assigneeStore = new Map<
+  string,
+  { name: string; role: "admin" | "user"; userId?: string }
+>()
+const activityStore = new Map<string, Array<Record<string, unknown>>>()
+
+function pushActivity(leadId: string, row: Record<string, unknown>) {
+  const list = activityStore.get(leadId) || []
+  list.unshift(row)
+  activityStore.set(leadId, list.slice(0, 40))
+}
 
 function elapsedLabel(from: Date): string {
   const mins = Math.max(1, Math.floor((Date.now() - from.getTime()) / 60000))
@@ -38,6 +55,8 @@ const DEMO_LEADS = [
     location: "Main Sanctuary",
     stage: "first_visit" as VisitorStage,
     contactName: "Jane Cooper",
+    contactEmail: "jane.cooper@email.com",
+    contactPhone: "+15550101001",
     value: 0,
     createdAt: new Date(Date.now() - 60000),
   },
@@ -48,6 +67,8 @@ const DEMO_LEADS = [
     location: "North Campus",
     stage: "first_visit" as VisitorStage,
     contactName: "Annette Willie",
+    contactEmail: "annette.willie@email.com",
+    contactPhone: "+15550101002",
     value: 0,
     createdAt: new Date(Date.now() - 30 * 60000),
   },
@@ -58,6 +79,8 @@ const DEMO_LEADS = [
     location: "Main Sanctuary",
     stage: "welcome_call" as VisitorStage,
     contactName: "Darlene Robertson",
+    contactEmail: "darlene.robertson@email.com",
+    contactPhone: "+15550101003",
     value: 0,
     createdAt: new Date(Date.now() - 5 * 60000),
   },
@@ -68,6 +91,8 @@ const DEMO_LEADS = [
     location: "Café Lobby",
     stage: "pastoral_visit" as VisitorStage,
     contactName: "Brian Robbin",
+    contactEmail: "brian.robbin@email.com",
+    contactPhone: "+15550101004",
     value: 0,
     createdAt: new Date(Date.now() - 47 * 60000),
   },
@@ -78,6 +103,8 @@ const DEMO_LEADS = [
     location: "Room 204",
     stage: "foundations_class" as VisitorStage,
     contactName: "Eleanor Pena",
+    contactEmail: "eleanor.pena@email.com",
+    contactPhone: "+15550101005",
     value: 0,
     createdAt: new Date(Date.now() - 60000),
   },
@@ -88,6 +115,8 @@ const DEMO_LEADS = [
     location: "Discipleship",
     stage: "group_integration" as VisitorStage,
     contactName: "Marcus Vance",
+    contactEmail: "marcus.vance@email.com",
+    contactPhone: "+15550101006",
     value: 0,
     createdAt: new Date(Date.now() - 120 * 60000),
   },
@@ -98,6 +127,8 @@ const DEMO_LEADS = [
     location: "Main Campus",
     stage: "active_partner" as VisitorStage,
     contactName: "Sarah Miller",
+    contactEmail: "sarah.miller@email.com",
+    contactPhone: "+15550101007",
     value: 0,
     createdAt: new Date(Date.now() - 24 * 60 * 60000),
   },
@@ -142,6 +173,11 @@ export const visitorService = {
         col.leadCount += 1
         const createdAt =
           lead.createdAt instanceof Date ? lead.createdAt : new Date(lead.createdAt as string)
+        const assigned =
+          assigneeStore.get(lead.id) ||
+          ((lead as { assignedToUserId?: string | null }).assignedToUserId
+            ? { name: "Staff", role: "user" as const }
+            : null)
         col.leads.push({
           id: lead.id,
           leadNumber: "leadNumber" in lead ? lead.leadNumber : (lead as { leadNumber: string }).leadNumber,
@@ -149,11 +185,25 @@ export const visitorService = {
           location: lead.location || "Main Sanctuary",
           contactName: lead.contactName,
           contactAvatar: lead.contactName.charAt(0).toUpperCase(),
+          contactEmail:
+            (lead as { contactEmail?: string | null }).contactEmail ||
+            (lead as { contactEmail?: string }).contactEmail ||
+            "",
+          contactPhone:
+            (lead as { contactPhone?: string | null }).contactPhone ||
+            (lead as { contactPhone?: string }).contactPhone ||
+            "",
           amount: val > 0 ? `$${val.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : undefined,
           elapsed: elapsedLabel(createdAt),
           stage: stageId,
-          assignee: { name: "Pastor Ahmad", avatar: "/avatars/ahmad.jpg" },
-          metrics: { calendar: 1, checklist: 2, files: 1, notes: 1 },
+          assignee: assigned
+            ? {
+                name: assigned.name,
+                role: assigned.role,
+                avatar: assigned.name.charAt(0).toUpperCase(),
+              }
+            : null,
+          metrics: { calendar: 0, checklist: 0, files: 0, notes: activityStore.get(lead.id)?.length || 0 },
         })
       }
 
@@ -167,6 +217,7 @@ export const visitorService = {
       for (const lead of DEMO_LEADS) {
         const col = stages.find((s) => s.id === lead.stage)!
         col.leadCount += 1
+        const assigned = assigneeStore.get(lead.id)
         col.leads.push({
           id: lead.id,
           leadNumber: lead.leadNumber,
@@ -174,10 +225,18 @@ export const visitorService = {
           location: lead.location,
           contactName: lead.contactName,
           contactAvatar: lead.contactName.charAt(0).toUpperCase(),
+          contactEmail: lead.contactEmail,
+          contactPhone: lead.contactPhone,
           elapsed: elapsedLabel(lead.createdAt),
           stage: lead.stage,
-          assignee: { name: "Pastor Ahmad", avatar: "/avatars/ahmad.jpg" },
-          metrics: { calendar: 1, checklist: 2, files: 0, notes: 1 },
+          assignee: assigned
+            ? {
+                name: assigned.name,
+                role: assigned.role,
+                avatar: assigned.name.charAt(0).toUpperCase(),
+              }
+            : null,
+          metrics: { calendar: 0, checklist: 0, files: 0, notes: activityStore.get(lead.id)?.length || 0 },
         })
       }
       return { totalLeads: DEMO_LEADS.length, stages }
@@ -263,9 +322,16 @@ export const visitorService = {
         const row = lead[0]
         const stageOrder = VISITOR_STAGES
         const activeIdx = stageOrder.indexOf(row.stage as VisitorStage)
+        const assigned = assigneeStore.get(row.id)
+        const localActs = activityStore.get(row.id) || []
         return {
           ...row,
           pipeline: "Visitor Pipeline",
+          assignee: assigned
+            ? { name: assigned.name, role: assigned.role }
+            : row.assignedToUserId
+              ? { name: "Staff", role: "user" as const }
+              : null,
           stages: stageOrder.map((s, i) => ({
             id: s,
             label: VISITOR_STAGE_LABELS[s],
@@ -284,7 +350,7 @@ export const visitorService = {
             phone: row.contactPhone,
             source: row.source,
           },
-          latestActivity: activities,
+          latestActivity: [...localActs, ...activities],
         }
       }
     } catch (e) {
@@ -293,6 +359,8 @@ export const visitorService = {
 
     const demo = DEMO_LEADS.find((l) => l.id === id) || DEMO_LEADS[3]
     const activeIdx = VISITOR_STAGES.indexOf(demo.stage)
+    const assigned = assigneeStore.get(demo.id)
+    const localActs = activityStore.get(demo.id) || []
     return {
       id: demo.id,
       leadNumber: demo.leadNumber,
@@ -300,6 +368,7 @@ export const visitorService = {
       location: demo.location,
       stage: demo.stage,
       pipeline: "Visitor Pipeline",
+      assignee: assigned ? { name: assigned.name, role: assigned.role } : null,
       stages: VISITOR_STAGES.map((s, i) => ({
         id: s,
         label: VISITOR_STAGE_LABELS[s],
@@ -313,8 +382,8 @@ export const visitorService = {
           .join("")
           .slice(0, 2),
         name: demo.contactName,
-        email: `${demo.contactName.toLowerCase().replace(" ", ".")}@email.com`,
-        phone: "(555) 010-2000",
+        email: demo.contactEmail,
+        phone: demo.contactPhone,
         source: "QR Check-in",
       },
       activeSequence: {
@@ -322,16 +391,19 @@ export const visitorService = {
         nextDrip: "Shepherd coffee invite",
         scheduledFor: "Tomorrow 10:00 AM",
       },
-      latestActivity: [
-        {
-          id: "act-1",
-          type: "email",
-          title: "Welcome email queued",
-          description: "Senior Pastor welcome drip scheduled (+2h).",
-          performedByUserId: null,
-          createdAt: new Date(),
-        },
-      ],
+      latestActivity:
+        localActs.length > 0
+          ? localActs
+          : [
+              {
+                id: "act-1",
+                type: "email",
+                title: "Welcome email queued",
+                description: "Senior Pastor welcome drip scheduled (+2h).",
+                performedByUserId: null,
+                createdAt: new Date(),
+              },
+            ],
     }
   },
 
@@ -430,5 +502,149 @@ export const visitorService = {
     } catch {
       return { success: true, id, stage: input.stage }
     }
+  },
+
+  async assignLead(id: string, input: AssignLeadInput) {
+    const role = input.assigneeRole || "user"
+    assigneeStore.set(id, {
+      name: input.assigneeName,
+      role,
+      userId: input.assignedToUserId,
+    })
+
+    pushActivity(id, {
+      id: `act-assign-${Date.now()}`,
+      type: "assignment",
+      title: `Assigned to ${input.assigneeName}`,
+      description: `Role: ${role === "admin" ? "Admin (system control)" : "User (follow-up owner)"}`,
+      createdAt: new Date(),
+    })
+
+    try {
+      const existing = await db.select().from(visitorLeads).where(eq(visitorLeads.id, id)).limit(1)
+      if (existing.length > 0) {
+        await db
+          .update(visitorLeads)
+          .set({
+            assignedToUserId: input.assignedToUserId || existing[0].assignedToUserId,
+            updatedAt: new Date(),
+          })
+          .where(eq(visitorLeads.id, id))
+
+        await db.insert(visitorActivities).values({
+          leadId: id,
+          type: "assignment",
+          title: `Assigned to ${input.assigneeName}`,
+          description: `Role: ${role}`,
+        })
+      }
+    } catch (e) {
+      console.error("[visitorService.assignLead]", e)
+    }
+
+    return {
+      success: true,
+      id,
+      assignee: { name: input.assigneeName, role },
+    }
+  },
+
+  async addComment(id: string, input: VisitorCommentInput) {
+    const activity = {
+      id: `act-comment-${Date.now()}`,
+      type: "comment",
+      title: "Follow-up comment",
+      description: input.body,
+      createdAt: new Date(),
+    }
+    pushActivity(id, activity)
+
+    try {
+      const existing = await db.select().from(visitorLeads).where(eq(visitorLeads.id, id)).limit(1)
+      if (existing.length > 0) {
+        await db.insert(visitorActivities).values({
+          leadId: id,
+          type: "comment",
+          title: "Follow-up comment",
+          description: input.body,
+        })
+      }
+    } catch (e) {
+      console.error("[visitorService.addComment]", e)
+    }
+
+    return { success: true, id, activity }
+  },
+
+  async sendOutreach(id: string, input: VisitorOutreachInput) {
+    let lead:
+      | {
+          contactName: string
+          contactEmail?: string | null
+          contactPhone?: string | null
+        }
+      | undefined
+
+    try {
+      const rows = await db.select().from(visitorLeads).where(eq(visitorLeads.id, id)).limit(1)
+      lead = rows[0]
+    } catch {
+      /* demo fallback */
+    }
+
+    if (!lead) {
+      const demo = DEMO_LEADS.find((l) => l.id === id)
+      if (!demo) throw new NotFoundError("Visitor", id)
+      lead = demo
+    }
+
+    if (input.channel === "email") {
+      const to = lead.contactEmail?.trim()
+      if (!to) throw new ValidationError("Visitor has no email on file")
+      const subject = input.subject?.trim() || `Following up — ${lead.contactName}`
+      await emailService
+        .sendRawCampaign({
+          to,
+          subject,
+          html: `<div style="font-family:sans-serif;line-height:1.5;color:#1f2937"><p>${input.message
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\n/g, "<br/>")}</p></div>`,
+        })
+        .catch((err) => {
+          console.error("[visitorService.sendOutreach email]", err)
+        })
+    } else {
+      const phone = lead.contactPhone?.trim()
+      if (!phone) throw new ValidationError("Visitor has no phone on file")
+      await smsService.send(phone, input.message).catch((err) => {
+        console.error("[visitorService.sendOutreach sms]", err)
+      })
+    }
+
+    const activity = {
+      id: `act-${input.channel}-${Date.now()}`,
+      type: input.channel,
+      title: input.channel === "email" ? "Email sent" : "SMS sent",
+      description: input.message.slice(0, 280),
+      createdAt: new Date(),
+    }
+    pushActivity(id, activity)
+
+    try {
+      const existing = await db.select().from(visitorLeads).where(eq(visitorLeads.id, id)).limit(1)
+      if (existing.length > 0) {
+        await db.insert(visitorActivities).values({
+          leadId: id,
+          type: input.channel,
+          title: activity.title,
+          description: activity.description,
+        })
+      }
+    } catch (e) {
+      console.error("[visitorService.sendOutreach activity]", e)
+    }
+
+    return { success: true, id, channel: input.channel, activity }
   },
 }

@@ -16,6 +16,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -98,20 +99,24 @@ export function ColumnCustomize({
         <ChevronDown className="size-3.5 opacity-50" strokeWidth={1.75} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-xs">
-        <DropdownMenuLabel className="text-[11px] font-medium text-zinc-500">
-          Toggle columns
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-[11px] font-medium text-zinc-500">
+            Toggle columns
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        {columns.map((col) => (
-          <DropdownMenuCheckboxItem
-            key={col.id}
-            checked={visible[col.id] !== false}
-            onCheckedChange={(v) => onToggle(col.id, Boolean(v))}
-            className="text-xs font-normal"
-          >
-            {col.label}
-          </DropdownMenuCheckboxItem>
-        ))}
+        <DropdownMenuGroup>
+          {columns.map((col) => (
+            <DropdownMenuCheckboxItem
+              key={col.id}
+              checked={visible[col.id] !== false}
+              onCheckedChange={(v) => onToggle(col.id, Boolean(v))}
+              className="text-xs font-normal"
+            >
+              {col.label}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )

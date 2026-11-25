@@ -99,7 +99,7 @@ export default function VisitorsPage() {
 
           <div className="p-6 md:p-8">
             {view === "board" ? (
-              <TablePanel className="rounded-lg border bg-background p-4">
+              <TablePanel className="rounded-2xl border-0 bg-[#fbfcfb] p-4 shadow-sm">
                 <KanbanBoard embedded />
               </TablePanel>
             ) : (

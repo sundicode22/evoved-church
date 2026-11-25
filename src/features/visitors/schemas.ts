@@ -38,6 +38,23 @@ export const updateLeadStageSchema = z.object({
   reason: z.string().optional(),
 })
 
+export const assignLeadSchema = z.object({
+  assigneeName: z.string().min(2, "Assignee name is required"),
+  /** Admin = full system control; User = staff follow-up owner. */
+  assigneeRole: z.enum(["admin", "user"]).default("user"),
+  assignedToUserId: z.string().optional(),
+})
+
+export const visitorCommentSchema = z.object({
+  body: z.string().min(1, "Comment is required").max(4000),
+})
+
+export const visitorOutreachSchema = z.object({
+  channel: z.enum(["email", "sms"]),
+  message: z.string().min(1, "Message is required").max(2000),
+  subject: z.string().max(200).optional(),
+})
+
 export const scheduleAppointmentSchema = z.object({
   title: z.string().min(3, "Appointment title is required"),
   appointmentDate: z.string().datetime("Valid ISO date string is required"),
@@ -49,5 +66,8 @@ export const scheduleAppointmentSchema = z.object({
 
 export type CreateLeadInput = z.infer<typeof createLeadSchema>
 export type UpdateLeadStageInput = z.infer<typeof updateLeadStageSchema>
+export type AssignLeadInput = z.infer<typeof assignLeadSchema>
+export type VisitorCommentInput = z.infer<typeof visitorCommentSchema>
+export type VisitorOutreachInput = z.infer<typeof visitorOutreachSchema>
 export type ScheduleAppointmentInput = z.infer<typeof scheduleAppointmentSchema>
 export type VisitorStage = z.infer<typeof visitorStageSchema>
