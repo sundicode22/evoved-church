@@ -114,6 +114,7 @@ export function AppSidebar({
         { title: "Drips", url: "/dashboard/communications" },
         { title: "Announcements", url: "/dashboard/announcements" },
         { title: "Blog", url: "/dashboard/blog" },
+        { title: "Portal", url: "/dashboard/portal" },
         { title: "Documents", url: "/dashboard/documents" },
         { title: "Policies", url: "/dashboard/policies" },
       ],

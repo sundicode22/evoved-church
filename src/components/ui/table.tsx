@@ -141,7 +141,7 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
         const key = String(child.key ?? `row-${index}`)
         dataKeys.push(key)
         return React.cloneElement(
-          child,
+          child as React.ReactElement<{ children?: React.ReactNode; "data-state"?: string }>,
           { "data-state": ctx.selected.has(key) ? "selected" : undefined },
           [
           <TableCell

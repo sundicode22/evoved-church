@@ -16,3 +16,6 @@ export const announcementsController = new Elysia({ prefix: "/announcements" })
   .post("/:id/publish", ({ params, set }) =>
     apiOk(set, () => announcementsService.publish(params.id))
   )
+  .delete("/:id", ({ params, set }) =>
+    apiOk(set, () => announcementsService.remove(params.id))
+  )

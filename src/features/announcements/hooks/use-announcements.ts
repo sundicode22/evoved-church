@@ -54,3 +54,17 @@ export function usePublishAnnouncement() {
     },
   })
 }
+
+export function useDeleteAnnouncement() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/announcements/${id}`)
+    },
+    onError: (e: Error) => toast.error(e.message),
+    onSuccess: () => {
+      toast.success("Announcement deleted")
+      qc.invalidateQueries({ queryKey: ANNOUNCEMENT_KEYS.all })
+    },
+  })
+}

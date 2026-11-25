@@ -92,10 +92,17 @@ const PROGRAM_TYPE_OPTIONS = PROGRAM_TYPES.map((t) => ({ value: t.value, label: 
 const ASSIGNEE_ROLE_OPTIONS = ASSIGNEE_ROLES.map((r) => ({ value: r.value, label: r.label }))
 
 export default function ChurchCalendarPage() {
-  const [month, setMonth] = React.useState<Date>(new Date())
-  const [selectedDay, setSelectedDay] = React.useState<Date>(new Date())
-  const from = startOfMonth(month).toISOString()
-  const to = endOfMonth(month).toISOString()
+  const [month, setMonth] = React.useState<Date | null>(null)
+  const [selectedDay, setSelectedDay] = React.useState<Date | null>(null)
+
+  React.useEffect(() => {
+    const now = new Date()
+    setMonth(now)
+    setSelectedDay(now)
+  }, [])
+
+  const from = month ? startOfMonth(month).toISOString() : undefined
+  const to = month ? endOfMonth(month).toISOString() : undefined
 
   const { data: programs } = usePrograms()
   const { data: occurrences, isLoading } = useOccurrences(from, to)
@@ -113,7 +120,9 @@ export default function ChurchCalendarPage() {
   const mode = useWatch({ control: form.control, name: "mode" })
 
   const dayEvents =
-    occurrences?.filter((o) => isSameDay(parseISO(o.startsAt), selectedDay)) ?? []
+    selectedDay
+      ? (occurrences?.filter((o) => isSameDay(parseISO(o.startsAt), selectedDay)) ?? [])
+      : []
 
   const daysWithEvents = React.useMemo(() => {
     const set = new Set<string>()
@@ -124,7 +133,7 @@ export default function ChurchCalendarPage() {
   }, [occurrences])
 
   function openCreate() {
-    const base = new Date(selectedDay)
+    const base = new Date(selectedDay ?? Date.now())
     base.setHours(10, 0, 0, 0)
     const end = new Date(base)
     end.setHours(12, 0, 0, 0)
@@ -191,26 +200,31 @@ export default function ChurchCalendarPage() {
 
           <div className="grid gap-6 p-8 lg:grid-cols-[340px_1fr]">
             <div className="rounded-lg border border-zinc-200/80 bg-white p-4 shadow-xs">
-              <Calendar
-                mode="single"
-                month={month}
-                onMonthChange={setMonth}
-                selected={selectedDay}
-                onSelect={(d) => d && setSelectedDay(d)}
-                className="w-full"
-                modifiers={{
-                  hasEvent: (date) => daysWithEvents.has(format(date, "yyyy-MM-dd")),
-                }}
-                modifiersClassNames={{
-                  hasEvent: "relative after:absolute after:bottom-1 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-emerald-500",
-                }}
-              />
+              {month ? (
+                <Calendar
+                  mode="single"
+                  month={month}
+                  onMonthChange={setMonth}
+                  selected={selectedDay ?? undefined}
+                  onSelect={(d) => d && setSelectedDay(d)}
+                  className="w-full"
+                  modifiers={{
+                    hasEvent: (date) => daysWithEvents.has(format(date, "yyyy-MM-dd")),
+                  }}
+                  modifiersClassNames={{
+                    hasEvent:
+                      "relative after:absolute after:bottom-1 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-emerald-500",
+                  }}
+                />
+              ) : (
+                <div className="h-72 animate-pulse rounded-lg bg-zinc-100" />
+              )}
             </div>
 
             <div className="overflow-hidden rounded-lg border border-zinc-200/80 bg-white shadow-xs">
               <div className="border-b border-zinc-100 px-5 py-4">
                 <h2 className="text-sm font-medium text-zinc-900">
-                  {format(selectedDay, "EEEE, MMM d, yyyy")}
+                  {selectedDay ? format(selectedDay, "EEEE, MMM d, yyyy") : "Loading…"}
                 </h2>
                 <p className="text-xs text-zinc-400">
                   {dayEvents.length} event{dayEvents.length === 1 ? "" : "s"}

@@ -100,6 +100,7 @@ export const NAV_PERMISSION: Record<string, PermissionKey | PermissionKey[]> = {
   "/dashboard/campaigns": "campaigns.read",
   "/dashboard/announcements": "announcements.read",
   "/dashboard/blog": "blog.read",
+  "/dashboard/portal": "blog.read",
   "/dashboard/forms": "forms.read",
   "/dashboard/metrics": "reports.read",
   "/dashboard/settings": "settings.read",

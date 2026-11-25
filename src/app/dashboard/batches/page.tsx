@@ -62,7 +62,11 @@ const batchFormSchema = z.object({
 
 type BatchFormValues = z.infer<typeof batchFormSchema>
 
-const batchDefaults = (): BatchFormValues => ({ name: "", batchDate: todayISO(), notes: "" })
+const batchDefaults = (batchDate = ""): BatchFormValues => ({
+  name: "",
+  batchDate,
+  notes: "",
+})
 
 const COLUMNS: ColumnOption[] = [
   { id: "name", label: "Batch" },
@@ -85,11 +89,11 @@ export default function BatchesPage() {
 
   const form = useForm<BatchFormValues>({
     resolver: zodResolver(batchFormSchema),
-    defaultValues: batchDefaults(),
+    defaultValues: batchDefaults(""),
   })
 
   React.useEffect(() => {
-    if (sheetOpen) form.reset(batchDefaults())
+    if (sheetOpen) form.reset(batchDefaults(todayISO()))
   }, [sheetOpen, form])
 
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
@@ -113,7 +117,7 @@ export default function BatchesPage() {
       {
         onSuccess: () => {
           setSheetOpen(false)
-          form.reset(batchDefaults())
+          form.reset(batchDefaults(""))
         },
       }
     )

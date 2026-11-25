@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { usePublishedBlogPost } from "@/features/blog/hooks/use-blog"
 import { usePortal } from "@/features/portal/hooks/use-portal"
 
-export default function PortalBlogPostPage() {
+function PortalBlogPostPage() {
   const params = useParams<{ slug: string; postSlug: string }>()
   const portalSlug = params.slug
   const postSlug = params.postSlug
@@ -103,5 +103,22 @@ export default function PortalBlogPostPage() {
         </div>
       </article>
     </div>
+  )
+}
+
+export default function PortalBlogPostRoute() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen bg-[#f7f8f6]">
+          <div className="mx-auto max-w-3xl space-y-6 px-4 py-12">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="aspect-[21/9] w-full rounded-2xl" />
+          </div>
+        </div>
+      }
+    >
+      <PortalBlogPostPage />
+    </React.Suspense>
   )
 }

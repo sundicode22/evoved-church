@@ -52,6 +52,7 @@ import { StatusPill, TablePanel } from "@/components/table-panel"
 import {
   useAnnouncements,
   useCreateAnnouncement,
+  useDeleteAnnouncement,
   usePublishAnnouncement,
 } from "@/features/announcements/hooks/use-announcements"
 import {
@@ -75,9 +76,11 @@ export default function AnnouncementsPage() {
   const { data, isLoading } = useAnnouncements()
   const create = useCreateAnnouncement()
   const publish = usePublishAnnouncement()
+  const remove = useDeleteAnnouncement()
 
   const [open, setOpen] = React.useState(false)
   const [confirmPublish, setConfirmPublish] = React.useState<Announcement | null>(null)
+  const [confirmDelete, setConfirmDelete] = React.useState<Announcement | null>(null)
   const form = useForm<AnnouncementFormValues>({
     resolver: zodResolver(announcementFormSchema),
     defaultValues: emptyForm,
@@ -113,9 +116,7 @@ export default function AnnouncementsPage() {
             icon={<Megaphone className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="announcements.write">
-                <Button
-                  onClick={openCreate}
-                >
+                <Button variant="primary" onClick={openCreate}>
                   <Plus strokeWidth={2} className="size-3.5" />
                   New announcement
                 </Button>
@@ -199,8 +200,19 @@ export default function AnnouncementsPage() {
                                             label: "Publish",
                                             onClick: () => setConfirmPublish(a),
                                           },
+                                          {
+                                            label: "Delete",
+                                            onClick: () => setConfirmDelete(a),
+                                            destructive: true,
+                                          },
                                         ]
-                                      : [{ label: "Already posted", onClick: () => undefined }],
+                                      : [
+                                          {
+                                            label: "Delete",
+                                            onClick: () => setConfirmDelete(a),
+                                            destructive: true,
+                                          },
+                                        ],
                                 },
                               ]}
                             />
@@ -275,6 +287,17 @@ export default function AnnouncementsPage() {
             confirmLabel="Publish"
             onConfirm={async () => {
               if (confirmPublish) await publish.mutateAsync(confirmPublish.id)
+            }}
+          />
+          <ConfirmAction
+            open={Boolean(confirmDelete)}
+            onOpenChange={(o) => !o && setConfirmDelete(null)}
+            title="Delete this announcement?"
+            description="This removes it from the portal and staff list."
+            confirmLabel="Delete"
+            variant="destructive"
+            onConfirm={async () => {
+              if (confirmDelete) await remove.mutateAsync(confirmDelete.id)
             }}
           />
         </RequireAbility>

@@ -70,12 +70,12 @@ const pledgeFormSchema = z.object({
 
 type PledgeFormValues = z.infer<typeof pledgeFormSchema>
 
-const pledgeDefaults = (fundId: string): Partial<PledgeFormValues> => ({
+const pledgeDefaults = (fundId: string, startDate = ""): Partial<PledgeFormValues> => ({
   memberDisplayName: "",
   fundId,
   amountTotal: undefined,
   frequency: "monthly",
-  startDate: todayISO(),
+  startDate,
 })
 
 const FREQUENCY_ITEMS = PLEDGE_FREQUENCIES.map((value) => ({
@@ -110,7 +110,7 @@ export default function PledgesPage() {
   })
 
   React.useEffect(() => {
-    if (sheetOpen) form.reset(pledgeDefaults(defaultFundId))
+    if (sheetOpen) form.reset(pledgeDefaults(defaultFundId, todayISO()))
   }, [sheetOpen, defaultFundId, form])
 
   const rows = data ?? []

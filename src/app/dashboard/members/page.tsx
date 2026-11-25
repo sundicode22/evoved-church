@@ -106,6 +106,34 @@ const ADD_PERSON_DEFAULTS: AddPersonFormValues = {
 
 const PERSON_TYPE_OPTIONS = PERSON_TYPES.map((t) => ({ value: t.value, label: t.label }))
 
+function BackgroundCheckAlert({
+  members,
+}: {
+  members: Array<{
+    backgroundCheckStatus?: string
+    backgroundCheckExpiresAt?: string
+  }>
+}) {
+  const [cutoff, setCutoff] = React.useState<number | null>(null)
+  React.useEffect(() => {
+    setCutoff(Date.now() + 30 * 86400000)
+  }, [])
+  if (cutoff == null) return null
+  const show = members.some(
+    (p) =>
+      p.backgroundCheckStatus === "expired" ||
+      (p.backgroundCheckExpiresAt &&
+        new Date(p.backgroundCheckExpiresAt).getTime() < cutoff)
+  )
+  if (!show) return null
+  return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+      <span className="font-medium">Background check alert:</span> One or more members have
+      expired or soon-to-expire child-safety clearances.
+    </div>
+  )
+}
+
 export default function MembersPage() {
   const [activeTab, setActiveTab] = React.useState("all")
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -171,21 +199,7 @@ export default function MembersPage() {
           />
 
           <div className="space-y-4 p-6 md:p-8">
-            {members.some(
-              (p: {
-                backgroundCheckStatus?: string
-                backgroundCheckExpiresAt?: string
-              }) =>
-                p.backgroundCheckStatus === "expired" ||
-                (p.backgroundCheckExpiresAt &&
-                  new Date(p.backgroundCheckExpiresAt) <
-                    new Date(Date.now() + 30 * 86400000))
-            ) && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                <span className="font-medium">Background check alert:</span> One or more members
-                have expired or soon-to-expire child-safety clearances.
-              </div>
-            )}
+            <BackgroundCheckAlert members={members} />
 
             <TablePanel>
               <TableChrome

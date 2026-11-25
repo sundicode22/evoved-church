@@ -194,7 +194,7 @@ export default function AccountingPage() {
       label: "",
       department: "",
       allocatedAmount: undefined,
-      fiscalYear: new Date().getFullYear(),
+      fiscalYear: undefined,
     },
   })
 
@@ -587,7 +587,19 @@ export default function AccountingPage() {
                     ]}
                     primaryAction={
                       <Can permission="accounting.budgets">
-                        <Button variant="primary" onClick={() => setLineSheetOpen(true)}>
+                        <Button
+                          variant="primary"
+                          onClick={() => {
+                            lineForm.reset({
+                              fundId: "",
+                              label: "",
+                              department: "",
+                              allocatedAmount: undefined,
+                              fiscalYear: new Date().getFullYear(),
+                            })
+                            setLineSheetOpen(true)
+                          }}
+                        >
                           Add line
                         </Button>
                       </Can>

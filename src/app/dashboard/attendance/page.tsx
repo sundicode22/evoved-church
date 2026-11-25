@@ -7,7 +7,7 @@ import { ExternalLink, QrCode, Users } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -48,17 +48,19 @@ export default function AttendancePage() {
             icon={<Users className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               qr?.targetUrl ? (
-                <Button
-                  asChild
-                  variant="outline"
-                  className="h-8 gap-1.5 text-xs font-normal"
+                <Link
+                  href={qr.targetUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={buttonVariants({
+                    variant: "outline",
+                    className: "h-8 gap-1.5 text-xs font-normal",
+                  })}
                 >
-                  <Link href={qr.targetUrl} target="_blank" rel="noreferrer">
-                    <QrCode className="size-3.5" strokeWidth={1.75} />
-                    Connection card
-                    <ExternalLink className="size-3" />
-                  </Link>
-                </Button>
+                  <QrCode className="size-3.5" strokeWidth={1.75} />
+                  Connection card
+                  <ExternalLink className="size-3" />
+                </Link>
               ) : null
             }
           />
@@ -132,17 +134,19 @@ export default function AttendancePage() {
                             : ""}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            asChild
-                            variant="outline"
-                            size="sm"
-                            className="h-7 gap-1 text-xs"
+                          <Link
+                            href={s.checkinUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={buttonVariants({
+                              variant: "outline",
+                              size: "sm",
+                              className: "h-7 gap-1 text-xs",
+                            })}
                           >
-                            <Link href={s.checkinUrl} target="_blank" rel="noreferrer">
-                              Open link
-                              <ExternalLink className="size-3" />
-                            </Link>
-                          </Button>
+                            Open link
+                            <ExternalLink className="size-3" />
+                          </Link>
                         </TableCell>
                       </TableRow>
                     ))}

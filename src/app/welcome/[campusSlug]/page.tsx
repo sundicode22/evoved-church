@@ -28,7 +28,7 @@ function titleCase(slug: string): string {
     .join(" ")
 }
 
-export default function WelcomePage() {
+function WelcomePage() {
   const params = useParams<{ campusSlug: string }>()
   const campusSlug = params.campusSlug
   const campusLabel = titleCase(decodeURIComponent(campusSlug ?? ""))
@@ -154,5 +154,19 @@ export default function WelcomePage() {
         </Card>
       </div>
     </main>
+  )
+}
+
+export default function WelcomeRoute() {
+  return (
+    <React.Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center text-sm text-zinc-500">
+          Loading…
+        </main>
+      }
+    >
+      <WelcomePage />
+    </React.Suspense>
   )
 }

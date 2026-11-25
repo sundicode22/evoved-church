@@ -74,4 +74,11 @@ export const announcementsService = {
     row.updatedAt = row.postedAt
     return { ...row }
   },
+
+  async remove(id: string): Promise<{ ok: true }> {
+    find(id)
+    const idx = store.findIndex((x) => x.id === id)
+    store.splice(idx, 1)
+    return { ok: true }
+  },
 }

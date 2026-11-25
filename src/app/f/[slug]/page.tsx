@@ -128,7 +128,7 @@ function PublicFormBody({
   )
 }
 
-export default function PublicFormPage() {
+function PublicFormPage() {
   const params = useParams<{ slug: string }>()
   const slug = params.slug
   const { data: form, isLoading, error } = usePublicForm(slug)
@@ -169,5 +169,22 @@ export default function PublicFormPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function PublicFormRoute() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen bg-[#f4f6f5]">
+          <div className="mx-auto max-w-lg space-y-3 px-4 py-12">
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        </div>
+      }
+    >
+      <PublicFormPage />
+    </React.Suspense>
   )
 }

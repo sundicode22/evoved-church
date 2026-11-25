@@ -74,7 +74,7 @@ function toDraft(
   };
 }
 
-export default function CampaignDetailPage() {
+function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading } = useCampaign(id);
   const update = useUpdateCampaign(id);
@@ -438,5 +438,19 @@ export default function CampaignDetailPage() {
         </RequireAbility>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+export default function CampaignDetailRoute() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center text-sm text-zinc-500">
+          Loading campaign…
+        </div>
+      }
+    >
+      <CampaignDetailPage />
+    </React.Suspense>
   );
 }

@@ -81,14 +81,17 @@ const givingFormSchema = z.object({
 
 type GivingFormValues = z.infer<typeof givingFormSchema>
 
-const givingDefaults = (fundId: string): Partial<GivingFormValues> => ({
+const givingDefaults = (
+  fundId: string,
+  contributionDate = ""
+): Partial<GivingFormValues> => ({
   donorDisplayName: "",
   fundId,
   amount: undefined,
   method: "cash_envelope",
   channel: "in_person",
   frequency: "one_time",
-  contributionDate: todayISO(),
+  contributionDate,
   notes: "",
 })
 
@@ -158,7 +161,7 @@ export default function GivingPage() {
   })
 
   React.useEffect(() => {
-    if (sheetOpen) form.reset(givingDefaults(defaultFundId))
+    if (sheetOpen) form.reset(givingDefaults(defaultFundId, todayISO()))
   }, [sheetOpen, defaultFundId, form])
 
   const contributions = data?.contributions ?? []
@@ -200,7 +203,7 @@ export default function GivingPage() {
       {
         onSuccess: () => {
           setSheetOpen(false)
-          form.reset(givingDefaults(defaultFundId))
+          form.reset(givingDefaults(defaultFundId, ""))
         },
       }
     )
