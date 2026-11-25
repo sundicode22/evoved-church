@@ -4,11 +4,89 @@ import { eq, desc, and, or, ilike, sql } from "drizzle-orm"
 import { NotFoundError, ValidationError } from "@/lib/errors"
 import {
   CreateCategoryInput,
+  CreateMemberInput,
   UpdatePersonTypeInput,
   AttachHouseholdInput,
   HOUSEHOLD_ROLE_LABELS,
 } from "./schemas"
 import { DbPaginationResult } from "@/lib/db/pagination"
+
+/** Mutable demo directory when DB is empty / unavailable. */
+let memoryMembers: Array<Record<string, unknown>> = [
+  {
+    id: "mem-1",
+    firstName: "David",
+    lastName: "Johnson",
+    email: "david.johnson@email.com",
+    phoneNumber: "+15550101001",
+    personType: "staff_minister",
+    recordedTitle: "Senior Pastor",
+    householdRole: "father",
+    ministryRoles: ["Preaching", "Board of Elders"],
+    ordinationDate: "2010-06-15",
+    ordinationCredentials: "Acts Assemblies Presbytery #4492",
+    backgroundCheckStatus: "cleared",
+    backgroundCheckExpiresAt: "2027-01-01",
+    category: "Senior Leadership",
+    badgeColor: "emerald",
+  },
+  {
+    id: "mem-2",
+    firstName: "Marcus",
+    lastName: "Vance",
+    email: "marcus.vance@email.com",
+    phoneNumber: "+15550101002",
+    personType: "staff_minister",
+    householdRole: "head",
+    recordedTitle: "Executive Pastor (Operations)",
+    ministryRoles: ["Operations", "Finance Committee"],
+    ordinationDate: "2014-08-20",
+    backgroundCheckStatus: "cleared",
+    category: "Executive Staff",
+    badgeColor: "blue",
+  },
+  {
+    id: "mem-3",
+    firstName: "Kathryn",
+    lastName: "Murphy",
+    email: "kathryn.murphy@email.com",
+    phoneNumber: "+15550101003",
+    personType: "leader",
+    recordedTitle: "Deaconess & Life Group Coordinator",
+    ministryRoles: ["Small Groups", "Hospitality"],
+    baptismDate: "2018-04-12",
+    backgroundCheckStatus: "cleared",
+    category: "Ministry Leaders",
+    badgeColor: "purple",
+  },
+  {
+    id: "mem-4",
+    firstName: "Jane",
+    lastName: "Cooper",
+    email: "jane.cooper@email.com",
+    phoneNumber: "+15550101004",
+    personType: "prospect",
+    recordedTitle: null,
+    ministryRoles: [],
+    backgroundCheckStatus: "none",
+    category: "Newcomers & Visitors",
+    badgeColor: "amber",
+  },
+  {
+    id: "mem-5",
+    firstName: "Brian",
+    lastName: "Robbin",
+    email: "brian.robbin@email.com",
+    phoneNumber: "+15550101005",
+    personType: "volunteer",
+    recordedTitle: null,
+    ministryRoles: ["Kids Check-in"],
+    backgroundCheckStatus: "expired",
+    backgroundCheckExpiresAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+    category: "Volunteers",
+    badgeColor: "rose",
+  },
+]
 
 const DEMO_HOUSEHOLD = {
   id: "hh-cooper",
@@ -97,75 +175,32 @@ export const memberService = {
       const total = countResult[0]?.count || 0
       const totalPages = Math.ceil(total / pageSize) || 1
 
-      // If database is empty during fresh dev, return initial seeded directory
-      if (records.length === 0 && !params.search) {
+      // If database is empty during fresh dev, return mutable in-memory directory
+      if (records.length === 0) {
+        let data = [...memoryMembers]
+        if (params.personType && params.personType !== "all") {
+          data = data.filter((m) => m.personType === params.personType)
+        }
+        if (params.search) {
+          const q = params.search.toLowerCase()
+          data = data.filter((m) => {
+            const blob = `${m.firstName} ${m.lastName} ${m.email || ""} ${m.recordedTitle || ""}`.toLowerCase()
+            return blob.includes(q)
+          })
+        }
+        const total = data.length
+        const slice = data.slice(offset, offset + pageSize)
+        const totalPages = Math.ceil(total / pageSize) || 1
         return {
-          data: [
-            {
-              id: "mem-1",
-              firstName: "David",
-              lastName: "Johnson",
-              personType: "staff_minister",
-              recordedTitle: "Senior Pastor",
-              householdRole: "father",
-              ministryRoles: ["Preaching", "Board of Elders"],
-              ordinationDate: "2010-06-15",
-              ordinationCredentials: "Acts Assemblies Presbytery #4492",
-              backgroundCheckStatus: "cleared",
-              backgroundCheckExpiresAt: "2027-01-01",
-              category: "Senior Leadership",
-              badgeColor: "emerald",
-            },
-            {
-              id: "mem-2",
-              firstName: "Marcus",
-              lastName: "Vance",
-              personType: "staff_minister",
-              householdRole: "head",
-              recordedTitle: "Executive Pastor (Operations)",
-              ministryRoles: ["Operations", "Finance Committee"],
-              ordinationDate: "2014-08-20",
-              backgroundCheckStatus: "cleared",
-              category: "Executive Staff",
-              badgeColor: "blue",
-            },
-            {
-              id: "mem-3",
-              firstName: "Kathryn",
-              lastName: "Murphy",
-              personType: "leader",
-              recordedTitle: "Deaconess & Life Group Coordinator",
-              ministryRoles: ["Small Groups", "Hospitality"],
-              baptismDate: "2018-04-12",
-              backgroundCheckStatus: "cleared",
-              category: "Ministry Leaders",
-              badgeColor: "purple",
-            },
-            {
-              id: "mem-4",
-              firstName: "Jane",
-              lastName: "Cooper",
-              personType: "prospect",
-              recordedTitle: null,
-              ministryRoles: [],
-              backgroundCheckStatus: "none",
-              category: "Newcomers & Visitors",
-              badgeColor: "amber",
-            },
-            {
-              id: "mem-5",
-              firstName: "Brian",
-              lastName: "Robbin",
-              personType: "volunteer",
-              recordedTitle: null,
-              ministryRoles: ["Kids Check-in"],
-              backgroundCheckStatus: "expired",
-              backgroundCheckExpiresAt: new Date(Date.now() - 7 * 86400000).toISOString(),
-              category: "Volunteers",
-              badgeColor: "rose",
-            },
-          ],
-          pagination: { page: 1, pageSize: 10, total: 4, totalPages: 1, hasNext: false, hasPrev: false },
+          data: slice,
+          pagination: {
+            page,
+            pageSize,
+            total,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1,
+          },
         }
       }
 
@@ -182,11 +217,83 @@ export const memberService = {
       }
     } catch (err) {
       console.error("[memberService.getPaginatedMembers] DB error:", err)
+      let data = [...memoryMembers]
+      if (params.personType && params.personType !== "all") {
+        data = data.filter((m) => m.personType === params.personType)
+      }
+      if (params.search) {
+        const q = params.search.toLowerCase()
+        data = data.filter((m) => {
+          const blob = `${m.firstName} ${m.lastName} ${m.email || ""}`.toLowerCase()
+          return blob.includes(q)
+        })
+      }
+      const total = data.length
+      const slice = data.slice(offset, offset + pageSize)
+      const totalPages = Math.ceil(total / pageSize) || 1
       return {
-        data: [],
-        pagination: { page, pageSize, total: 0, totalPages: 1, hasNext: false, hasPrev: false },
+        data: slice,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
       }
     }
+  },
+
+  async createMember(input: CreateMemberInput) {
+    if (!input.firstName?.trim() || !input.lastName?.trim()) {
+      throw new ValidationError("First and last name are required")
+    }
+
+    let campusId = input.campusId
+    try {
+      if (!campusId) {
+        const rows = await db.select().from(campuses).limit(1)
+        campusId = rows[0]?.id
+      }
+      if (campusId) {
+        const [created] = await db
+          .insert(members)
+          .values({
+            campusId,
+            firstName: input.firstName.trim(),
+            lastName: input.lastName.trim(),
+            email: input.email || null,
+            phoneNumber: input.phoneNumber || null,
+            personType: input.personType || "covenant_member",
+            recordedTitle: input.recordedTitle || null,
+            ministryRoles: input.ministryRoles || [],
+            backgroundCheckStatus: input.backgroundCheckStatus || "none",
+          })
+          .returning()
+        if (created) return created
+      }
+    } catch (e) {
+      console.error("[memberService.createMember]", e)
+    }
+
+    const row = {
+      id: `mem-${Date.now().toString(36)}`,
+      firstName: input.firstName.trim(),
+      lastName: input.lastName.trim(),
+      email: input.email || "",
+      phoneNumber: input.phoneNumber || "",
+      personType: input.personType || "covenant_member",
+      recordedTitle: input.recordedTitle || null,
+      ministryRoles: input.ministryRoles || [],
+      householdRole: null,
+      backgroundCheckStatus: input.backgroundCheckStatus || "none",
+      category: "Directory",
+      badgeColor: "teal",
+      createdAt: new Date().toISOString(),
+    }
+    memoryMembers = [row, ...memoryMembers]
+    return row
   },
 
   /**

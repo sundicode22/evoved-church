@@ -78,7 +78,7 @@ export default function RoomsPage() {
           <PageHeader
             title="Rooms"
             description="Bookable spaces across your locations."
-            icon={<DoorOpen className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<DoorOpen className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="facilities.write">
                 <Button

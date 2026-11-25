@@ -98,7 +98,7 @@ export function VisitorDrawer() {
                   </Badge>
                   <Button
                     size="sm"
-                    className="h-8 gap-1 bg-[var(--accent-cta)] text-white shadow-sm hover:bg-[var(--accent-cta-hover)]"
+                    className="h-8 gap-1 bg-accent-cta text-white shadow-sm hover:bg-accent-cta-hover"
                   >
                     Create appointment
                   </Button>
@@ -160,7 +160,7 @@ export function VisitorDrawer() {
                         key={s.id}
                         className={`rounded-full px-2.5 py-1 text-[11px] shadow-xs ${
                           s.active
-                            ? "bg-[var(--brand-soft)] font-semibold text-[var(--brand-ink)]"
+                            ? "bg-brand-soft font-semibold text-brand-ink"
                             : s.completed
                               ? "bg-zinc-100 text-zinc-500"
                               : "bg-white text-zinc-400"

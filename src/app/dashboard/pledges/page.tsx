@@ -145,7 +145,7 @@ export default function PledgesPage() {
           <PageHeader
             title="Pledges"
             description="Track pledged giving toward funds and campaigns."
-            icon={<HeartHandshake className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<HeartHandshake className="size-5 text-brand" strokeWidth={1.75} />}
           />
 
           <div className="p-6 md:p-8">

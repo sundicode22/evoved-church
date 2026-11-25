@@ -74,7 +74,7 @@ export default function FundsPage() {
           <PageHeader
             title="Funds"
             description="Fund balances from the chart of accounts."
-            icon={<Landmark className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Landmark className="size-5 text-brand" strokeWidth={1.75} />}
           />
 
           <div className="p-6 md:p-8">

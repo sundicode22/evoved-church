@@ -7,6 +7,24 @@ import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -15,10 +33,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useMembers } from "@/features/members/hooks/use-members"
+import { useCreateMember, useMembers } from "@/features/members/hooks/use-members"
 import { MemberDrawer } from "@/components/members/member-drawer"
-import { RequireAbility } from "@/components/auth/can"
-import { HOUSEHOLD_ROLE_LABELS, type HouseholdRole } from "@/features/members/schemas"
+import { Can, RequireAbility } from "@/components/auth/can"
+import {
+  HOUSEHOLD_ROLE_LABELS,
+  type HouseholdRole,
+  type PersonType,
+} from "@/features/members/schemas"
 import {
   ColumnCustomize,
   StatusPill,
@@ -49,20 +71,75 @@ const TABS = [
   { id: "prospect", label: "Guests" },
 ]
 
+const PERSON_TYPES: { value: PersonType; label: string }[] = [
+  { value: "covenant_member", label: "Covenant member" },
+  { value: "prospect", label: "Guest / prospect" },
+  { value: "regular_attender", label: "Regular attender" },
+  { value: "volunteer", label: "Volunteer" },
+  { value: "leader", label: "Leader" },
+  { value: "staff_minister", label: "Pastor / elder" },
+  { value: "visitor", label: "Visitor" },
+  { value: "donor_only", label: "Donor only" },
+]
+
 export default function MembersPage() {
   const [activeTab, setActiveTab] = React.useState("all")
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(10)
+  const [sheetOpen, setSheetOpen] = React.useState(false)
+  const [firstName, setFirstName] = React.useState("")
+  const [lastName, setLastName] = React.useState("")
+  const [email, setEmail] = React.useState("")
+  const [phoneNumber, setPhoneNumber] = React.useState("")
+  const [personType, setPersonType] = React.useState<PersonType>("covenant_member")
+  const [recordedTitle, setRecordedTitle] = React.useState("")
+
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
-  const { data: membersResponse, isLoading } = useMembers({
+  const createMember = useCreateMember()
+  const { data: membersResponse, isLoading, refetch } = useMembers({
     personType: activeTab === "all" ? undefined : activeTab,
     search: searchQuery,
   })
 
   const members = membersResponse?.data || []
   const pageRows = members.slice((page - 1) * pageSize, page * pageSize)
+
+  function resetForm() {
+    setFirstName("")
+    setLastName("")
+    setEmail("")
+    setPhoneNumber("")
+    setPersonType("covenant_member")
+    setRecordedTitle("")
+  }
+
+  function openCreate() {
+    resetForm()
+    setSheetOpen(true)
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    try {
+      await createMember.mutateAsync({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        phoneNumber: phoneNumber.trim() || undefined,
+        personType,
+        recordedTitle: recordedTitle.trim() || undefined,
+        ministryRoles: [],
+        backgroundCheckStatus: "none",
+      })
+      setSheetOpen(false)
+      resetForm()
+      await refetch()
+    } catch {
+      /* toast in hook */
+    }
+  }
 
   return (
     <SidebarProvider
@@ -83,7 +160,10 @@ export default function MembersPage() {
 
           <div className="space-y-4 p-6 md:p-8">
             {members.some(
-              (p: any) =>
+              (p: {
+                backgroundCheckStatus?: string
+                backgroundCheckExpiresAt?: string
+              }) =>
                 p.backgroundCheckStatus === "expired" ||
                 (p.backgroundCheckExpiresAt &&
                   new Date(p.backgroundCheckExpiresAt) <
@@ -123,18 +203,16 @@ export default function MembersPage() {
                 trailing={
                   <>
                     <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1.5 rounded-lg border-zinc-200 text-xs font-normal shadow-xs"
-                    >
+                    <Button variant="secondary">
                       <Download className="size-3.5" strokeWidth={1.75} />
                       Export
                     </Button>
-                    <TableAddButton>
-                      <Plus className="size-3.5" strokeWidth={1.75} />
-                      Add Person
-                    </TableAddButton>
+                    <Can permission="members.write">
+                      <TableAddButton onClick={openCreate}>
+                        <Plus className="size-3.5" strokeWidth={1.75} />
+                        Add Person
+                      </TableAddButton>
+                    </Can>
                   </>
                 }
               />
@@ -164,7 +242,16 @@ export default function MembersPage() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {pageRows.map((person: any) => (
+                  {pageRows.map((person: {
+                    id: string
+                    firstName: string
+                    lastName: string
+                    recordedTitle?: string | null
+                    personType: string
+                    householdRole?: string | null
+                    ministryRoles?: string[]
+                    backgroundCheckStatus?: string
+                  }) => (
                     <TableRow
                       key={person.id}
                       className="cursor-pointer"
@@ -173,7 +260,7 @@ export default function MembersPage() {
                       {isVisible("name") && (
                         <TableCell className="pl-4">
                           <div className="flex items-center gap-3">
-                            <div className="flex size-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-medium text-emerald-800">
+                            <div className="flex size-8 items-center justify-center rounded-full bg-brand-soft text-xs font-medium text-brand-ink">
                               {person.firstName.charAt(0)}
                               {person.lastName.charAt(0)}
                             </div>
@@ -272,6 +359,91 @@ export default function MembersPage() {
               />
             </TablePanel>
           </div>
+
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetContent side="right" inset size="sm" className="p-0">
+              <form onSubmit={submit} className="flex h-full flex-col">
+                <SheetHeader className="pr-12">
+                  <SheetTitle className="font-medium">Add person</SheetTitle>
+                  <SheetDescription>
+                    Create a member record. You can attach a household and ministries later.
+                  </SheetDescription>
+                </SheetHeader>
+                <SheetBody>
+                  <FieldGroup className="gap-4">
+                    <Field>
+                      <FieldLabel>First name</FieldLabel>
+                      <Input
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                        autoFocus
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Last name</FieldLabel>
+                      <Input
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Email</FieldLabel>
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="optional"
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Phone</FieldLabel>
+                      <Input
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="optional"
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Lifecycle</FieldLabel>
+                      <Select
+                        value={personType}
+                        onValueChange={(v) => v && setPersonType(v as PersonType)}
+                      >
+                        <SelectTrigger className="h-[39px] w-full shadow-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PERSON_TYPES.map((t) => (
+                            <SelectItem key={t.value} value={t.value}>
+                              {t.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <Field>
+                      <FieldLabel>Title (optional)</FieldLabel>
+                      <Input
+                        value={recordedTitle}
+                        onChange={(e) => setRecordedTitle(e.target.value)}
+                        placeholder="e.g. Elder, Deaconess"
+                      />
+                    </Field>
+                  </FieldGroup>
+                </SheetBody>
+                <SheetFooter>
+                  <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="primary" disabled={createMember.isPending}>
+                    {createMember.isPending ? "Saving…" : "Add person"}
+                  </Button>
+                </SheetFooter>
+              </form>
+            </SheetContent>
+          </Sheet>
         </RequireAbility>
 
         <MemberDrawer

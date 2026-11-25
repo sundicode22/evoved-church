@@ -320,7 +320,7 @@ export default function AccountingPage() {
           <PageHeader
             title="Fund"
             description="Funds, budgets, encumbrance, and the audited ledger."
-            icon={<Coins className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Coins className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <>
                 <AccountingCommand

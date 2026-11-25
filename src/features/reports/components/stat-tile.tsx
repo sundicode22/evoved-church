@@ -37,7 +37,7 @@ export function StatTile({
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm font-medium text-zinc-800">{title}</p>
         {icon ? (
-          <span className="inline-flex size-8 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand-ink)]">
+          <span className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand-ink">
             {icon}
           </span>
         ) : null}
@@ -50,7 +50,7 @@ export function StatTile({
           <span
             className={cn(
               "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium",
-              up && "bg-[var(--brand-soft)] text-[var(--brand-ink)]",
+              up && "bg-brand-soft text-brand-ink",
               down && "bg-rose-50 text-rose-700",
               !up && !down && "bg-zinc-100 text-zinc-600"
             )}

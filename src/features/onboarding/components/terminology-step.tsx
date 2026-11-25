@@ -26,7 +26,7 @@ export function TerminologyStep({ value, onChange }: TerminologyStepProps) {
               className={cn(
                 "flex items-center justify-between rounded-xl border bg-white p-4 text-left shadow-xs transition-all",
                 selected
-                  ? "border-[var(--brand)] bg-[var(--brand-soft)] ring-1 ring-[var(--brand)]/20"
+                  ? "border-brand bg-brand-soft ring-1 ring-[var(--brand)]/20"
                   : "border-zinc-200/70 hover:border-zinc-300 hover:bg-zinc-50"
               )}
             >
@@ -35,7 +35,7 @@ export function TerminologyStep({ value, onChange }: TerminologyStepProps) {
                 <span className="mt-0.5 block text-sm text-zinc-500">{preset.description}</span>
               </span>
               {selected && (
-                <CheckCircle2 className="size-5 text-[var(--brand)]" />
+                <CheckCircle2 className="size-5 text-brand" />
               )}
             </button>
           )

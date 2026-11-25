@@ -129,7 +129,7 @@ export default function BlogDashboardPage() {
           <PageHeader
             title="Blog"
             description="Write stories with images for the member portal."
-            icon={<BookOpen className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<BookOpen className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <div className="flex items-center gap-2">
                 <Link
@@ -160,10 +160,10 @@ export default function BlogDashboardPage() {
                   </EmptyDescription>
                 </EmptyHeader>
                 <Can permission="blog.write">
-                  <TableAddButton onClick={openCreate}>
+                  <Button type="button" className="mt-2" onClick={openCreate}>
                     <Plus className="size-4" strokeWidth={1.75} />
                     Write first post
-                  </TableAddButton>
+                  </Button>
                 </Can>
               </Empty>
             ) : (
@@ -200,8 +200,8 @@ export default function BlogDashboardPage() {
                                   className="size-full object-cover"
                                 />
                               ) : (
-                                <div className="flex size-full items-center justify-center bg-[var(--brand-soft)]">
-                                  <BookOpen className="size-4 text-[var(--brand-ink)]" />
+                                <div className="flex size-full items-center justify-center bg-brand-soft">
+                                  <BookOpen className="size-4 text-brand-ink" />
                                 </div>
                               )}
                             </div>

@@ -98,7 +98,7 @@ export default function FollowUpsPage() {
           <PageHeader
             title="Follow-ups"
             description="Pastoral care tasks for guests and members."
-            icon={<ListChecks className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<ListChecks className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="followups.write">
                 <Button

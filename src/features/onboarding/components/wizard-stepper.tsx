@@ -17,8 +17,8 @@ export function WizardStepper({ steps, current }: WizardStepperProps) {
             <span
               className={cn(
                 "flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold shadow-xs transition-colors",
-                done && "border-[var(--brand)] bg-[var(--brand)] text-white",
-                active && "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--brand-ink)]",
+                done && "border-brand bg-brand text-white",
+                active && "border-brand bg-brand-soft text-brand-ink",
                 !done && !active && "border-zinc-200 bg-white text-zinc-400"
               )}
             >
@@ -33,7 +33,7 @@ export function WizardStepper({ steps, current }: WizardStepperProps) {
               {label}
             </span>
             {i < steps.length - 1 && (
-              <span className={cn("h-px flex-1", done ? "bg-[var(--brand)]" : "bg-zinc-200")} />
+              <span className={cn("h-px flex-1", done ? "bg-brand" : "bg-zinc-200")} />
             )}
           </li>
         )

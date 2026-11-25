@@ -45,7 +45,7 @@ export default function AttendancePage() {
           <PageHeader
             title="Attendance"
             description="Service sessions and guest check-in links."
-            icon={<Users className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Users className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               qr?.targetUrl ? (
                 <Button

@@ -145,7 +145,7 @@ export default function PoliciesPage() {
           <PageHeader
             title="Policies"
             description="Module-scoped policies for your teams."
-            icon={<FileCheck className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<FileCheck className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="policies.write">
                 <Button

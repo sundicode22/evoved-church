@@ -227,7 +227,7 @@ export default function DocumentsPage() {
         <PageHeader
           title="Documents"
           description="Bylaws, minutes, and handbooks with role-based access."
-          icon={<ShieldCheck className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+          icon={<ShieldCheck className="size-5 text-brand" strokeWidth={1.75} />}
           actions={
             <>
               <div className="relative hidden w-56 sm:block">
@@ -420,7 +420,8 @@ export default function DocumentsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="h-9 rounded-lg bg-[var(--brand)] px-4 font-normal text-white hover:bg-[var(--brand)]"
+                  variant="primary"
+                  className="h-9 rounded-lg px-4 font-normal"
                 >
                   Create folder
                 </Button>
@@ -498,7 +499,7 @@ export default function DocumentsPage() {
                 <Button
                   type="submit"
                   disabled={uploading}
-                  className="h-9 rounded-lg bg-[var(--brand)] px-4 font-normal text-white hover:bg-[var(--brand)]"
+                  className="h-9 rounded-lg px-4 font-normal"
                 >
                   {uploading ? "Uploading…" : "Upload"}
                 </Button>

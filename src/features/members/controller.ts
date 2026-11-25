@@ -2,6 +2,7 @@ import { Elysia } from "elysia"
 import { memberService } from "./service"
 import {
   createCategorySchema,
+  createMemberSchema,
   updatePersonTypeSchema,
   attachHouseholdSchema,
 } from "./schemas"
@@ -62,6 +63,20 @@ export const memberController = new Elysia({ prefix: "/members" })
     try {
       const parsed = createCategorySchema.parse(body)
       const data = await memberService.createCategory(parsed)
+      set.status = 201
+      return { success: true, data }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
+
+  .post("/", async ({ body, headers, set }) => {
+    try {
+      const parsed = createMemberSchema.parse(body)
+      const campusId = parsed.campusId || (headers["x-campus-id"] as string)
+      const data = await memberService.createMember({ ...parsed, campusId })
       set.status = 201
       return { success: true, data }
     } catch (error) {

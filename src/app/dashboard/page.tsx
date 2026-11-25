@@ -172,7 +172,7 @@ export default function DashboardHomePage() {
                 <Link
                   key={l.href}
                   href={l.href}
-                  className="rounded-lg bg-zinc-100 px-3.5 py-2 text-base text-zinc-900 hover:bg-[var(--brand-soft)]"
+                  className="rounded-lg bg-zinc-100 px-3.5 py-2 text-base text-zinc-900 hover:bg-brand-soft"
                 >
                   {l.label}
                 </Link>
@@ -189,7 +189,7 @@ function StatCard({ label, value, href }: { label: string; value: string; href: 
   return (
     <Link
       href={href}
-      className="rounded-xl bg-zinc-50 px-5 py-5 transition-colors hover:bg-[var(--brand-soft)]"
+      className="rounded-xl bg-zinc-50 px-5 py-5 transition-colors hover:bg-brand-soft"
     >
       <p className="text-base font-medium text-zinc-800">{label}</p>
       <p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">{value}</p>

@@ -70,7 +70,7 @@ export default function FamiliesPage() {
           <PageHeader
             title="Families"
             description="Households linked to church members."
-            icon={<Home className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Home className="size-5 text-brand" strokeWidth={1.75} />}
           />
 
           <div className="p-6 md:p-8">

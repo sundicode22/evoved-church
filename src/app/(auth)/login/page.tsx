@@ -99,7 +99,7 @@ function LoginForm() {
                 hint={
                   <Link
                     href="/forgot-password"
-                    className="text-[12px] font-medium text-[var(--brand)] hover:underline"
+                    className="text-[12px] font-medium text-brand hover:underline"
                   >
                     Forgot password?
                   </Link>
@@ -109,7 +109,7 @@ function LoginForm() {
             <Button
               type="submit"
               disabled={form.formState.isSubmitting}
-              className="h-10 w-full rounded-lg bg-[var(--accent-cta)] text-sm text-white shadow-xs hover:bg-[var(--accent-cta-hover)]"
+              className="h-10 w-full rounded-lg bg-accent-cta text-sm text-white shadow-xs hover:bg-accent-cta-hover"
             >
               {form.formState.isSubmitting ? "Signing in…" : "Sign in"}
             </Button>
@@ -117,7 +117,7 @@ function LoginForm() {
         </Form>
         <p className="text-center text-xs text-zinc-500">
           New to Evolve?{" "}
-          <Link href="/signup" className="font-medium text-[var(--brand)] hover:underline">
+          <Link href="/signup" className="font-medium text-brand hover:underline">
             Create an account
           </Link>
         </p>

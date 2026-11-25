@@ -126,7 +126,7 @@ export default function GroupsPage() {
           <PageHeader
             title="Groups"
             description="Small groups, teams, and cell ministry."
-            icon={<UsersRound className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<UsersRound className="size-5 text-brand" strokeWidth={1.75} />}
           />
 
           <div className="p-6 md:p-8">
@@ -140,7 +140,8 @@ export default function GroupsPage() {
                 </EmptyHeader>
                 <Can permission="groups.write">
                   <Button
-                    className="mt-4 gap-1.5 bg-[var(--accent-cta)] text-white hover:bg-[var(--accent-cta-hover)]"
+                    variant="primary"
+                    className="mt-4 gap-1.5"
                     onClick={() => setSheetOpen(true)}
                   >
                     <Plus className="size-4" strokeWidth={1.75} />
@@ -206,7 +207,7 @@ export default function GroupsPage() {
                                   className="size-8 rounded-md object-cover"
                                 />
                               ) : (
-                                <div className="flex size-8 items-center justify-center rounded-md bg-[var(--brand-soft)] text-xs font-medium text-[var(--brand-ink)]">
+                                <div className="flex size-8 items-center justify-center rounded-md bg-brand-soft text-xs font-medium text-brand-ink">
                                   {group.name.slice(0, 1)}
                                 </div>
                               )}

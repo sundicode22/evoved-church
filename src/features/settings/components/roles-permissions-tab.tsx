@@ -275,10 +275,10 @@ export function RolesPermissionsTab() {
           </SheetHeader>
           <SheetBody className="gap-4">
             {selected?.isAdmin && (
-              <Alert className="border-[var(--brand)]/20 bg-[var(--brand-soft)] text-[var(--brand-ink)]">
+              <Alert className="border-brand/20 bg-brand-soft text-brand-ink">
                 <Info className="size-3.5" />
                 <AlertTitle>Administrator</AlertTitle>
-                <AlertDescription className="text-[var(--brand-ink)]/80">
+                <AlertDescription className="text-brand-ink/80">
                   This role always has every permission. The list below is read-only.
                 </AlertDescription>
               </Alert>
@@ -372,7 +372,7 @@ export function RolesPermissionsTab() {
                     }
                   )
                 }
-                className="bg-[var(--brand)] font-normal text-white hover:bg-[var(--brand)]"
+                className="font-normal"
               >
                 <CheckCircle2 className="size-3.5" />
                 Save permissions

@@ -212,7 +212,7 @@ export default function GivingPage() {
           <PageHeader
             title="Offering"
             description="Record contributions and post them to the books."
-            icon={<HandCoins className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<HandCoins className="size-5 text-brand" strokeWidth={1.75} />}
           />
 
           <div className="space-y-6 p-6 md:p-8">

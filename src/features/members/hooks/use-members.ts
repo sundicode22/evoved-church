@@ -62,6 +62,24 @@ export function useUserCategories() {
   })
 }
 
+export function useCreateMember() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: CreateMemberInput) => {
+      const response = await apiClient.post<ApiResponse<any>>("/members", input)
+      return response.data.data
+    },
+    onError: (err: Error) => {
+      toast.error(err.message)
+    },
+    onSuccess: (_data, variables) => {
+      toast.success(`${variables.firstName} ${variables.lastName} added`)
+      queryClient.invalidateQueries({ queryKey: MEMBER_KEYS.all })
+    },
+  })
+}
+
 /**
  * Isolated mutation hook to create a dynamic user category via Axios
  */

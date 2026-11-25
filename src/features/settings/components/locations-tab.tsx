@@ -101,7 +101,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
                   <TableCell>
                     {l.name}
                     {l.isMainCampus ? (
-                      <span className="ml-2 text-xs text-[var(--brand)]">Main</span>
+                      <span className="ml-2 text-xs text-brand">Main</span>
                     ) : null}
                   </TableCell>
                   <TableCell className="font-mono text-xs">{l.slug}</TableCell>

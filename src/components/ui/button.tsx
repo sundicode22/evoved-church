@@ -7,32 +7,34 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        /** CTA / call button — accent green (not primary blue). */
+        /** Lime/emerald — Save, Send, Confirm, and other non-Add filled actions. */
         default:
-          "border-transparent bg-[var(--accent-cta)] text-white shadow-xs hover:bg-[var(--accent-cta-hover)]",
-        /** Primary brand chrome actions (blue). */
+          "border-transparent bg-accent-cta text-white shadow-xs hover:bg-accent-cta-hover",
+        /** Cornflower blue — Add / Create entry-point buttons only. */
         primary:
-          "border-transparent bg-[var(--brand)] text-white shadow-xs hover:bg-[var(--brand-hover)]",
+          "border-transparent bg-brand text-white shadow-xs hover:bg-brand-hover",
         outline:
-          "border-border bg-white hover:bg-input/50 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground shadow-xs dark:bg-input/30",
+          "border-border bg-white text-foreground hover:bg-input/50 aria-expanded:bg-muted aria-expanded:text-foreground shadow-xs dark:bg-input/30",
+        /** Secondary — Export and similar utility toolbar actions. */
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground shadow-xs",
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-[var(--brand)] underline-offset-4 hover:underline",
+        link: "text-brand underline-offset-4 hover:underline",
       },
       size: {
+        /** Shared control height with inputs (39px). */
         default:
-          "h-10 gap-2 rounded-lg px-3.5 text-sm has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 [&_svg:not([class*='size-'])]:size-4",
+          "h-[39px] gap-1.5 rounded-lg px-3.5 text-sm has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 [&_svg:not([class*='size-'])]:size-3.5",
         xs: "h-7 gap-1 rounded-md px-2 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-9 gap-1.5 rounded-lg px-3 text-sm has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-11 gap-2 rounded-lg px-4 text-sm has-data-[icon=inline-end]:pr-3.5 has-data-[icon=inline-start]:pl-3.5 [&_svg:not([class*='size-'])]:size-4",
-        icon: "size-10 rounded-lg [&_svg:not([class*='size-'])]:size-4",
+        sm: "h-8 gap-1.5 rounded-lg px-3 text-sm has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5 [&_svg:not([class*='size-'])]:size-3.5",
+        lg: "h-10 gap-2 rounded-lg px-4 text-sm has-data-[icon=inline-end]:pr-3.5 has-data-[icon=inline-start]:pl-3.5 [&_svg:not([class*='size-'])]:size-4",
+        icon: "size-[39px] rounded-lg [&_svg:not([class*='size-'])]:size-3.5",
         "icon-xs": "size-7 rounded-md [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-9 rounded-lg [&_svg:not([class*='size-'])]:size-3.5",
-        "icon-lg": "size-11 rounded-lg [&_svg:not([class*='size-'])]:size-5",
+        "icon-sm": "size-8 rounded-lg [&_svg:not([class*='size-'])]:size-3.5",
+        "icon-lg": "size-10 rounded-lg [&_svg:not([class*='size-'])]:size-4",
       },
     },
     defaultVariants: {
@@ -51,7 +53,7 @@ function Button({
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size }), className)}
       {...props}
     />
   )

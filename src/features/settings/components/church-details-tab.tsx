@@ -44,7 +44,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
     <div className="mx-auto max-w-3xl space-y-8">
       <section className="rounded-xl border bg-white p-6 shadow-xs">
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs font-semibold tracking-wide text-[var(--brand)]">Church details</p>
+          <p className="text-xs font-semibold tracking-wide text-brand">Church details</p>
           {canEdit ? (
             <Button
               variant="ghost"
@@ -89,7 +89,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
 
       <section className="rounded-xl border bg-white p-6 shadow-xs">
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs font-semibold tracking-wide text-[var(--brand)]">Contact details</p>
+          <p className="text-xs font-semibold tracking-wide text-brand">Contact details</p>
           {canEdit ? (
             <Button
               variant="ghost"

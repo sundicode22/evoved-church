@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
         <p className="text-center text-xs text-zinc-500">
           Check <span className="font-medium text-zinc-700">{sentEmail}</span> for the reset
           link.{" "}
-          <Link href="/login" className="font-medium text-[var(--brand)] hover:underline">
+          <Link href="/login" className="font-medium text-brand hover:underline">
             Back to sign in
           </Link>
         </p>
@@ -70,12 +70,12 @@ export default function ForgotPasswordPage() {
             <Button
               type="submit"
               disabled={form.formState.isSubmitting}
-              className="h-10 w-full rounded-lg bg-[var(--accent-cta)] text-sm text-white shadow-xs hover:bg-[var(--accent-cta-hover)]"
+              className="h-10 w-full rounded-lg bg-accent-cta text-sm text-white shadow-xs hover:bg-accent-cta-hover"
             >
               {form.formState.isSubmitting ? "Sending…" : "Send reset link"}
             </Button>
             <p className="text-center text-xs text-zinc-500">
-              <Link href="/login" className="font-medium text-[var(--brand)] hover:underline">
+              <Link href="/login" className="font-medium text-brand hover:underline">
                 Back to sign in
               </Link>
             </p>

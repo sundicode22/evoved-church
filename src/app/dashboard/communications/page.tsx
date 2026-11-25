@@ -108,7 +108,7 @@ export default function CommunicationsPage() {
           <PageHeader
             title="Communications"
             description="Automated drip sequences for guests and members."
-            icon={<Droplet className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Droplet className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <>
                 <Can permission="campaigns.write">
@@ -142,7 +142,7 @@ export default function CommunicationsPage() {
                   onClick={() => setActiveId(s.id)}
                   className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
                     active?.id === s.id
-                      ? "border-emerald-300 bg-[var(--brand-soft)]"
+                      ? "border-emerald-300 bg-brand-soft"
                       : "border-zinc-200/80 bg-white hover:border-emerald-200"
                   }`}
                 >

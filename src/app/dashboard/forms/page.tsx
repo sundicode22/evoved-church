@@ -84,7 +84,7 @@ export default function FormsPage() {
           <PageHeader
             title="Forms"
             description="Public intake forms for prayer, serving, and connection."
-            icon={<ClipboardList className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<ClipboardList className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="forms.write">
                 <Button

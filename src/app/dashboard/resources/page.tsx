@@ -95,7 +95,7 @@ export default function ResourcesPage() {
           <PageHeader
             title="Resources"
             description="Equipment and supplies available for ministry use."
-            icon={<Package className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Package className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="facilities.write">
                 <Button

@@ -66,7 +66,7 @@ export function CampusSwitcher() {
                   onClick={() => setActiveCampus(campus)}
                   className={`gap-2 rounded-lg p-2 ${
                     campus.id === activeCampus.id
-                      ? "bg-[var(--brand-soft)] text-[var(--brand-ink)]"
+                      ? "bg-brand-soft text-brand-ink"
                       : ""
                   }`}
                 >
@@ -84,7 +84,7 @@ export function CampusSwitcher() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="gap-2 rounded-lg p-2 text-[var(--brand)]">
+              <DropdownMenuItem className="gap-2 rounded-lg p-2 text-brand">
                 <div className="flex size-6 items-center justify-center rounded-md border border-dashed border-emerald-300 bg-emerald-50/60">
                   <Plus className="size-3.5" strokeWidth={1.75} />
                 </div>

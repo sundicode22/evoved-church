@@ -74,7 +74,7 @@ export function RichTextEditor({
       attributes: {
         class: cn(
           "prose prose-sm max-w-none px-4 py-3 text-sm text-zinc-800 outline-none focus:outline-none",
-          "[&_blockquote]:border-l-2 [&_blockquote]:border-[var(--brand)]/40 [&_blockquote]:pl-3 [&_blockquote]:text-zinc-600",
+          "[&_blockquote]:border-l-2 [&_blockquote]:border-brand/40 [&_blockquote]:pl-3 [&_blockquote]:text-zinc-600",
           "[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5",
           "[&_img]:rounded-xl"
         ),
@@ -202,7 +202,7 @@ export function RichTextEditor({
               title={t.label}
               className={cn(
                 "size-7 text-zinc-600",
-                t.active && "bg-[var(--brand-soft)] text-[var(--brand-ink)]"
+                t.active && "bg-brand-soft text-brand-ink"
               )}
               onMouseDown={(e) => {
                 e.preventDefault()

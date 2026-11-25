@@ -189,7 +189,7 @@ export default function OnboardingPage() {
                 type="button"
                 disabled={!canContinue || pending}
                 onClick={next}
-                className="h-10 gap-1 rounded-lg bg-[var(--accent-cta)] px-5 text-sm font-medium text-white shadow-xs hover:bg-[var(--accent-cta-hover)]"
+                className="h-10 gap-1 rounded-lg bg-accent-cta px-5 text-sm font-medium text-white shadow-xs hover:bg-accent-cta-hover"
               >
                 {step === STEPS.length - 1 ? (pending ? "Finishing…" : "Finish setup") : "Continue"}
                 {step < STEPS.length - 1 && <ChevronRight className="size-4" />}

@@ -79,7 +79,7 @@ export default function MemberPortalPage() {
           {settings.publicGiving ? (
             <Link
               href={settings.givingUrl}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[var(--accent-cta)] px-3.5 text-sm font-medium text-white shadow-xs hover:bg-[var(--accent-cta-hover)]"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent-cta px-3.5 text-sm font-medium text-white shadow-xs hover:bg-accent-cta-hover"
             >
               <HeartHandshake className="size-4" strokeWidth={1.75} />
               Give
@@ -116,7 +116,7 @@ export default function MemberPortalPage() {
                       className="size-full object-cover transition duration-500 group-hover:scale-[1.03]"
                     />
                   ) : (
-                    <div className="flex size-full items-center justify-center bg-[var(--brand-soft)] text-[var(--brand-ink)]">
+                    <div className="flex size-full items-center justify-center bg-brand-soft text-brand-ink">
                       <BookOpen className="size-10" strokeWidth={1.5} />
                     </div>
                   )}
@@ -175,8 +175,8 @@ export default function MemberPortalPage() {
                           className="size-full object-cover transition duration-500 group-hover:scale-[1.03]"
                         />
                       ) : (
-                        <div className="flex size-full items-center justify-center bg-[var(--brand-soft)]">
-                          <BookOpen className="size-8 text-[var(--brand-ink)]" strokeWidth={1.5} />
+                        <div className="flex size-full items-center justify-center bg-brand-soft">
+                          <BookOpen className="size-8 text-brand-ink" strokeWidth={1.5} />
                         </div>
                       )}
                     </div>
@@ -241,7 +241,7 @@ export default function MemberPortalPage() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <p className="text-sm font-semibold text-zinc-900">{g.name}</p>
-                        <span className="shrink-0 rounded-md bg-[var(--brand-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--brand-ink)]">
+                        <span className="shrink-0 rounded-md bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-ink">
                           {g.meetingDay}
                         </span>
                       </div>

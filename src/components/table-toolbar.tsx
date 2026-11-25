@@ -77,12 +77,12 @@ export function TableToolbar({
       <div className="flex flex-wrap items-center gap-2 sm:justify-end">
         {onSearchChange && (
           <div className="relative w-full min-w-[12rem] max-w-sm sm:w-64">
-            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-400" />
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-zinc-400" />
             <Input
               value={search ?? ""}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
-              className="h-10 rounded-lg border-zinc-200 bg-white pl-10 text-sm shadow-xs"
+              className="border-zinc-200 bg-white pl-9 shadow-xs"
             />
           </div>
         )}
@@ -91,37 +91,23 @@ export function TableToolbar({
 
         <ButtonGroup>
           {onFilter && (
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              className="h-10 gap-1.5 text-sm"
-              onClick={onFilter}
-            >
-              <Filter className="size-4" />
+            <Button type="button" variant="outline" onClick={onFilter}>
+              <Filter className="size-3.5" />
               Filter
             </Button>
           )}
           {onExport && (
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              className="h-10 gap-1.5 text-sm"
-              onClick={onExport}
-            >
-              <Download className="size-4" />
+            <Button type="button" variant="secondary" onClick={onExport}>
+              <Download className="size-3.5" />
               Export
             </Button>
           )}
           {moreActions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger
-                render={
-                  <Button variant="outline" size="default" className="h-10 px-3 text-sm" />
-                }
+                render={<Button variant="outline" className="px-3" />}
               >
-                <MoreHorizontal className="size-4" />
+                <MoreHorizontal className="size-3.5" />
                 <ChevronDown className="size-3.5 opacity-50" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-48">

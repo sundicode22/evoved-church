@@ -143,7 +143,7 @@ export default function ChurchCalendarPage() {
           <PageHeader
             title="Calendar"
             description="Programs, services, and who is responsible."
-            icon={<CalendarIcon className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<CalendarIcon className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="calendar.write">
                 <Button

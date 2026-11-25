@@ -80,7 +80,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               key={card.id}
               className="flex flex-col rounded-lg border bg-white p-5 shadow-xs"
             >
-              <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand-ink)]">
+              <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-brand-soft text-brand-ink">
                 <Icon className="size-5" />
               </div>
               <h3 className="text-sm font-semibold text-zinc-900">{card.name}</h3>
@@ -90,7 +90,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
                   <Button
                     disabled={!canEdit}
                     onClick={() => setSheet("stripe")}
-                    className="h-9 w-full rounded-lg bg-[var(--accent-cta)] text-sm text-white hover:bg-[var(--accent-cta-hover)]"
+                    className="h-9 w-full rounded-lg bg-accent-cta text-sm text-white hover:bg-accent-cta-hover"
                   >
                     {stripeConnected ? "Manage Stripe" : "Connect your account"}
                   </Button>

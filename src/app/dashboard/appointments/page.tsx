@@ -115,7 +115,7 @@ export default function AppointmentsPage() {
           <PageHeader
             title="Appointments"
             description="Pastoral booking windows guests can schedule into."
-            icon={<CalendarClock className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<CalendarClock className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="appointments.write">
                 <Button

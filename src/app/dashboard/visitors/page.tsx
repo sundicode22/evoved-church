@@ -6,6 +6,25 @@ import { Plus, UserPlus } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -29,6 +48,7 @@ import {
   type ColumnOption,
 } from "@/components/table-panel"
 import {
+  useCreateLead,
   useVisitorBoard,
   useVisitorLeads,
 } from "@/features/visitors/hooks/use-visitor-leads"
@@ -42,6 +62,15 @@ const COLUMNS: ColumnOption[] = [
   { id: "location", label: "Location" },
   { id: "assignee", label: "Assignee" },
   { id: "updated", label: "Updated" },
+]
+
+const SOURCES = [
+  "Sunday Service QR",
+  "Website",
+  "Friend invite",
+  "Walk-in",
+  "Event",
+  "Other",
 ]
 
 function stageTone(stage: string): "neutral" | "success" | "warning" | "info" {
@@ -66,8 +95,17 @@ export default function VisitorsPage() {
   const [search, setSearch] = React.useState("")
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(10)
+  const [sheetOpen, setSheetOpen] = React.useState(false)
+  const [contactName, setContactName] = React.useState("")
+  const [contactEmail, setContactEmail] = React.useState("")
+  const [contactPhone, setContactPhone] = React.useState("")
+  const [location, setLocation] = React.useState("")
+  const [source, setSource] = React.useState(SOURCES[0])
+  const [title, setTitle] = React.useState("")
+
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
-  const { data: listRes, isLoading } = useVisitorLeads(1, 50, undefined, search)
+  const createLead = useCreateLead()
+  const { data: listRes, isLoading, refetch } = useVisitorLeads(1, 50, undefined, search)
   const board = useVisitorBoard(search)
 
   const rows = React.useMemo(() => {
@@ -77,6 +115,43 @@ export default function VisitorsPage() {
   }, [listRes, board.data])
 
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize)
+
+  function resetForm() {
+    setContactName("")
+    setContactEmail("")
+    setContactPhone("")
+    setLocation("")
+    setSource(SOURCES[0])
+    setTitle("")
+  }
+
+  function openCreate() {
+    resetForm()
+    setSheetOpen(true)
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    const name = contactName.trim()
+    try {
+      await createLead.mutateAsync({
+        contactName: name,
+        title: title.trim() || `Guest — ${name}`,
+        contactEmail: contactEmail.trim() || "",
+        contactPhone: contactPhone.trim() || "",
+        location: location.trim() || undefined,
+        source,
+        value: 0,
+        tags: [],
+      })
+      setSheetOpen(false)
+      resetForm()
+      await refetch()
+      await board.refetch()
+    } catch {
+      /* toast in hook */
+    }
+  }
 
   return (
     <SidebarProvider
@@ -93,13 +168,21 @@ export default function VisitorsPage() {
           <PageHeader
             title="Visitors"
             description="Follow up with guests. Use List by default; Board is optional."
-            icon={<UserPlus className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<UserPlus className="size-5 text-brand" strokeWidth={1.75} />}
             actions={<ViewToggle value={view} onChange={setView} />}
           />
 
           <div className="p-6 md:p-8">
             {view === "board" ? (
               <TablePanel className="rounded-2xl border-0 bg-[#fbfcfb] p-4 shadow-sm">
+                <div className="mb-3 flex justify-end">
+                  <Can permission="visitors.write">
+                    <TableAddButton onClick={openCreate}>
+                      <Plus className="size-3.5" strokeWidth={1.75} />
+                      Add Visitor
+                    </TableAddButton>
+                  </Can>
+                </div>
                 <KanbanBoard embedded />
               </TablePanel>
             ) : (
@@ -119,7 +202,7 @@ export default function VisitorsPage() {
                     <>
                       <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
                       <Can permission="visitors.write">
-                        <TableAddButton>
+                        <TableAddButton onClick={openCreate}>
                           <Plus className="size-3.5" strokeWidth={1.75} />
                           Add Visitor
                         </TableAddButton>
@@ -196,9 +279,9 @@ export default function VisitorsPage() {
                         )}
                         {isVisible("updated") && (
                           <TableCell className="text-zinc-500">
-                            {row.updatedAt || row.stageChangedAt
+                            {row.updatedAt || row.stageChangedAt || row.createdAt
                               ? formatDistanceToNow(
-                                  new Date(row.updatedAt || row.stageChangedAt),
+                                  new Date(row.updatedAt || row.stageChangedAt || row.createdAt),
                                   { addSuffix: true }
                                 )
                               : "—"}
@@ -221,6 +304,89 @@ export default function VisitorsPage() {
               </TablePanel>
             )}
           </div>
+
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetContent side="right" inset size="sm" className="p-0">
+              <form onSubmit={submit} className="flex h-full flex-col">
+                <SheetHeader className="pr-12">
+                  <SheetTitle className="font-medium">Add visitor</SheetTitle>
+                  <SheetDescription>
+                    Start a guest in First Visit. You can assign follow-up from the board.
+                  </SheetDescription>
+                </SheetHeader>
+                <SheetBody>
+                  <FieldGroup className="gap-4">
+                    <Field>
+                      <FieldLabel>Name</FieldLabel>
+                      <Input
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        required
+                        autoFocus
+                        minLength={2}
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Title (optional)</FieldLabel>
+                      <Input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="e.g. First-Time Family — Cooper"
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Email</FieldLabel>
+                      <Input
+                        type="email"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                        placeholder="optional"
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Phone</FieldLabel>
+                      <Input
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                        placeholder="optional"
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Location</FieldLabel>
+                      <Input
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="Main Sanctuary"
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Source</FieldLabel>
+                      <Select value={source} onValueChange={(v) => v && setSource(v)}>
+                        <SelectTrigger className="h-[39px] w-full shadow-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SOURCES.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </FieldGroup>
+                </SheetBody>
+                <SheetFooter>
+                  <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="primary" disabled={createLead.isPending}>
+                    {createLead.isPending ? "Saving…" : "Add visitor"}
+                  </Button>
+                </SheetFooter>
+              </form>
+            </SheetContent>
+          </Sheet>
         </RequireAbility>
       </SidebarInset>
     </SidebarProvider>

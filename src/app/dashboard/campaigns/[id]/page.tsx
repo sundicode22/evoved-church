@@ -152,7 +152,7 @@ export default function CampaignDetailPage() {
                 All campaigns
               </Link>
             }
-            icon={<Mail className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Mail className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <>
                 <Can permission="campaigns.write">
@@ -169,7 +169,7 @@ export default function CampaignDetailPage() {
                   <Button
                     onClick={() => setConfirmSend(true)}
                     disabled={!data || locked || send.isPending}
-                    className="h-8 gap-1.5 rounded-lg bg-[var(--brand)] px-3.5 text-xs font-normal text-white shadow-xs hover:bg-[var(--brand)]"
+                    className="h-8 gap-1.5 rounded-lg px-3.5 text-xs font-normal shadow-xs"
                   >
                     <CheckCircle2 className="size-3.5" strokeWidth={1.75} />
                     {send.isPending ? "Sending…" : "Send"}

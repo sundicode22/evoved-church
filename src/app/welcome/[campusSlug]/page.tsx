@@ -71,7 +71,7 @@ export default function WelcomePage() {
           {submitted ? (
             <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
               <span className="flex size-14 items-center justify-center rounded-full bg-emerald-50">
-                <CheckCircle2 className="size-8 text-[var(--brand)]" />
+                <CheckCircle2 className="size-8 text-brand" />
               </span>
               <h1 className="text-xl font-semibold tracking-tight text-slate-900">
                 Thank you, {name.trim().split(" ")[0]}!
@@ -138,7 +138,7 @@ export default function WelcomePage() {
                   <Button
                     type="submit"
                     disabled={pending}
-                    className="h-10 w-full rounded-lg bg-[var(--accent-cta)] text-sm text-white shadow-sm hover:bg-[var(--accent-cta-hover)]"
+                    className="h-10 w-full rounded-lg bg-accent-cta text-sm text-white shadow-sm hover:bg-accent-cta-hover"
                   >
                     {pending ? "Submitting…" : "Say hello"}
                   </Button>

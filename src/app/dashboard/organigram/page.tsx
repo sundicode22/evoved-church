@@ -479,7 +479,7 @@ export default function OrganigramPage() {
           <PageHeader
             title="Organigram"
             description="Reporting lines across your ministry."
-            icon={<Network className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Network className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="organigram.write">
                 <TableAddButton onClick={openCreate}>

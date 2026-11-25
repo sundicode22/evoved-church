@@ -107,7 +107,7 @@ export default function CampaignsPage() {
           <PageHeader
             title="Campaigns"
             description="Reach your congregation by email and SMS."
-            icon={<Mail className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Mail className="size-5 text-brand" strokeWidth={1.75} />}
           />
 
           <div className="p-6 md:p-8">
@@ -158,7 +158,7 @@ export default function CampaignsPage() {
                         <TableCell className="pl-4">
                           <Link
                             href={`/dashboard/campaigns/${c.id}`}
-                            className="font-medium text-zinc-900 hover:text-[var(--brand)]"
+                            className="font-medium text-zinc-900 hover:text-brand"
                           >
                             {c.name}
                           </Link>

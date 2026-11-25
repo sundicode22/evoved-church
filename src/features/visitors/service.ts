@@ -47,7 +47,7 @@ function emptyBoard() {
   }))
 }
 
-const DEMO_LEADS = [
+let DEMO_LEADS = [
   {
     id: "lead-1",
     leadNumber: "#192740",
@@ -133,6 +133,41 @@ const DEMO_LEADS = [
     createdAt: new Date(Date.now() - 24 * 60 * 60000),
   },
 ]
+
+function paginateDemoLeads(params: {
+  page: number
+  pageSize: number
+  search?: string
+  stage?: string
+}): DbPaginationResult<(typeof DEMO_LEADS)[number]> {
+  let data = [...DEMO_LEADS]
+  if (params.stage && params.stage !== "all") {
+    data = data.filter((l) => l.stage === params.stage)
+  }
+  if (params.search) {
+    const q = params.search.toLowerCase()
+    data = data.filter(
+      (l) =>
+        l.contactName.toLowerCase().includes(q) ||
+        l.title.toLowerCase().includes(q) ||
+        l.leadNumber.toLowerCase().includes(q)
+    )
+  }
+  const total = data.length
+  const totalPages = Math.ceil(total / params.pageSize) || 1
+  const start = (params.page - 1) * params.pageSize
+  return {
+    data: data.slice(start, start + params.pageSize),
+    pagination: {
+      page: params.page,
+      pageSize: params.pageSize,
+      total,
+      totalPages,
+      hasNext: params.page < totalPages,
+      hasPrev: params.page > 1,
+    },
+  }
+}
 
 export const visitorService = {
   async getVisitorBoard(campusId?: string, search?: string) {
@@ -286,6 +321,9 @@ export const visitorService = {
       ])
 
       const total = countResult[0]?.count || 0
+      if (total === 0) {
+        return paginateDemoLeads({ page, pageSize, search: params.search, stage: params.stage })
+      }
       const totalPages = Math.ceil(total / pageSize) || 1
 
       return {
@@ -301,10 +339,7 @@ export const visitorService = {
       }
     } catch (err) {
       console.error("[visitorService.getPaginatedLeads] DB error:", err)
-      return {
-        data: [],
-        pagination: { page, pageSize, total: 0, totalPages: 1, hasNext: false, hasPrev: false },
-      }
+      return paginateDemoLeads({ page, pageSize, search: params.search, stage: params.stage })
     }
   },
 
@@ -413,64 +448,82 @@ export const visitorService = {
     }
 
     const leadNumber = `#${Math.floor(100000 + Math.random() * 900000)}`
+    const location = input.location || "Main Sanctuary"
+    const source = input.source || "Sunday Service QR"
+
+    const pushDemo = () => {
+      const row = {
+        id: `lead-${Date.now().toString(36)}`,
+        leadNumber,
+        title: input.title.trim(),
+        location,
+        stage: "first_visit" as VisitorStage,
+        contactName: input.contactName.trim(),
+        contactEmail: input.contactEmail || "",
+        contactPhone: input.contactPhone || "",
+        source,
+        value: input.value || 0,
+        createdAt: new Date(),
+      }
+      DEMO_LEADS = [row, ...DEMO_LEADS]
+      return { ...row, campusId: input.campusId || "demo-campus" }
+    }
 
     let campusId = input.campusId
-    if (!campusId) {
-      const defaultCampus = await db.select().from(campuses).limit(1)
-      if (defaultCampus.length > 0) campusId = defaultCampus[0].id
-    }
-
-    if (!campusId) {
-      // Soft create for demo / no-DB environments
-      return {
-        id: `lead-${Date.now()}`,
-        leadNumber,
-        title: input.title,
-        contactName: input.contactName,
-        stage: "first_visit",
-        campusId: "demo-campus",
+    try {
+      if (!campusId) {
+        const defaultCampus = await db.select().from(campuses).limit(1)
+        if (defaultCampus.length > 0) campusId = defaultCampus[0].id
       }
+
+      if (campusId) {
+        const [created] = await db
+          .insert(visitorLeads)
+          .values({
+            leadNumber,
+            campusId,
+            title: input.title.trim(),
+            location,
+            contactName: input.contactName.trim(),
+            contactEmail: input.contactEmail || null,
+            contactPhone: input.contactPhone || null,
+            source,
+            value: String(input.value ?? 0),
+            tags: input.tags || [],
+            stage: "first_visit",
+            activeSequence: "Welcome Drip Sequence",
+            nextDripAction: "Welcome email in 2 hours",
+          })
+          .returning()
+
+        if (created) {
+          await db.insert(visitorActivities).values({
+            leadId: created.id,
+            type: "lead_created",
+            title: `Lead ${leadNumber} Created`,
+            description: `Visitor ${input.contactName} registered via ${source}.`,
+          })
+
+          if (input.contactEmail) {
+            await emailService
+              .sendWelcomeDrip({
+                to: input.contactEmail,
+                visitorName: input.contactName,
+                churchName: "Grace City Church",
+                pastorName: "Pastor David Johnson",
+                nextSundayTime: "10:00 AM",
+              })
+              .catch((err) => console.error("[Resend Drip Warning]:", err))
+          }
+
+          return created
+        }
+      }
+    } catch (e) {
+      console.error("[visitorService.createLead]", e)
     }
 
-    const [created] = await db
-      .insert(visitorLeads)
-      .values({
-        leadNumber,
-        campusId,
-        title: input.title,
-        location: input.location || "Main Sanctuary",
-        contactName: input.contactName,
-        contactEmail: input.contactEmail || null,
-        contactPhone: input.contactPhone || null,
-        source: input.source,
-        value: input.value.toString(),
-        tags: input.tags,
-        stage: "first_visit",
-        activeSequence: "Welcome Drip Sequence",
-        nextDripAction: "Welcome email in 2 hours",
-      })
-      .returning()
-
-    await db.insert(visitorActivities).values({
-      leadId: created.id,
-      type: "lead_created",
-      title: `Lead ${leadNumber} Created`,
-      description: `Visitor ${input.contactName} registered via ${input.source}.`,
-    })
-
-    if (input.contactEmail) {
-      await emailService
-        .sendWelcomeDrip({
-          to: input.contactEmail,
-          visitorName: input.contactName,
-          churchName: "Grace City Church",
-          pastorName: "Pastor David Johnson",
-          nextSundayTime: "10:00 AM",
-        })
-        .catch((err) => console.error("[Resend Drip Warning]:", err))
-    }
-
-    return created
+    return pushDemo()
   },
 
   async updateLeadStage(id: string, input: UpdateLeadStageInput) {

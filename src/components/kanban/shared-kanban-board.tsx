@@ -159,7 +159,7 @@ function Column({
     <div
       ref={setNodeRef}
       className={`flex w-[300px] shrink-0 flex-col rounded-2xl bg-[#f4f6f5] p-1 shadow-sm transition-shadow ${
-        isOver ? "bg-[var(--brand-soft)] shadow-md" : ""
+        isOver ? "bg-brand-soft shadow-md" : ""
       }`}
     >
       <div className="flex items-center justify-between px-3 py-3">

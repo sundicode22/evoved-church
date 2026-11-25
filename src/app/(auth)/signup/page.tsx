@@ -89,7 +89,7 @@ export default function SignupPage() {
             <Button
               type="submit"
               disabled={form.formState.isSubmitting}
-              className="h-10 w-full rounded-lg bg-[var(--accent-cta)] text-sm text-white shadow-xs hover:bg-[var(--accent-cta-hover)]"
+              className="h-10 w-full rounded-lg bg-accent-cta text-sm text-white shadow-xs hover:bg-accent-cta-hover"
             >
               {form.formState.isSubmitting ? "Creating account…" : "Create account"}
             </Button>
@@ -97,7 +97,7 @@ export default function SignupPage() {
         </Form>
         <p className="text-center text-xs text-zinc-500">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-[var(--brand)] hover:underline">
+          <Link href="/login" className="font-medium text-brand hover:underline">
             Sign in
           </Link>
         </p>

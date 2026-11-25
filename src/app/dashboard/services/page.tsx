@@ -113,7 +113,7 @@ export default function ServicesPage() {
           <PageHeader
             title="Services"
             description="Worship, midweek, prayer, youth, and special gatherings."
-            icon={<Church className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Church className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="services.write">
                 <Button
@@ -156,7 +156,7 @@ export default function ServicesPage() {
                           onClick={() => setSelectedId(s.id)}
                           className={`flex w-full flex-col rounded-xl px-3 py-2.5 text-left transition-colors ${
                             active
-                              ? "bg-[var(--brand-soft)] text-[var(--brand-ink)]"
+                              ? "bg-brand-soft text-brand-ink"
                               : "text-zinc-700 hover:bg-zinc-50"
                           }`}
                         >

@@ -115,7 +115,7 @@ export default function BatchesPage() {
           <PageHeader
             title="Batches"
             description="Group envelope and deposit contributions for counting."
-            icon={<Layers className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Layers className="size-5 text-brand" strokeWidth={1.75} />}
           />
 
           <div className="p-6 md:p-8">

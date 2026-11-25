@@ -50,7 +50,7 @@ export default function PublicFormPage() {
   return (
     <div className="min-h-screen bg-[#f4f6f5]">
       <div className="mx-auto max-w-lg px-4 py-12">
-        <p className="text-xs font-medium uppercase tracking-wide text-[var(--brand)]">
+        <p className="text-xs font-medium uppercase tracking-wide text-brand">
           Evolve ChMS
         </p>
         {isLoading && (
@@ -129,7 +129,7 @@ export default function PublicFormPage() {
             <Button
               type="submit"
               disabled={submit.isPending}
-              className="w-full bg-[var(--accent-cta)] text-white hover:bg-[var(--accent-cta)]"
+              className="w-full bg-accent-cta text-white hover:bg-accent-cta"
             >
               Submit
             </Button>

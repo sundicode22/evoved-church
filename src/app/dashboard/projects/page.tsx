@@ -152,7 +152,7 @@ export default function ProjectsPage() {
           <PageHeader
             title="Projects"
             description={`Open ${total - doneCount} · Done ${doneCount}. List first; board is optional.`}
-            icon={<ListTodo className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<ListTodo className="size-5 text-brand" strokeWidth={1.75} />}
             actions={<ViewToggle value={view} onChange={setView} />}
           />
 

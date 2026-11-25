@@ -114,7 +114,7 @@ export function ImageUpload({
             onClick={() => inputRef.current?.click()}
             className="flex w-full flex-col items-center justify-center gap-2 px-4 py-8 text-center outline-none"
           >
-            <span className="flex size-10 items-center justify-center rounded-full bg-white text-[var(--brand)] shadow-sm">
+            <span className="flex size-10 items-center justify-center rounded-full bg-white text-brand shadow-sm">
               <ImagePlus className="size-5" strokeWidth={1.75} />
             </span>
             <span className="text-sm font-medium text-zinc-800">Upload image</span>

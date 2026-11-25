@@ -82,7 +82,7 @@ export default function AnnouncementsPage() {
           <PageHeader
             title="Announcements"
             description="Post news for the member portal and campus screens."
-            icon={<Megaphone className="size-5 text-[var(--brand)]" strokeWidth={1.75} />}
+            icon={<Megaphone className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="announcements.write">
                 <Button

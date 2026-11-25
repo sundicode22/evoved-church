@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { apiClient, ApiResponse } from "@/lib/axios"
 import {
   AssignLeadInput,
@@ -105,7 +106,11 @@ export function useCreateLead() {
       const response = await apiClient.post<ApiResponse<any>>("/visitors", input)
       return response.data.data
     },
-    onSuccess: () => {
+    onError: (err: Error) => {
+      toast.error(err.message)
+    },
+    onSuccess: (_data, variables) => {
+      toast.success(`${variables.contactName} added`)
       queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.all })
     },
   })

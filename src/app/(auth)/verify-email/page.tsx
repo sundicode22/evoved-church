@@ -59,11 +59,11 @@ function VerifyEmailForm() {
         </Button>
         <p className="text-center text-xs text-zinc-500">
           Already verified?{" "}
-          <Link href="/login" className="font-medium text-[var(--brand)] hover:underline">
+          <Link href="/login" className="font-medium text-brand hover:underline">
             Sign in
           </Link>
           {" · "}
-          <Link href="/onboarding" className="font-medium text-[var(--brand)] hover:underline">
+          <Link href="/onboarding" className="font-medium text-brand hover:underline">
             Continue setup
           </Link>
         </p>

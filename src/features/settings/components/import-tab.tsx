@@ -224,7 +224,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
                 <TableRow key={item.id}>
                   <TableCell className="pl-4">
                     <div className="flex items-start gap-3">
-                      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand-ink)] shadow-xs">
+                      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-ink shadow-xs">
                         <Icon className="size-4" strokeWidth={1.75} />
                       </span>
                       <div>
@@ -347,7 +347,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
               )}
 
               {report && (
-                <div className="space-y-2 rounded-xl bg-[var(--brand-soft)] p-4 text-xs text-[var(--brand-ink)] shadow-xs">
+                <div className="space-y-2 rounded-xl bg-brand-soft p-4 text-xs text-brand-ink shadow-xs">
                   <p>
                     Mode: <strong>{report.mode}</strong> · Valid {report.valid}/{report.total}
                     {report.imported > 0 && (
