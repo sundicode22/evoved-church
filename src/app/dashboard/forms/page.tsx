@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { ClipboardList, Copy, ExternalLink, Plus, Trash2 } from "lucide-react"
-import { useForm } from "react-hook-form"
+import { useForm, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
@@ -55,23 +55,36 @@ import {
 import {
   FORM_FIELD_TYPES,
   FORM_PURPOSES,
-  createFormSchema,
-  formFieldSchema,
   type ChurchForm,
 } from "@/features/forms/schemas"
 
-const formBuilderSchema = createFormSchema
-  .pick({ title: true, description: true, purpose: true })
-  .extend({
-    slug: z
-      .string()
-      .refine((v) => !v || v.trim().length >= 2, "Slug must be at least 2 characters"),
-  })
+const formBuilderSchema = z.object({
+  title: z.string().min(2, "Title is required"),
+  slug: z
+    .string()
+    .refine((v) => !v || v.trim().length >= 2, "Slug must be at least 2 characters"),
+  description: z.string(),
+  purpose: z.enum(["general", "visitor_intake"]),
+})
 
 type FormBuilderValues = z.infer<typeof formBuilderSchema>
-const fieldBuilderSchema = formFieldSchema
-  .omit({ options: true })
-  .extend({ optionsText: z.string().optional() })
+const fieldBuilderSchema = z.object({
+  label: z.string().min(1),
+  fieldType: z.enum([
+    "short_text",
+    "long_text",
+    "multiple_choice",
+    "checkboxes",
+    "email",
+    "phone",
+    "number",
+    "date",
+    "time",
+  ]),
+  required: z.boolean(),
+  optionsText: z.string().optional(),
+  orderIndex: z.number().int().optional(),
+})
 type FieldBuilderValues = z.infer<typeof fieldBuilderSchema>
 
 const emptyForm: FormBuilderValues = {
@@ -111,7 +124,7 @@ function FormBuilderSheet({
   const unpublish = useUnpublishForm()
 
   const fieldForm = useForm<FieldBuilderValues>({
-    resolver: zodResolver(fieldBuilderSchema),
+    resolver: zodResolver(fieldBuilderSchema) as Resolver<FieldBuilderValues>,
     defaultValues: emptyField,
   })
   const fieldType = fieldForm.watch("fieldType")
@@ -352,7 +365,7 @@ export default function FormsPage() {
   const [confirmPublish, setConfirmPublish] = React.useState<ChurchForm | null>(null)
   const publish = usePublishForm()
   const form = useForm<FormBuilderValues>({
-    resolver: zodResolver(formBuilderSchema),
+    resolver: zodResolver(formBuilderSchema) as Resolver<FormBuilderValues>,
     defaultValues: emptyForm,
   })
   const purposeWatch = form.watch("purpose")
@@ -362,7 +375,7 @@ export default function FormsPage() {
       const cur = form.getValues()
       if (!cur.title.trim()) form.setValue("title", "Visitor Connect")
       if (!cur.slug.trim()) form.setValue("slug", "visitor-connect")
-      if (!cur.description.trim()) {
+      if (!(cur.description ?? "").trim()) {
         form.setValue(
           "description",
           "Share your details so our welcome team can follow up."
