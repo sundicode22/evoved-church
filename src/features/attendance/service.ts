@@ -63,7 +63,100 @@ const demoSessions: AttendanceSession[] = [
 
 export const attendanceService = {
   async listSessions(): Promise<AttendanceSession[]> {
+    try {
+      const { attendanceSessions } = await import("@/lib/db/schema")
+      const { desc } = await import("drizzle-orm")
+      const rows = await db
+        .select()
+        .from(attendanceSessions)
+        .orderBy(desc(attendanceSessions.sessionDate))
+        .limit(50)
+      if (rows.length > 0) {
+        return rows.map((row) => ({
+          id: row.id,
+          campusId: row.campusId,
+          sessionName: row.sessionName,
+          sessionDate: row.sessionDate.toISOString(),
+          sessionType: (row.sessionType as AttendanceSession["sessionType"]) || "service",
+          qrToken: row.qrToken,
+          checkinUrl: qrService.getCheckinUrl(row.id),
+          headcountAdults: row.headcountAdults,
+          headcountChildren: row.headcountChildren,
+          createdAt: row.createdAt.toISOString(),
+        }))
+      }
+    } catch (err) {
+      console.info("[attendance] listSessions falling back to demo", err)
+    }
     return [...demoSessions].sort((a, b) => b.sessionDate.localeCompare(a.sessionDate))
+  },
+
+  async createSession(input: {
+    sessionName: string
+    sessionDate: string
+    sessionType: AttendanceSession["sessionType"]
+    campusId?: string
+  }): Promise<AttendanceSession> {
+    const when = new Date(input.sessionDate)
+    if (Number.isNaN(when.getTime())) {
+      throw new Error("Invalid service day")
+    }
+
+    let campusId = input.campusId
+    if (!campusId) {
+      try {
+        const defaultCampus = await db.select().from(campuses).limit(1)
+        if (defaultCampus.length > 0) campusId = defaultCampus[0].id
+      } catch {
+        campusId = DEMO_CAMPUS
+      }
+    }
+    if (!campusId) campusId = DEMO_CAMPUS
+
+    const qrToken = `qr-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+
+    try {
+      const { attendanceSessions } = await import("@/lib/db/schema")
+      const [row] = await db
+        .insert(attendanceSessions)
+        .values({
+          campusId,
+          sessionName: input.sessionName,
+          sessionDate: when,
+          sessionType: input.sessionType,
+          qrToken,
+        })
+        .returning()
+
+      return {
+        id: row.id,
+        campusId: row.campusId,
+        sessionName: row.sessionName,
+        sessionDate: row.sessionDate.toISOString(),
+        sessionType: (row.sessionType as AttendanceSession["sessionType"]) || "service",
+        qrToken: row.qrToken,
+        checkinUrl: qrService.getCheckinUrl(row.id),
+        headcountAdults: row.headcountAdults,
+        headcountChildren: row.headcountChildren,
+        createdAt: row.createdAt.toISOString(),
+      }
+    } catch (err) {
+      console.info("[attendance] createSession demo fallback", err)
+      const session: AttendanceSession = {
+        id: `sess-${Date.now()}`,
+        campusId,
+        sessionName: input.sessionName,
+        sessionDate: when.toISOString(),
+        sessionType: input.sessionType,
+        qrToken,
+        checkinUrl: qrService.getCheckinUrl(`sess-${Date.now()}`),
+        headcountAdults: 0,
+        headcountChildren: 0,
+        createdAt: now(),
+      }
+      demoSessions.unshift(session)
+      return session
+    }
   },
 
   /**

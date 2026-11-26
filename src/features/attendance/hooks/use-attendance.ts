@@ -6,6 +6,7 @@ import { apiClient, ApiResponse } from "@/lib/axios"
 import {
   SundayCheckinInput,
   ChildKioskCheckinInput,
+  type CreateAttendanceSessionInput,
   type AttendanceSession,
 } from "../schemas"
 import { VISITOR_KEYS } from "@/features/visitors/hooks/use-visitor-leads"
@@ -26,6 +27,25 @@ export function useAttendanceSessions() {
       )
       return response.data.data || []
     },
+  })
+}
+
+export function useCreateAttendanceSession() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: CreateAttendanceSessionInput) => {
+      const response = await apiClient.post<ApiResponse<AttendanceSession>>(
+        "/attendance/sessions",
+        input
+      )
+      return response.data.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ATTENDANCE_KEYS.sessions() })
+      toast.success("Service day list opened")
+    },
+    onError: (err: Error) => toast.error(err.message),
   })
 }
 

@@ -2,13 +2,15 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { formatDistanceToNow } from "date-fns"
-import { Copy, ExternalLink, Plus, UserPlus } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { format, formatDistanceToNow, isValid, parseISO } from "date-fns"
+import { Copy, ExternalLink, Info, Plus, UserPlus, X } from "lucide-react"
 import { toast } from "sonner"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useForm, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -175,7 +177,20 @@ function publicUrl(slug: string) {
   return `${window.location.origin}/f/${slug}`
 }
 
-export default function VisitorsPage() {
+function sameCalendarDay(iso: unknown, day: string) {
+  if (typeof iso !== "string" || !iso) return false
+  try {
+    const d = parseISO(iso)
+    if (!isValid(d)) return false
+    return format(d, "yyyy-MM-dd") === day
+  } catch {
+    return false
+  }
+}
+
+function VisitorsPageInner() {
+  const searchParams = useSearchParams()
+  const dayFilter = searchParams.get("day")?.trim() || ""
   const [view, setView] = React.useState<"table" | "board">("table")
   const [search, setSearch] = React.useState("")
   const [page, setPage] = React.useState(1)
@@ -187,6 +202,16 @@ export default function VisitorsPage() {
   const { data: listRes, isLoading, refetch } = useVisitorLeads(1, 50, undefined, search)
   const board = useVisitorBoard(search)
   const { data: intakeForm, isLoading: intakeLoading } = useVisitorIntakeForm(true)
+
+  const dayLabel = React.useMemo(() => {
+    if (!dayFilter) return null
+    try {
+      const d = parseISO(dayFilter)
+      return isValid(d) ? format(d, "EEEE, MMM d") : dayFilter
+    } catch {
+      return dayFilter
+    }
+  }, [dayFilter])
 
   const fields = React.useMemo(
     () =>
@@ -212,10 +237,21 @@ export default function VisitorsPage() {
   }, [sheetOpen, defaultValues, form])
 
   const rows = React.useMemo(() => {
-    if (listRes?.data?.length) return listRes.data
-    const stages = board.data?.stages ?? []
-    return stages.flatMap((col: { leads?: unknown[] }) => col.leads ?? [])
-  }, [listRes, board.data])
+    const base = listRes?.data?.length
+      ? listRes.data
+      : (board.data?.stages ?? []).flatMap((col: { leads?: unknown[] }) => col.leads ?? [])
+    if (!dayFilter) return base
+    return (base as Record<string, unknown>[]).filter(
+      (row) =>
+        sameCalendarDay(row.createdAt, dayFilter) ||
+        sameCalendarDay(row.stageChangedAt, dayFilter) ||
+        sameCalendarDay(row.updatedAt, dayFilter)
+    )
+  }, [listRes, board.data, dayFilter])
+
+  React.useEffect(() => {
+    setPage(1)
+  }, [dayFilter, search])
 
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize)
 
@@ -298,13 +334,36 @@ export default function VisitorsPage() {
           />
 
           <div className="space-y-4 p-6 md:p-8">
+            {dayLabel ? (
+              <Alert className="items-start gap-x-3 border-brand/25 bg-brand-soft/40 px-4 py-3.5 text-sm shadow-xs has-[>svg]:grid-cols-[auto_1fr] *:[svg]:size-4">
+                <Info className="text-brand" strokeWidth={1.75} />
+                <AlertTitle className="text-sm font-medium text-foreground">
+                  Service day visitor list
+                </AlertTitle>
+                <AlertDescription className="mt-1 text-sm text-muted-foreground">
+                  Showing guests for <strong className="text-foreground">{dayLabel}</strong> —{" "}
+                  {rows.length} {rows.length === 1 ? "person" : "people"}. Clear the filter to see
+                  everyone.
+                </AlertDescription>
+                <div className="col-span-full mt-3 sm:col-start-2">
+                  <Link
+                    href="/dashboard/visitors"
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm shadow-xs hover:bg-muted"
+                  >
+                    <X className="size-3.5" />
+                    Clear day filter
+                  </Link>
+                </div>
+              </Alert>
+            ) : null}
+
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {cards.map((c) => (
                 <div
                   key={c.label}
                   className="flex min-h-[112px] flex-col justify-between rounded-xl border border-border bg-card px-5 py-5 shadow-xs"
                 >
-                  <p className="text-sm font-normal text-zinc-500">{c.label}</p>
+                  <p className="text-sm font-normal text-muted-foreground">{c.label}</p>
                   <p className="text-3xl font-medium tracking-tight text-foreground">
                     {c.value}
                   </p>
@@ -613,5 +672,13 @@ export default function VisitorsPage() {
         </RequireAbility>
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+export default function VisitorsPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <VisitorsPageInner />
+    </React.Suspense>
   )
 }

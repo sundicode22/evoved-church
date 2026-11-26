@@ -17,7 +17,17 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ClipboardList, Copy, ExternalLink, GripVertical, Plus, Trash2 } from "lucide-react"
+import {
+  ClipboardList,
+  Copy,
+  ExternalLink,
+  GripVertical,
+  Info,
+  Plus,
+  QrCode,
+  Trash2,
+  Users,
+} from "lucide-react"
 import { useForm, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -26,8 +36,10 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
+import { ServiceDaySheet } from "@/components/attendance/service-day-sheet"
 import {
   Sheet,
   SheetBody,
@@ -534,8 +546,19 @@ export default function FormsPage() {
   const [createOpen, setCreateOpen] = React.useState(false)
   const [builderId, setBuilderId] = React.useState<string | null>(null)
   const [confirmPublish, setConfirmPublish] = React.useState<ChurchForm | null>(null)
+  const [serviceDayOpen, setServiceDayOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
   const publish = usePublishForm()
+
+  const visitorForm = React.useMemo(
+    () => (data ?? []).find((f) => f.purpose === "visitor_intake" && f.status === "published"),
+    [data]
+  )
+  const formPublicUrl = React.useMemo(() => {
+    if (!visitorForm) return null
+    const origin = typeof window !== "undefined" ? window.location.origin : ""
+    return `${origin}/f/${visitorForm.slug}`
+  }, [visitorForm])
   const form = useForm<FormBuilderValues>({
     resolver: zodResolver(formBuilderSchema) as Resolver<FormBuilderValues>,
     defaultValues: emptyForm,
@@ -647,12 +670,47 @@ export default function FormsPage() {
           />
 
           <div className="space-y-4 p-6 md:p-8">
-            <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-xs">
-              <strong className="font-medium text-foreground">How forms work:</strong> create a
-              draft, add the questions you need, then publish. Guests fill it at{" "}
-              <code className="rounded bg-muted px-1 text-xs">/f/your-slug</code>. Visitor
-              intake forms also create a lead on the Visitors board.
-            </div>
+            <Alert className="items-start gap-x-3 border-border bg-card px-4 py-3.5 text-sm shadow-xs has-[>svg]:grid-cols-[auto_1fr] *:[svg]:size-4 *:[svg]:translate-y-0.5">
+              <Info className="text-brand" strokeWidth={1.75} />
+              <AlertTitle className="text-sm font-medium text-foreground">
+                How forms work
+              </AlertTitle>
+              <AlertDescription className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                Create a draft, add questions, then publish. Guests fill it at{" "}
+                <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
+                  /f/your-slug
+                </code>
+                . Visitor intake also creates a lead — share the QR and open a visitor list for
+                each service day to track arrivals.
+              </AlertDescription>
+              <div className="col-span-full mt-3 flex flex-wrap gap-2 sm:col-start-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="primary"
+                  onClick={() => setServiceDayOpen(true)}
+                >
+                  <QrCode className="size-3.5" />
+                  Share QR &amp; service day
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setServiceDayOpen(true)}
+                >
+                  <Users className="size-3.5" />
+                  Open visitor list
+                </Button>
+              </div>
+            </Alert>
+
+            <ServiceDaySheet
+              open={serviceDayOpen}
+              onOpenChange={setServiceDayOpen}
+              formUrl={formPublicUrl}
+              formTitle={visitorForm?.title}
+            />
 
             {!isLoading && (data?.length ?? 0) === 0 ? (
               <Empty className="rounded-lg border border-border py-16">

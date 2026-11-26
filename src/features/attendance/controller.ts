@@ -1,6 +1,10 @@
 import { Elysia } from "elysia"
 import { attendanceService } from "./service"
-import { sundayCheckinSchema, childKioskCheckinSchema } from "./schemas"
+import {
+  sundayCheckinSchema,
+  childKioskCheckinSchema,
+  createAttendanceSessionSchema,
+} from "./schemas"
 import { qrService } from "./qr-service"
 import { formatErrorResponse } from "@/lib/errors"
 
@@ -13,6 +17,19 @@ export const attendanceController = new Elysia({ prefix: "/attendance" })
       const { status, body } = formatErrorResponse(error)
       set.status = status
       return body
+    }
+  })
+
+  .post("/sessions", async ({ body, set }) => {
+    try {
+      const parsed = createAttendanceSessionSchema.parse(body)
+      const data = await attendanceService.createSession(parsed)
+      set.status = 201
+      return { success: true, data }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
     }
   })
 

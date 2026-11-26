@@ -20,8 +20,16 @@ export const childKioskCheckinSchema = z.object({
   campusId: z.string().uuid().optional(),
 })
 
+export const createAttendanceSessionSchema = z.object({
+  sessionName: z.string().min(2, "Session name is required"),
+  sessionDate: z.string().min(1, "Service day is required"),
+  sessionType: z.enum(["service", "kids", "youth", "class"]).default("service"),
+  campusId: z.string().uuid().optional(),
+})
+
 export type SundayCheckinInput = z.infer<typeof sundayCheckinSchema>
 export type ChildKioskCheckinInput = z.infer<typeof childKioskCheckinSchema>
+export type CreateAttendanceSessionInput = z.infer<typeof createAttendanceSessionSchema>
 
 export type AttendanceSession = {
   id: string
