@@ -7,119 +7,27 @@ import {
   CreateMemberInput,
   UpdatePersonTypeInput,
   AttachHouseholdInput,
-  HOUSEHOLD_ROLE_LABELS,
 } from "./schemas"
 import { DbPaginationResult } from "@/lib/db/pagination"
 
-/** Mutable demo directory when DB is empty / unavailable. */
-let memoryMembers: Array<Record<string, unknown>> = [
-  {
-    id: "mem-1",
-    firstName: "David",
-    lastName: "Johnson",
-    email: "david.johnson@email.com",
-    phoneNumber: "+15550101001",
-    personType: "staff_minister",
-    recordedTitle: "Senior Pastor",
-    householdRole: "father",
-    ministryRoles: ["Preaching", "Board of Elders"],
-    ordinationDate: "2010-06-15",
-    ordinationCredentials: "Acts Assemblies Presbytery #4492",
-    backgroundCheckStatus: "cleared",
-    backgroundCheckExpiresAt: "2027-01-01",
-    category: "Senior Leadership",
-    badgeColor: "emerald",
-  },
-  {
-    id: "mem-2",
-    firstName: "Marcus",
-    lastName: "Vance",
-    email: "marcus.vance@email.com",
-    phoneNumber: "+15550101002",
-    personType: "staff_minister",
-    householdRole: "head",
-    recordedTitle: "Executive Pastor (Operations)",
-    ministryRoles: ["Operations", "Finance Committee"],
-    ordinationDate: "2014-08-20",
-    backgroundCheckStatus: "cleared",
-    category: "Executive Staff",
-    badgeColor: "blue",
-  },
-  {
-    id: "mem-3",
-    firstName: "Kathryn",
-    lastName: "Murphy",
-    email: "kathryn.murphy@email.com",
-    phoneNumber: "+15550101003",
-    personType: "leader",
-    recordedTitle: "Deaconess & Life Group Coordinator",
-    ministryRoles: ["Small Groups", "Hospitality"],
-    baptismDate: "2018-04-12",
-    backgroundCheckStatus: "cleared",
-    category: "Ministry Leaders",
-    badgeColor: "purple",
-  },
-  {
-    id: "mem-4",
-    firstName: "Jane",
-    lastName: "Cooper",
-    email: "jane.cooper@email.com",
-    phoneNumber: "+15550101004",
-    personType: "prospect",
-    recordedTitle: null,
-    ministryRoles: [],
-    backgroundCheckStatus: "none",
-    category: "Newcomers & Visitors",
-    badgeColor: "amber",
-  },
-  {
-    id: "mem-5",
-    firstName: "Brian",
-    lastName: "Robbin",
-    email: "brian.robbin@email.com",
-    phoneNumber: "+15550101005",
-    personType: "volunteer",
-    recordedTitle: null,
-    ministryRoles: ["Kids Check-in"],
-    backgroundCheckStatus: "expired",
-    backgroundCheckExpiresAt: new Date(Date.now() - 7 * 86400000).toISOString(),
-    category: "Volunteers",
-    badgeColor: "rose",
-  },
-]
+function emptyPage<T>(page: number, pageSize: number): DbPaginationResult<T> {
+  return {
+    data: [],
+    pagination: {
+      page,
+      pageSize,
+      total: 0,
+      totalPages: 1,
+      hasNext: false,
+      hasPrev: false,
+    },
+  }
+}
 
-const DEMO_HOUSEHOLD = {
-  id: "hh-cooper",
-  name: "The Cooper Household",
-  members: [
-    {
-      id: "mem-1",
-      firstName: "David",
-      lastName: "Johnson",
-      personType: "staff_minister",
-      householdRole: "father",
-      recordedTitle: "Senior Pastor",
-      backgroundCheckStatus: "cleared",
-    },
-    {
-      id: "mem-spouse",
-      firstName: "Rachel",
-      lastName: "Johnson",
-      personType: "covenant_member",
-      householdRole: "mother",
-      recordedTitle: null,
-      backgroundCheckStatus: "cleared",
-    },
-    {
-      id: "mem-child",
-      firstName: "Noah",
-      lastName: "Johnson",
-      personType: "regular_attender",
-      householdRole: "son",
-      recordedTitle: null,
-      backgroundCheckStatus: "none",
-    },
-  ],
+function optionalDate(value?: string | null) {
+  if (!value?.trim()) return null
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : d
 }
 
 export const memberService = {
@@ -132,7 +40,7 @@ export const memberService = {
     personType?: string
     campusId?: string
     search?: string
-  }): Promise<DbPaginationResult<any>> {
+  }): Promise<DbPaginationResult<(typeof members.$inferSelect)>> {
     const page = Math.max(1, Number(params.page || 1))
     const pageSize = Math.max(1, Math.min(100, Number(params.pageSize || 10)))
     const offset = (page - 1) * pageSize
@@ -142,7 +50,7 @@ export const memberService = {
       conditions.push(eq(members.campusId, params.campusId))
     }
     if (params.personType && params.personType !== "all") {
-      conditions.push(eq(members.personType, params.personType as any))
+      conditions.push(eq(members.personType, params.personType as typeof members.personType.enumValues[number]))
     }
     if (params.search) {
       conditions.push(
@@ -150,7 +58,10 @@ export const memberService = {
           ilike(members.firstName, `%${params.search}%`),
           ilike(members.lastName, `%${params.search}%`),
           ilike(members.email, `%${params.search}%`),
-          ilike(members.recordedTitle, `%${params.search}%`)
+          ilike(members.phoneNumber, `%${params.search}%`),
+          ilike(members.recordedTitle, `%${params.search}%`),
+          ilike(members.city, `%${params.search}%`),
+          ilike(members.address, `%${params.search}%`)
         )
       )
     }
@@ -175,35 +86,6 @@ export const memberService = {
       const total = countResult[0]?.count || 0
       const totalPages = Math.ceil(total / pageSize) || 1
 
-      // If database is empty during fresh dev, return mutable in-memory directory
-      if (records.length === 0) {
-        let data = [...memoryMembers]
-        if (params.personType && params.personType !== "all") {
-          data = data.filter((m) => m.personType === params.personType)
-        }
-        if (params.search) {
-          const q = params.search.toLowerCase()
-          data = data.filter((m) => {
-            const blob = `${m.firstName} ${m.lastName} ${m.email || ""} ${m.recordedTitle || ""}`.toLowerCase()
-            return blob.includes(q)
-          })
-        }
-        const total = data.length
-        const slice = data.slice(offset, offset + pageSize)
-        const totalPages = Math.ceil(total / pageSize) || 1
-        return {
-          data: slice,
-          pagination: {
-            page,
-            pageSize,
-            total,
-            totalPages,
-            hasNext: page < totalPages,
-            hasPrev: page > 1,
-          },
-        }
-      }
-
       return {
         data: records,
         pagination: {
@@ -217,31 +99,7 @@ export const memberService = {
       }
     } catch (err) {
       console.error("[memberService.getPaginatedMembers] DB error:", err)
-      let data = [...memoryMembers]
-      if (params.personType && params.personType !== "all") {
-        data = data.filter((m) => m.personType === params.personType)
-      }
-      if (params.search) {
-        const q = params.search.toLowerCase()
-        data = data.filter((m) => {
-          const blob = `${m.firstName} ${m.lastName} ${m.email || ""}`.toLowerCase()
-          return blob.includes(q)
-        })
-      }
-      const total = data.length
-      const slice = data.slice(offset, offset + pageSize)
-      const totalPages = Math.ceil(total / pageSize) || 1
-      return {
-        data: slice,
-        pagination: {
-          page,
-          pageSize,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
-      }
+      return emptyPage(page, pageSize)
     }
   },
 
@@ -251,76 +109,70 @@ export const memberService = {
     }
 
     let campusId = input.campusId
-    try {
-      if (!campusId) {
-        const rows = await db.select().from(campuses).limit(1)
-        campusId = rows[0]?.id
-      }
-      if (campusId) {
-        const [created] = await db
-          .insert(members)
-          .values({
-            campusId,
-            firstName: input.firstName.trim(),
-            lastName: input.lastName.trim(),
-            email: input.email || null,
-            phoneNumber: input.phoneNumber || null,
-            personType: input.personType || "covenant_member",
-            recordedTitle: input.recordedTitle || null,
-            ministryRoles: input.ministryRoles || [],
-            backgroundCheckStatus: input.backgroundCheckStatus || "none",
-          })
-          .returning()
-        if (created) return created
-      }
-    } catch (e) {
-      console.error("[memberService.createMember]", e)
+    if (!campusId) {
+      const rows = await db.select().from(campuses).limit(1)
+      campusId = rows[0]?.id
+    }
+    if (!campusId) {
+      throw new ValidationError("Create a location before adding members.")
     }
 
-    const row = {
-      id: `mem-${Date.now().toString(36)}`,
-      firstName: input.firstName.trim(),
-      lastName: input.lastName.trim(),
-      email: input.email || "",
-      phoneNumber: input.phoneNumber || "",
-      personType: input.personType || "covenant_member",
-      recordedTitle: input.recordedTitle || null,
-      ministryRoles: input.ministryRoles || [],
-      householdRole: null,
-      backgroundCheckStatus: input.backgroundCheckStatus || "none",
-      category: "Directory",
-      badgeColor: "teal",
-      createdAt: new Date().toISOString(),
-    }
-    memoryMembers = [row, ...memoryMembers]
-    return row
+    const [created] = await db
+      .insert(members)
+      .values({
+        campusId,
+        firstName: input.firstName.trim(),
+        lastName: input.lastName.trim(),
+        preferredName: input.preferredName?.trim() || null,
+        email: input.email || null,
+        phoneNumber: input.phoneNumber || null,
+        personType: input.personType || "covenant_member",
+        recordedTitle: input.recordedTitle || null,
+        gender: input.gender || null,
+        maritalStatus: input.maritalStatus || null,
+        address: input.address?.trim() || null,
+        city: input.city?.trim() || null,
+        state: input.state?.trim() || null,
+        zipCode: input.zipCode?.trim() || null,
+        country: input.country?.trim() || "US",
+        occupation: input.occupation?.trim() || null,
+        notes: input.notes?.trim() || null,
+        membershipDate: optionalDate(input.membershipDate),
+        birthDate: optionalDate(input.birthDate),
+        salvationDate: optionalDate(input.salvationDate),
+        baptismDate: optionalDate(input.baptismDate),
+        baptismOfficiant: input.baptismOfficiant || null,
+        ordinationDate: optionalDate(input.ordinationDate),
+        ordinationCredentials: input.ordinationCredentials || null,
+        ministryRoles: input.ministryRoles || [],
+        backgroundCheckStatus: input.backgroundCheckStatus || "none",
+      })
+      .returning()
+
+    if (!created) throw new ValidationError("Could not create member")
+
+    const { writeAuditLog } = await import("@/features/audit/service")
+    void writeAuditLog({
+      campusId: created.campusId,
+      action: "member.create",
+      entityType: "member",
+      entityId: created.id,
+      summary: `Created member ${created.firstName} ${created.lastName}`,
+      metadata: { personType: created.personType },
+    })
+
+    return created
   },
 
-  /**
-   * Retrieves all dynamic user categories
-   */
   async getCategories() {
     try {
-      const cats = await db.select().from(userCategories)
-      if (cats.length === 0) {
-        return [
-          { id: "cat-1", name: "Senior Leadership", slug: "senior-leadership", badgeColor: "emerald", isSystem: true },
-          { id: "cat-2", name: "Executive Staff", slug: "executive-staff", badgeColor: "blue", isSystem: true },
-          { id: "cat-3", name: "Ministry Leaders", slug: "ministry-leaders", badgeColor: "purple", isSystem: false },
-          { id: "cat-4", name: "Covenant Partners", slug: "covenant-partners", badgeColor: "teal", isSystem: false },
-          { id: "cat-5", name: "Newcomers & Guests", slug: "newcomers-guests", badgeColor: "amber", isSystem: true },
-        ]
-      }
-      return cats
+      return await db.select().from(userCategories)
     } catch (err) {
       console.error("[memberService.getCategories] DB error:", err)
       return []
     }
   },
 
-  /**
-   * Creates a dynamic category of users
-   */
   async createCategory(input: CreateCategoryInput) {
     const slug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")
     const [created] = await db
@@ -337,227 +189,141 @@ export const memberService = {
   },
 
   async getMemberById(id: string) {
-    try {
-      const rows = await db.select().from(members).where(eq(members.id, id)).limit(1)
-      if (rows[0]) {
-        let householdPeers: unknown[] = []
-        if (rows[0].householdId) {
-          householdPeers = await db
-            .select()
-            .from(members)
-            .where(eq(members.householdId, rows[0].householdId))
+    const rows = await db.select().from(members).where(eq(members.id, id)).limit(1)
+    if (!rows[0]) throw new NotFoundError("Member not found")
+
+    let householdName: string | null = null
+    let householdPeers: (typeof members.$inferSelect)[] = []
+    let householdAddress: {
+      address: string | null
+      city: string | null
+      state: string | null
+      zipCode: string | null
+    } | null = null
+
+    if (rows[0].householdId) {
+      const [hh] = await db
+        .select()
+        .from(households)
+        .where(eq(households.id, rows[0].householdId))
+        .limit(1)
+      if (hh) {
+        householdName = hh.name
+        householdAddress = {
+          address: hh.address,
+          city: hh.city,
+          state: hh.state,
+          zipCode: hh.zipCode,
         }
-        return { ...rows[0], householdPeers }
       }
-    } catch {
-      /* demo */
+      householdPeers = await db
+        .select()
+        .from(members)
+        .where(eq(members.householdId, rows[0].householdId))
     }
-    const all = [
-      ...DEMO_HOUSEHOLD.members,
-      {
-        id: "mem-5",
-        firstName: "Brian",
-        lastName: "Robbin",
-        personType: "volunteer",
-        householdRole: "other" as const,
-        recordedTitle: null,
-        backgroundCheckStatus: "expired",
-        backgroundCheckExpiresAt: new Date(Date.now() - 7 * 86400000).toISOString(),
-        ministryRoles: ["Kids Check-in"],
-      },
-    ]
-    const found = all.find((m) => m.id === id) || all[0]
-    const peers =
-      found.id === "mem-5"
-        ? [found]
-        : DEMO_HOUSEHOLD.members.map((m) => ({
-            ...m,
-            roleLabel: HOUSEHOLD_ROLE_LABELS[m.householdRole as keyof typeof HOUSEHOLD_ROLE_LABELS],
-          }))
+
     return {
-      ...found,
-      householdId: found.id === "mem-5" ? null : DEMO_HOUSEHOLD.id,
-      householdName: found.id === "mem-5" ? null : DEMO_HOUSEHOLD.name,
-      householdPeers: peers,
-      email: `${found.firstName.toLowerCase()}@gracecity.church`,
-      phoneNumber: "(555) 010-1000",
-      ministryRoles: (found as { ministryRoles?: string[] }).ministryRoles || ["Pastoral Care"],
+      ...rows[0],
+      householdName,
+      householdAddress,
+      householdPeers,
     }
   },
 
   async attachHousehold(id: string, input: AttachHouseholdInput) {
-    try {
-      let householdId = input.householdId
-      if (!householdId && input.householdName) {
-        let campusId = input.campusId
-        if (!campusId) {
-          const c = await db.select().from(campuses).limit(1)
-          campusId = c[0]?.id
-        }
-        if (!campusId) throw new ValidationError("Campus/location required to create household")
-        const [hh] = await db
-          .insert(households)
-          .values({ name: input.householdName, campusId })
-          .returning()
-        householdId = hh.id
+    let householdId = input.householdId
+    if (!householdId && input.householdName) {
+      let campusId = input.campusId
+      if (!campusId) {
+        const c = await db.select().from(campuses).limit(1)
+        campusId = c[0]?.id
       }
-      if (!householdId) throw new ValidationError("householdId or householdName required")
-
-      const [updated] = await db
-        .update(members)
-        .set({
-          householdId,
-          householdRole: input.householdRole,
-          isHeadOfHousehold: input.householdRole === "head" || input.householdRole === "father",
-          updatedAt: new Date(),
-        })
-        .where(eq(members.id, id))
+      if (!campusId) throw new ValidationError("Campus/location required to create household")
+      const [hh] = await db
+        .insert(households)
+        .values({ name: input.householdName, campusId })
         .returning()
-      return updated || { id, householdId, householdRole: input.householdRole }
-    } catch (e) {
-      if (e instanceof ValidationError) throw e
-      return { id, householdId: input.householdId || "hh-demo", householdRole: input.householdRole }
+      householdId = hh.id
     }
+    if (!householdId) throw new ValidationError("householdId or householdName required")
+
+    const [updated] = await db
+      .update(members)
+      .set({
+        householdId,
+        householdRole: input.householdRole,
+        isHeadOfHousehold: input.householdRole === "head" || input.householdRole === "father",
+        updatedAt: new Date(),
+      })
+      .where(eq(members.id, id))
+      .returning()
+
+    if (!updated) throw new NotFoundError("Member not found")
+    return updated
   },
 
-  /**
-   * Household directory for Families page — DB when available, else demo.
-   */
+  /** Household directory for Families page — real DB only, never seeded demo rows. */
   async listHouseholds() {
     try {
       const rows = await db.select().from(households).orderBy(desc(households.createdAt))
-      if (rows.length > 0) {
-        const result = []
-        for (const hh of rows) {
-          const membersInHh = await db
-            .select()
-            .from(members)
-            .where(eq(members.householdId, hh.id))
-          result.push({
-            id: hh.id,
-            name: hh.name,
-            campusId: hh.campusId,
-            address: hh.address,
-            city: hh.city,
-            state: hh.state,
-            zipCode: hh.zipCode,
-            memberCount: membersInHh.length,
-            members: membersInHh.map((m) => ({
-              id: m.id,
-              firstName: m.firstName,
-              lastName: m.lastName,
-              householdRole: m.householdRole,
-              personType: m.personType,
-            })),
-            createdAt: hh.createdAt.toISOString(),
-          })
-        }
-        return result
+      const result = []
+      for (const hh of rows) {
+        const membersInHh = await db
+          .select()
+          .from(members)
+          .where(eq(members.householdId, hh.id))
+        result.push({
+          id: hh.id,
+          name: hh.name,
+          campusId: hh.campusId,
+          address: hh.address,
+          city: hh.city,
+          state: hh.state,
+          zipCode: hh.zipCode,
+          memberCount: membersInHh.length,
+          members: membersInHh.map((m) => ({
+            id: m.id,
+            firstName: m.firstName,
+            lastName: m.lastName,
+            email: m.email,
+            phoneNumber: m.phoneNumber,
+            householdRole: m.householdRole,
+            personType: m.personType,
+            address: m.address,
+            city: m.city,
+            state: m.state,
+            zipCode: m.zipCode,
+          })),
+          createdAt: hh.createdAt.toISOString(),
+        })
       }
+      return result
     } catch (err) {
-      console.error("[memberService.listHouseholds] demo", err)
+      console.error("[memberService.listHouseholds]", err)
+      return []
     }
-
-    return [
-      {
-        id: DEMO_HOUSEHOLD.id,
-        name: DEMO_HOUSEHOLD.name,
-        campusId: "campus-demo-1",
-        address: "120 Grace Avenue",
-        city: "Springfield",
-        state: "IL",
-        zipCode: "62701",
-        memberCount: DEMO_HOUSEHOLD.members.length,
-        members: DEMO_HOUSEHOLD.members,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "hh-vance",
-        name: "The Vance Household",
-        campusId: "campus-demo-1",
-        address: "88 Oak Street",
-        city: "Springfield",
-        state: "IL",
-        zipCode: "62704",
-        memberCount: 2,
-        members: [
-          {
-            id: "mem-2",
-            firstName: "Marcus",
-            lastName: "Vance",
-            personType: "staff_minister",
-            householdRole: "head",
-          },
-          {
-            id: "mem-vance-spouse",
-            firstName: "Rachel",
-            lastName: "Vance",
-            personType: "covenant_member",
-            householdRole: "spouse",
-          },
-        ],
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "hh-murphy",
-        name: "The Murphy Household",
-        campusId: "campus-demo-1",
-        address: null,
-        city: "Springfield",
-        state: "IL",
-        zipCode: null,
-        memberCount: 1,
-        members: [
-          {
-            id: "mem-3",
-            firstName: "Kathryn",
-            lastName: "Murphy",
-            personType: "leader",
-            householdRole: "head",
-          },
-        ],
-        createdAt: new Date().toISOString(),
-      },
-    ]
   },
 
-  /**
-   * Lifecycle promotion/demotion with actor audit note
-   */
   async updatePersonType(id: string, input: UpdatePersonTypeInput) {
-    try {
-      const existing = await db.select().from(members).where(eq(members.id, id)).limit(1)
-      if (existing.length === 0) {
-        return {
-          id,
-          personType: input.personType,
-          changedByUserId: input.changedByUserId,
-          reason: input.reason || `Lifecycle set to ${input.personType}`,
-        }
-      }
-      const previous = existing[0].personType
-      const [updated] = await db
-        .update(members)
-        .set({ personType: input.personType, updatedAt: new Date() })
-        .where(eq(members.id, id))
-        .returning()
-      return {
-        ...updated,
-        lifecycleAudit: {
-          previous,
-          next: input.personType,
-          changedByUserId: input.changedByUserId,
-          reason: input.reason || null,
-          changedAt: new Date().toISOString(),
-        },
-      }
-    } catch {
-      return {
-        id,
-        personType: input.personType,
+    const existing = await db.select().from(members).where(eq(members.id, id)).limit(1)
+    if (existing.length === 0) throw new NotFoundError("Member not found")
+
+    const previous = existing[0].personType
+    const [updated] = await db
+      .update(members)
+      .set({ personType: input.personType, updatedAt: new Date() })
+      .where(eq(members.id, id))
+      .returning()
+
+    return {
+      ...updated,
+      lifecycleAudit: {
+        previous,
+        next: input.personType,
         changedByUserId: input.changedByUserId,
-        reason: input.reason,
-      }
+        reason: input.reason || null,
+        changedAt: new Date().toISOString(),
+      },
     }
   },
 }

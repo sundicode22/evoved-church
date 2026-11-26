@@ -38,11 +38,16 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { apiClient, ApiResponse } from "@/lib/axios"
-import { HOUSEHOLD_ROLE_LABELS, type HouseholdRole } from "@/features/members/schemas"
+import {
+  GENDER_LABELS,
+  HOUSEHOLD_ROLE_LABELS,
+  MARITAL_STATUS_LABELS,
+  type HouseholdRole,
+} from "@/features/members/schemas"
 import { MEMBER_KEYS } from "@/features/members/hooks/use-members"
 import { Can } from "@/components/auth/can"
 import { toast } from "sonner"
-import { Mail, Smartphone } from "lucide-react"
+import { Briefcase, Home, Mail, MapPin, Smartphone, User } from "lucide-react"
 
 export function MemberDrawer({
   memberId,
@@ -130,6 +135,18 @@ export function MemberDrawer({
                 <ScrollArea className="min-h-0 flex-1 pr-1">
                   <TabsContent value="profile" className="mt-0 space-y-4 pb-4">
                     <ul className="space-y-3 rounded-xl border border-zinc-200/70 bg-white p-4 text-sm">
+                      {member.preferredName ? (
+                        <>
+                          <li className="flex items-start gap-2.5">
+                            <User className="mt-0.5 size-3.5 text-zinc-400" />
+                            <div>
+                              <p className="text-[11px] text-zinc-400">Preferred name</p>
+                              <p className="text-zinc-800">{member.preferredName}</p>
+                            </div>
+                          </li>
+                          <Separator />
+                        </>
+                      ) : null}
                       <li className="flex items-start gap-2.5">
                         <Mail className="mt-0.5 size-3.5 text-zinc-400" />
                         <div>
@@ -146,12 +163,83 @@ export function MemberDrawer({
                         </div>
                       </li>
                       <Separator />
+                      <li className="flex items-start gap-2.5">
+                        <MapPin className="mt-0.5 size-3.5 text-zinc-400" />
+                        <div>
+                          <p className="text-[11px] text-zinc-400">Address</p>
+                          <p className="text-zinc-800">
+                            {[
+                              member.address,
+                              member.city,
+                              member.state,
+                              member.zipCode,
+                              member.country,
+                            ]
+                              .filter(Boolean)
+                              .join(", ") ||
+                              (member.householdAddress
+                                ? [
+                                    member.householdAddress.address,
+                                    member.householdAddress.city,
+                                    member.householdAddress.state,
+                                    member.householdAddress.zipCode,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(", ")
+                                : null) ||
+                              "—"}
+                          </p>
+                        </div>
+                      </li>
+                      <Separator />
+                      <li className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-[11px] text-zinc-400">Gender</p>
+                          <p className="text-zinc-800">
+                            {GENDER_LABELS[member.gender] || member.gender || "—"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-zinc-400">Marital status</p>
+                          <p className="text-zinc-800">
+                            {MARITAL_STATUS_LABELS[member.maritalStatus] ||
+                              member.maritalStatus ||
+                              "—"}
+                          </p>
+                        </div>
+                      </li>
+                      <Separator />
+                      <li className="flex items-start gap-2.5">
+                        <Briefcase className="mt-0.5 size-3.5 text-zinc-400" />
+                        <div>
+                          <p className="text-[11px] text-zinc-400">Occupation</p>
+                          <p className="text-zinc-800">{member.occupation || "—"}</p>
+                        </div>
+                      </li>
+                      <Separator />
+                      <li className="flex items-start gap-2.5">
+                        <Home className="mt-0.5 size-3.5 text-zinc-400" />
+                        <div>
+                          <p className="text-[11px] text-zinc-400">Household</p>
+                          <p className="text-zinc-800">{member.householdName || "—"}</p>
+                        </div>
+                      </li>
+                      <Separator />
                       <li>
                         <p className="text-[11px] text-zinc-400">Ministries</p>
                         <p className="text-zinc-800">
                           {(member.ministryRoles || []).join(", ") || "—"}
                         </p>
                       </li>
+                      {member.notes ? (
+                        <>
+                          <Separator />
+                          <li>
+                            <p className="text-[11px] text-zinc-400">Notes</p>
+                            <p className="whitespace-pre-wrap text-zinc-800">{member.notes}</p>
+                          </li>
+                        </>
+                      ) : null}
                     </ul>
                   </TabsContent>
 
@@ -209,7 +297,7 @@ export function MemberDrawer({
 
                     <Can permission="members.write">
                       <div className="space-y-2 rounded-xl border border-zinc-200/70 bg-[#f8faf9] p-4">
-                        <Label className="text-xs font-semibold">Your role in household</Label>
+                        <Label>Your role in household</Label>
                         <Select
                           value={role}
                           items={(Object.keys(HOUSEHOLD_ROLE_LABELS) as HouseholdRole[]).map(
@@ -281,7 +369,7 @@ export function MemberDrawer({
                   Close
                 </Button>
                 <Button
-                  variant="accent"
+                  variant="default"
                   onClick={() => attach.mutate()}
                   disabled={attach.isPending}
                 >

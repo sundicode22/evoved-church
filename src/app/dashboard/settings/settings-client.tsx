@@ -126,9 +126,11 @@ export function SettingsClient() {
 
   return (
     <RequireAbility permission="settings.read">
-      <div className="min-w-0 flex-1 bg-white p-4 md:p-6">
-        <h1 className="text-2xl text-zinc-950">{current?.label ?? "Settings"}</h1>
-        <div className="mt-6">
+      <div className="min-w-0 flex-1 bg-white px-4 py-4 text-left md:px-6 md:py-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
+          {current?.label ?? "Settings"}
+        </h1>
+        <div className="mt-6 w-full text-left">
           {active === "church_details" ? <ChurchDetailsTab canEdit={can("settings.write")} /> : null}
           {active === "locations" ? <LocationsTab canEdit={can("settings.write")} /> : null}
           {active === "defaults" ? <NomenclatureTab canEdit={can("settings.write")} /> : null}

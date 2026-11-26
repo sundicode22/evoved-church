@@ -23,6 +23,7 @@ import {
 } from "./schemas"
 import {
   getMemoryBooks,
+  provisionAllCampusBooks,
   provisionCampusBooks,
 } from "./default-books"
 import { emailService } from "@/features/communications/resend"
@@ -81,6 +82,8 @@ export const accountingService = {
     try {
       if (scopeId) {
         await provisionCampusBooks(scopeId)
+      } else {
+        await provisionAllCampusBooks()
       }
 
       const conditions = [eq(accountingFunds.isActive, true)]
@@ -221,6 +224,8 @@ export const accountingService = {
     try {
       if (scopeId) {
         await provisionCampusBooks(scopeId)
+      } else {
+        await provisionAllCampusBooks()
       }
 
       const conditions = [eq(chartOfAccounts.isActive, true)]
@@ -764,6 +769,17 @@ export const accountingService = {
         .set({ balance: next.toFixed(2), updatedAt: new Date() })
         .where(eq(accountingFunds.id, fundId))
     }
+
+    const { writeAuditLog } = await import("@/features/audit/service")
+    void writeAuditLog({
+      campusId: updated.campusId,
+      actorUserId: input.postedByUserId,
+      action: "ledger.post",
+      entityType: "journal_entry",
+      entityId: updated.id,
+      summary: `Posted journal ${updated.entryNumber}${updated.memo ? ` — ${updated.memo}` : ""}`,
+      metadata: { entryNumber: updated.entryNumber },
+    })
 
     return updated
   },

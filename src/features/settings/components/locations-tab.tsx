@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { apiClient, type ApiResponse } from "@/lib/axios"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { slugify } from "@/features/onboarding/presets"
@@ -61,7 +63,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
     return () => sub.unsubscribe()
   }, [form])
 
-  const { data: locations = [] } = useQuery({
+  const { data: locations = [], isLoading } = useQuery({
     queryKey: ["campuses"],
     queryFn: async () => {
       const res = await apiClient.get<ApiResponse<Campus[]>>("/campuses")
@@ -79,7 +81,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
       })
     },
     onSuccess: () => {
-      toast.success("Location created with its own books")
+      toast.success("Location created with standard chart of accounts")
       qc.invalidateQueries({ queryKey: ["campuses"] })
       qc.invalidateQueries({ queryKey: ["accounting"] })
       setOpen(false)
@@ -89,8 +91,8 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
   })
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="w-full space-y-4 text-left">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-zinc-900">Locations</h2>
           <p className="text-xs text-zinc-500">
@@ -110,17 +112,19 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
         ) : null}
       </div>
 
-      {locations.length === 0 ? (
-        <Empty className="border border-dashed py-12">
+      {isLoading ? (
+        <Skeleton className="h-40 w-full rounded-xl" />
+      ) : locations.length === 0 ? (
+        <Empty className="border border-dashed py-12 text-left">
           <EmptyTitle>No locations yet</EmptyTitle>
           <EmptyDescription>Add your first location to scope people and finances.</EmptyDescription>
         </Empty>
       ) : (
-        <div className="rounded-xl border bg-white shadow-xs">
+        <div className="w-full overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-xs">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead className="pl-4">Name</TableHead>
                 <TableHead>Slug</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Type</TableHead>
@@ -129,7 +133,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
             <TableBody>
               {locations.map((l) => (
                 <TableRow key={l.id}>
-                  <TableCell>
+                  <TableCell className="pl-4">
                     {l.name}
                     {l.isMainCampus ? (
                       <span className="ml-2 text-xs text-brand">Main</span>
@@ -173,7 +177,14 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
                 Cancel
               </Button>
               <Button type="submit" variant="primary" disabled={create.isPending}>
-                Save location
+                {create.isPending ? (
+                  <>
+                    <Spinner className="size-3.5" />
+                    Saving…
+                  </>
+                ) : (
+                  "Save location"
+                )}
               </Button>
             </SheetFooter>
           </form>

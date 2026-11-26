@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { ONBOARDING_COOKIE } from "@/features/onboarding/cookie"
 
 const PROTECTED_PREFIXES = ["/dashboard", "/onboarding"]
-const ONBOARDING_COOKIE = "evolve_onboarding_completed"
 
 function hasSessionCookie(request: NextRequest): boolean {
   return request.cookies

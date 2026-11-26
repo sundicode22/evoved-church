@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+/** Default seed keys — boards use customizable kanban_columns at runtime. */
 export const VISITOR_STAGES = [
   "first_visit",
   "welcome_call",
@@ -9,7 +10,7 @@ export const VISITOR_STAGES = [
   "active_partner",
 ] as const
 
-export const VISITOR_STAGE_LABELS: Record<(typeof VISITOR_STAGES)[number], string> = {
+export const VISITOR_STAGE_LABELS: Record<string, string> = {
   first_visit: "First Visit",
   welcome_call: "Welcome Call",
   pastoral_visit: "Pastoral Visit / Coffee",
@@ -18,7 +19,8 @@ export const VISITOR_STAGE_LABELS: Record<(typeof VISITOR_STAGES)[number], strin
   active_partner: "Active Partner",
 }
 
-export const visitorStageSchema = z.enum(VISITOR_STAGES)
+/** Any column key from the visitors kanban. */
+export const visitorStageSchema = z.string().min(1)
 
 export const createLeadSchema = z.object({
   title: z.string().min(2, "Title is required"),
@@ -70,4 +72,4 @@ export type AssignLeadInput = z.infer<typeof assignLeadSchema>
 export type VisitorCommentInput = z.infer<typeof visitorCommentSchema>
 export type VisitorOutreachInput = z.infer<typeof visitorOutreachSchema>
 export type ScheduleAppointmentInput = z.infer<typeof scheduleAppointmentSchema>
-export type VisitorStage = z.infer<typeof visitorStageSchema>
+export type VisitorStage = string

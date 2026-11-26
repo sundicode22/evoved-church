@@ -4,7 +4,7 @@ import Link from "next/link"
 export function BrandMark({ href = "/" }: { href?: string }) {
   return (
     <Link href={href} className="inline-flex items-center">
-      <span className="text-base font-semibold tracking-tight text-slate-900">LOGO</span>
+      <span className="text-xl font-semibold tracking-tight text-brand">Evolve</span>
     </Link>
   )
 }

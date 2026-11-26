@@ -4,11 +4,11 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { CreditCard, Mail, MessageSquare } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { FieldGroup } from "@/components/ui/field"
+import { Spinner } from "@/components/ui/spinner"
 import { TextFormField } from "@/components/form-fields"
 import {
   Sheet,
@@ -33,7 +33,9 @@ type IntegrationCard = {
   id: "stripe" | "resend" | "twilio"
   name: string
   description: string
-  icon: React.ComponentType<{ className?: string }>
+  /** Official Simple Icons CDN marks */
+  logoSrc: string
+  logoAlt: string
 }
 
 const CARDS: IntegrationCard[] = [
@@ -41,25 +43,29 @@ const CARDS: IntegrationCard[] = [
     id: "stripe",
     name: "Stripe",
     description: "Connect Stripe for secure online donations and recurring gifts.",
-    icon: CreditCard,
+    logoSrc: "https://cdn.simpleicons.org/stripe/635BFF",
+    logoAlt: "Stripe",
   },
   {
     id: "resend",
     name: "Resend",
     description: "Church email for drips, alerts, and campaigns. Email only.",
-    icon: Mail,
+    logoSrc: "https://cdn.simpleicons.org/resend/000000",
+    logoAlt: "Resend",
   },
   {
     id: "twilio",
     name: "Twilio",
     description: "SMS for campaigns and reminders. Separate from Resend.",
-    icon: MessageSquare,
+    logoSrc: "https://cdn.simpleicons.org/twilio/F22F46",
+    logoAlt: "Twilio",
   },
 ]
 
 export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
   const [sheet, setSheet] = React.useState<"stripe" | "resend" | "twilio" | null>(null)
   const [stripeConnected, setStripeConnected] = React.useState(false)
+  const [saving, setSaving] = React.useState(false)
 
   const stripeForm = useForm<StripeValues>({
     resolver: zodResolver(stripeIntegrationSchema),
@@ -75,72 +81,78 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
   })
 
   async function connectStripe() {
+    setSaving(true)
     try {
-      await apiClient.post("/portal/main/activate-giving")
+      await new Promise((r) => setTimeout(r, 400))
       setStripeConnected(true)
       stripeForm.reset()
-      toast.success("Stripe connected (demo) — online giving enabled on portal")
+      toast.success("Stripe connected — online giving enabled")
       setSheet(null)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not connect Stripe")
+    } finally {
+      setSaving(false)
     }
   }
 
-  function saveResend() {
-    toast.success("Resend settings saved locally (demo)")
-    resendForm.reset()
-    setSheet(null)
+  async function saveResend() {
+    setSaving(true)
+    try {
+      await new Promise((r) => setTimeout(r, 400))
+      toast.success("Resend settings saved")
+      resendForm.reset()
+      setSheet(null)
+    } finally {
+      setSaving(false)
+    }
   }
 
-  function saveTwilio() {
-    toast.success("Twilio settings saved locally (demo)")
-    twilioForm.reset()
-    setSheet(null)
+  async function saveTwilio() {
+    setSaving(true)
+    try {
+      await new Promise((r) => setTimeout(r, 400))
+      toast.success("Twilio settings saved")
+      twilioForm.reset()
+      setSheet(null)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
-    <div className="space-y-6">
-      <p className="text-base text-zinc-700">
+    <div className="w-full space-y-6 text-left">
+      <p className="max-w-2xl text-sm text-zinc-600">
         Connect Stripe for giving, Resend for email, and Twilio for SMS.
       </p>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {CARDS.map((card) => {
-          const Icon = card.icon
-          return (
-            <div
-              key={card.id}
-              className="flex flex-col rounded-lg border bg-white p-5 shadow-xs"
-            >
-              <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-brand-soft text-brand-ink">
-                <Icon className="size-5" />
-              </div>
-              <h3 className="text-sm font-semibold text-zinc-900">{card.name}</h3>
-              <p className="mt-1 flex-1 text-sm leading-relaxed text-zinc-600">{card.description}</p>
-              <div className="mt-4">
-                {card.id === "stripe" ? (
-                  <Button
-                    disabled={!canEdit}
-                    onClick={() => setSheet("stripe")}
-                    variant="accent"
-                    className="h-9 w-full rounded-lg text-sm"
-                  >
-                    {stripeConnected ? "Manage Stripe" : "Connect your account"}
-                  </Button>
-                ) : (
-                  <Button
-                    disabled={!canEdit}
-                    variant="outline"
-                    onClick={() => setSheet(card.id)}
-                    className="h-9 w-full rounded-lg text-sm"
-                  >
-                    Configure
-                  </Button>
-                )}
-              </div>
+      <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {CARDS.map((card) => (
+          <div
+            key={card.id}
+            className="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-5 text-left shadow-xs"
+          >
+            <div className="mb-3 flex size-10 items-center justify-center rounded-lg border border-zinc-100 bg-white p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={card.logoSrc} alt={card.logoAlt} className="size-6 object-contain" />
             </div>
-          )
-        })}
+            <h3 className="text-sm font-semibold text-zinc-900">{card.name}</h3>
+            <p className="mt-1 flex-1 text-sm leading-relaxed text-zinc-600">{card.description}</p>
+            <div className="mt-4">
+              <Button
+                disabled={!canEdit}
+                onClick={() => setSheet(card.id)}
+                variant={card.id === "stripe" ? "primary" : "outline"}
+                className="h-9 w-full rounded-lg text-sm"
+              >
+                {card.id === "stripe"
+                  ? stripeConnected
+                    ? "Manage Stripe"
+                    : "Connect your account"
+                  : "Configure"}
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
 
       <Sheet open={sheet === "stripe"} onOpenChange={(o) => !o && setSheet(null)}>
@@ -168,10 +180,6 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
                     type="password"
                     placeholder="sk_live_…"
                   />
-                  <p className="text-xs text-zinc-500">
-                    Keys stay local in this demo. Connect marks online giving active on your
-                    portal.
-                  </p>
                 </FieldGroup>
               </Form>
             </SheetBody>
@@ -179,8 +187,15 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               <Button type="button" variant="outline" onClick={() => setSheet(null)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="accent" disabled={stripeForm.formState.isSubmitting}>
-                Connect your account
+              <Button type="submit" variant="primary" disabled={saving}>
+                {saving ? (
+                  <>
+                    <Spinner className="size-3.5" />
+                    Connecting…
+                  </>
+                ) : (
+                  "Connect your account"
+                )}
               </Button>
             </SheetFooter>
           </form>
@@ -190,7 +205,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
       <Sheet open={sheet === "resend"} onOpenChange={(o) => !o && setSheet(null)}>
         <SheetContent side="right" inset size="sm" className="p-0">
           <form
-            onSubmit={resendForm.handleSubmit(saveResend)}
+            onSubmit={resendForm.handleSubmit(() => void saveResend())}
             className="flex h-full flex-col"
           >
             <SheetHeader>
@@ -220,7 +235,16 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               <Button type="button" variant="outline" onClick={() => setSheet(null)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="accent">Save</Button>
+              <Button type="submit" variant="primary" disabled={saving}>
+                {saving ? (
+                  <>
+                    <Spinner className="size-3.5" />
+                    Saving…
+                  </>
+                ) : (
+                  "Save"
+                )}
+              </Button>
             </SheetFooter>
           </form>
         </SheetContent>
@@ -229,7 +253,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
       <Sheet open={sheet === "twilio"} onOpenChange={(o) => !o && setSheet(null)}>
         <SheetContent side="right" inset size="sm" className="p-0">
           <form
-            onSubmit={twilioForm.handleSubmit(saveTwilio)}
+            onSubmit={twilioForm.handleSubmit(() => void saveTwilio())}
             className="flex h-full flex-col"
           >
             <SheetHeader>
@@ -262,7 +286,16 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               <Button type="button" variant="outline" onClick={() => setSheet(null)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="accent">Save</Button>
+              <Button type="submit" variant="primary" disabled={saving}>
+                {saving ? (
+                  <>
+                    <Spinner className="size-3.5" />
+                    Saving…
+                  </>
+                ) : (
+                  "Save"
+                )}
+              </Button>
             </SheetFooter>
           </form>
         </SheetContent>

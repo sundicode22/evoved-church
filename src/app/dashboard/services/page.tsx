@@ -8,7 +8,12 @@ import { Form } from "@/components/ui/form"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { SelectFormField, TextFormField } from "@/components/form-fields"
+import {
+  SelectFormField,
+  TextFormField,
+  TextareaFormField,
+  TimeFormField,
+} from "@/components/form-fields"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -46,7 +51,10 @@ import {
   type ChurchService,
 } from "@/features/services/schemas"
 import { PageHeader } from "@/components/page-header"
-import { Church, Plus } from "lucide-react"
+import { ArrowDown, ArrowUp, Church, Pencil, Plus, Trash2 } from "lucide-react"
+
+type Segment = ChurchService["segments"][number]
+type Volunteer = ChurchService["volunteers"][number]
 
 const serviceFormSchema = z.object({
   name: z.string().trim().min(2, "Name is required"),
@@ -58,6 +66,26 @@ const serviceFormSchema = z.object({
 
 type ServiceFormValues = z.infer<typeof serviceFormSchema>
 
+const segmentFormSchema = z.object({
+  title: z.string().trim().min(2, "Title is required"),
+  leader: z.string(),
+  durationMinutes: z.string().refine((v) => {
+    const n = Number(v)
+    return Number.isInteger(n) && n >= 1 && n <= 240
+  }, "1–240 minutes"),
+  details: z.string(),
+})
+
+type SegmentFormValues = z.infer<typeof segmentFormSchema>
+
+const volunteerFormSchema = z.object({
+  role: z.string().trim().min(2, "Role is required"),
+  assigneeName: z.string(),
+  status: z.enum(["needed", "confirmed", "declined"]),
+})
+
+type VolunteerFormValues = z.infer<typeof volunteerFormSchema>
+
 const SERVICE_FORM_DEFAULTS: ServiceFormValues = {
   name: "",
   type: "sunday_worship",
@@ -66,8 +94,53 @@ const SERVICE_FORM_DEFAULTS: ServiceFormValues = {
   defaultStartTime: "10:00",
 }
 
+const SEGMENT_FORM_DEFAULTS: SegmentFormValues = {
+  title: "",
+  leader: "",
+  durationMinutes: "10",
+  details: "",
+}
+
+const VOLUNTEER_FORM_DEFAULTS: VolunteerFormValues = {
+  role: "",
+  assigneeName: "",
+  status: "needed",
+}
+
 const SERVICE_TYPE_OPTIONS = SERVICE_TYPES.map((t) => ({ value: t.value, label: t.label }))
 const DAY_OPTIONS = DAY_LABELS.map((d, i) => ({ value: String(i), label: d }))
+const VOLUNTEER_STATUS_OPTIONS = [
+  { value: "needed", label: "Needed" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "declined", label: "Declined" },
+]
+
+function serviceToFormValues(s: ChurchService): ServiceFormValues {
+  return {
+    name: s.name,
+    type: s.type,
+    locationLabel: s.locationLabel || "",
+    defaultDayOfWeek: String(s.defaultDayOfWeek ?? 0),
+    defaultStartTime: s.defaultStartTime || "10:00",
+  }
+}
+
+function segmentToFormValues(seg: Segment): SegmentFormValues {
+  return {
+    title: seg.title,
+    leader: seg.leader || "",
+    durationMinutes: String(seg.durationMinutes || 10),
+    details: seg.details || "",
+  }
+}
+
+function volunteerToFormValues(v: Volunteer): VolunteerFormValues {
+  return {
+    role: v.role,
+    assigneeName: v.assigneeName || "",
+    status: v.status,
+  }
+}
 
 export default function ServicesPage() {
   const { data, isLoading } = useServices()
@@ -76,15 +149,37 @@ export default function ServicesPage() {
 
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [createOpen, setCreateOpen] = React.useState(false)
+  const [editServiceOpen, setEditServiceOpen] = React.useState(false)
   const [confirmDelete, setConfirmDelete] = React.useState<ChurchService | null>(null)
-  const form = useForm<ServiceFormValues>({
+  const [editingSegment, setEditingSegment] = React.useState<Segment | null>(null)
+  const [segmentSheetOpen, setSegmentSheetOpen] = React.useState(false)
+  const [editingVolunteer, setEditingVolunteer] = React.useState<Volunteer | null>(null)
+  const [volunteerSheetOpen, setVolunteerSheetOpen] = React.useState(false)
+  const [confirmDeleteSegment, setConfirmDeleteSegment] = React.useState<Segment | null>(null)
+  const [confirmDeleteVolunteer, setConfirmDeleteVolunteer] = React.useState<Volunteer | null>(
+    null
+  )
+
+  const createForm = useForm<ServiceFormValues>({
     resolver: zodResolver(serviceFormSchema),
     defaultValues: SERVICE_FORM_DEFAULTS,
   })
+  const editServiceForm = useForm<ServiceFormValues>({
+    resolver: zodResolver(serviceFormSchema),
+    defaultValues: SERVICE_FORM_DEFAULTS,
+  })
+  const segmentForm = useForm<SegmentFormValues>({
+    resolver: zodResolver(segmentFormSchema),
+    defaultValues: SEGMENT_FORM_DEFAULTS,
+  })
+  const volunteerForm = useForm<VolunteerFormValues>({
+    resolver: zodResolver(volunteerFormSchema),
+    defaultValues: VOLUNTEER_FORM_DEFAULTS,
+  })
 
   React.useEffect(() => {
-    if (createOpen) form.reset(SERVICE_FORM_DEFAULTS)
-  }, [createOpen, form])
+    if (createOpen) createForm.reset(SERVICE_FORM_DEFAULTS)
+  }, [createOpen, createForm])
 
   const selected = data?.find((s) => s.id === (selectedId ?? data[0]?.id)) ?? null
   const update = useUpdateService(selected?.id || "")
@@ -93,7 +188,41 @@ export default function ServicesPage() {
     if (!selectedId && data?.[0]) setSelectedId(data[0].id)
   }, [data, selectedId])
 
-  function onSubmit(values: ServiceFormValues) {
+  React.useEffect(() => {
+    if (editServiceOpen && selected) {
+      editServiceForm.reset(serviceToFormValues(selected))
+    }
+  }, [editServiceOpen, selected, editServiceForm])
+
+  React.useEffect(() => {
+    if (!segmentSheetOpen) return
+    if (editingSegment) segmentForm.reset(segmentToFormValues(editingSegment))
+    else segmentForm.reset(SEGMENT_FORM_DEFAULTS)
+  }, [segmentSheetOpen, editingSegment, segmentForm])
+
+  React.useEffect(() => {
+    if (!volunteerSheetOpen) return
+    if (editingVolunteer) volunteerForm.reset(volunteerToFormValues(editingVolunteer))
+    else volunteerForm.reset(VOLUNTEER_FORM_DEFAULTS)
+  }, [volunteerSheetOpen, editingVolunteer, volunteerForm])
+
+  const sortedSegments = React.useMemo(
+    () =>
+      selected
+        ? selected.segments.slice().sort((a, b) => a.orderIndex - b.orderIndex)
+        : [],
+    [selected]
+  )
+
+  const sortedVolunteers = React.useMemo(
+    () =>
+      selected
+        ? selected.volunteers.slice().sort((a, b) => a.orderIndex - b.orderIndex)
+        : [],
+    [selected]
+  )
+
+  function onCreateService(values: ServiceFormValues) {
     create.mutate(
       {
         name: values.name,
@@ -106,16 +235,106 @@ export default function ServicesPage() {
       {
         onSuccess: (s) => {
           setCreateOpen(false)
-          form.reset(SERVICE_FORM_DEFAULTS)
+          createForm.reset(SERVICE_FORM_DEFAULTS)
           setSelectedId(s.id)
         },
       }
     )
   }
 
-  function saveSegments(segments: ChurchService["segments"]) {
+  function onSaveService(values: ServiceFormValues) {
     if (!selected) return
-    update.mutate({ segments })
+    update.mutate(
+      {
+        name: values.name,
+        type: values.type,
+        locationLabel: values.locationLabel,
+        defaultStartTime: values.defaultStartTime,
+        defaultDayOfWeek: Number(values.defaultDayOfWeek),
+      },
+      { onSuccess: () => setEditServiceOpen(false) }
+    )
+  }
+
+  function saveSegments(segments: Segment[]) {
+    if (!selected) return
+    update.mutate({
+      segments: segments.map((seg, i) => ({ ...seg, orderIndex: i })),
+    })
+  }
+
+  function saveVolunteers(volunteers: Volunteer[]) {
+    if (!selected) return
+    update.mutate({
+      volunteers: volunteers.map((v, i) => ({ ...v, orderIndex: i })),
+    })
+  }
+
+  function openNewSegment() {
+    setEditingSegment(null)
+    setSegmentSheetOpen(true)
+  }
+
+  function openEditSegment(seg: Segment) {
+    setEditingSegment(seg)
+    setSegmentSheetOpen(true)
+  }
+
+  function onSaveSegment(values: SegmentFormValues) {
+    if (!selected) return
+    const next: Segment = {
+      id: editingSegment?.id || `seg-${crypto.randomUUID().slice(0, 8)}`,
+      title: values.title,
+      leader: values.leader.trim(),
+      durationMinutes: Number(values.durationMinutes),
+      details: values.details.trim(),
+      orderIndex: editingSegment?.orderIndex ?? sortedSegments.length,
+    }
+    if (editingSegment) {
+      saveSegments(sortedSegments.map((s) => (s.id === editingSegment.id ? next : s)))
+    } else {
+      saveSegments([...sortedSegments, next])
+    }
+    setSegmentSheetOpen(false)
+    setEditingSegment(null)
+  }
+
+  function moveSegment(index: number, dir: -1 | 1) {
+    const target = index + dir
+    if (target < 0 || target >= sortedSegments.length) return
+    const next = sortedSegments.slice()
+    ;[next[index], next[target]] = [next[target], next[index]]
+    saveSegments(next)
+  }
+
+  function openNewVolunteer() {
+    setEditingVolunteer(null)
+    setVolunteerSheetOpen(true)
+  }
+
+  function openEditVolunteer(v: Volunteer) {
+    setEditingVolunteer(v)
+    setVolunteerSheetOpen(true)
+  }
+
+  function onSaveVolunteer(values: VolunteerFormValues) {
+    if (!selected) return
+    const next: Volunteer = {
+      id: editingVolunteer?.id || `vol-${crypto.randomUUID().slice(0, 8)}`,
+      role: values.role,
+      assigneeName: values.assigneeName.trim(),
+      status: values.status,
+      orderIndex: editingVolunteer?.orderIndex ?? sortedVolunteers.length,
+    }
+    if (editingVolunteer) {
+      saveVolunteers(
+        sortedVolunteers.map((v) => (v.id === editingVolunteer.id ? next : v))
+      )
+    } else {
+      saveVolunteers([...sortedVolunteers, next])
+    }
+    setVolunteerSheetOpen(false)
+    setEditingVolunteer(null)
   }
 
   return (
@@ -131,9 +350,7 @@ export default function ServicesPage() {
             icon={<Church className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="services.write">
-                <Button
-                  onClick={() => setCreateOpen(true)}
-                >
+                <Button onClick={() => setCreateOpen(true)}>
                   <Plus strokeWidth={2} className="size-3.5" />
                   New service
                 </Button>
@@ -219,6 +436,10 @@ export default function ServicesPage() {
                           {
                             items: [
                               {
+                                label: "Edit service",
+                                onClick: () => setEditServiceOpen(true),
+                              },
+                              {
                                 label: "Archive service",
                                 destructive: true,
                                 onClick: () => setConfirmDelete(selected),
@@ -236,81 +457,164 @@ export default function ServicesPage() {
                       <TabsTrigger value="volunteers">Volunteers</TabsTrigger>
                     </TabsList>
                     <TabsContent value="run" className="space-y-3 pt-4">
-                      {selected.segments.length === 0 && (
-                        <p className="text-xs text-zinc-400">No segments yet.</p>
+                      {sortedSegments.length === 0 && (
+                        <p className="text-xs text-zinc-400">
+                          No segments yet. Add worship, message, offering, and more.
+                        </p>
                       )}
-                      {selected.segments
-                        .slice()
-                        .sort((a, b) => a.orderIndex - b.orderIndex)
-                        .map((seg, i) => (
-                          <div
-                            key={seg.id}
-                            className="rounded-lg border border-zinc-200/80 bg-[#f4f6f5] px-4 py-3"
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-sm font-medium text-zinc-900">
-                                {i + 1}. {seg.title}
+                      {sortedSegments.map((seg, i) => (
+                        <div
+                          key={seg.id}
+                          className="rounded-lg border border-zinc-200/80 bg-[#f4f6f5] px-4 py-3"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <button
+                              type="button"
+                              className="min-w-0 flex-1 text-left"
+                              onClick={() => openEditSegment(seg)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-zinc-900">
+                                  {i + 1}. {seg.title}
+                                </p>
+                                <Badge variant="outline" className="text-[10px] tabular-nums">
+                                  {seg.durationMinutes} min
+                                </Badge>
+                              </div>
+                              <p className="mt-1 text-xs text-zinc-500">
+                                {seg.leader || "Unassigned"}
+                                {seg.details ? ` · ${seg.details}` : ""}
                               </p>
-                              <Badge variant="outline" className="text-[10px] tabular-nums">
-                                {seg.durationMinutes} min
-                              </Badge>
-                            </div>
-                            <p className="mt-1 text-xs text-zinc-500">
-                              {seg.leader || "Unassigned"}
-                              {seg.details ? ` · ${seg.details}` : ""}
-                            </p>
+                            </button>
+                            <Can permission="services.write">
+                              <div className="flex shrink-0 items-center gap-0.5">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  className="size-7"
+                                  disabled={i === 0 || update.isPending}
+                                  onClick={() => moveSegment(i, -1)}
+                                  aria-label="Move up"
+                                >
+                                  <ArrowUp className="size-3.5" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  className="size-7"
+                                  disabled={i === sortedSegments.length - 1 || update.isPending}
+                                  onClick={() => moveSegment(i, 1)}
+                                  aria-label="Move down"
+                                >
+                                  <ArrowDown className="size-3.5" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  className="size-7"
+                                  onClick={() => openEditSegment(seg)}
+                                  aria-label="Edit segment"
+                                >
+                                  <Pencil className="size-3.5" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  className="size-7 text-zinc-500 hover:text-red-600"
+                                  onClick={() => setConfirmDeleteSegment(seg)}
+                                  aria-label="Delete segment"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </Button>
+                              </div>
+                            </Can>
                           </div>
-                        ))}
+                        </div>
+                      ))}
                       <Can permission="services.write">
                         <Button
                           variant="outline"
                           size="sm"
                           className="h-8 text-xs"
-                          onClick={() =>
-                            saveSegments([
-                              ...selected.segments,
-                              {
-                                id: `seg-${Date.now()}`,
-                                title: "New segment",
-                                leader: "",
-                                durationMinutes: 10,
-                                details: "",
-                                orderIndex: selected.segments.length,
-                              },
-                            ])
-                          }
+                          onClick={openNewSegment}
                         >
                           Add segment
                         </Button>
                       </Can>
                     </TabsContent>
                     <TabsContent value="volunteers" className="space-y-3 pt-4">
-                      {selected.volunteers.length === 0 && (
-                        <p className="text-xs text-zinc-400">No volunteer slots.</p>
+                      {sortedVolunteers.length === 0 && (
+                        <p className="text-xs text-zinc-400">
+                          No volunteer slots. Add roles like greeter, tech, or kids check-in.
+                        </p>
                       )}
-                      {selected.volunteers.map((v) => (
+                      {sortedVolunteers.map((v) => (
                         <div
                           key={v.id}
-                          className="flex items-center justify-between rounded-lg border border-zinc-200/80 px-4 py-3"
+                          className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200/80 px-4 py-3"
                         >
-                          <div>
+                          <button
+                            type="button"
+                            className="min-w-0 flex-1 text-left"
+                            onClick={() => openEditVolunteer(v)}
+                          >
                             <p className="text-sm font-medium text-zinc-900">{v.role}</p>
                             <p className="text-xs text-zinc-500">
                               {v.assigneeName || "Open slot"}
                             </p>
+                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <Badge
+                              variant="outline"
+                              className={
+                                v.status === "confirmed"
+                                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                  : v.status === "declined"
+                                    ? "border-red-200 bg-red-50 text-red-700"
+                                    : "border-amber-200 bg-amber-50 text-amber-700"
+                              }
+                            >
+                              {v.status}
+                            </Badge>
+                            <Can permission="services.write">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="size-7"
+                                onClick={() => openEditVolunteer(v)}
+                                aria-label="Edit volunteer"
+                              >
+                                <Pencil className="size-3.5" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="size-7 text-zinc-500 hover:text-red-600"
+                                onClick={() => setConfirmDeleteVolunteer(v)}
+                                aria-label="Delete volunteer"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </Can>
                           </div>
-                          <Badge
-                            variant="outline"
-                            className={
-                              v.status === "confirmed"
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                : "border-amber-200 bg-amber-50 text-amber-700"
-                            }
-                          >
-                            {v.status}
-                          </Badge>
                         </div>
                       ))}
+                      <Can permission="services.write">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={openNewVolunteer}
+                        >
+                          Add volunteer slot
+                        </Button>
+                      </Can>
                     </TabsContent>
                   </Tabs>
                 </>
@@ -320,8 +624,11 @@ export default function ServicesPage() {
 
           <Sheet open={createOpen} onOpenChange={setCreateOpen}>
             <SheetContent side="right" inset size="sm" className="p-0">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+              <Form {...createForm}>
+                <form
+                  onSubmit={createForm.handleSubmit(onCreateService)}
+                  className="flex h-full flex-col"
+                >
                   <SheetHeader className="pr-12">
                     <SheetTitle>New service</SheetTitle>
                     <SheetDescription>
@@ -330,32 +637,32 @@ export default function ServicesPage() {
                   </SheetHeader>
                   <SheetBody>
                     <FieldGroup>
-                      <TextFormField control={form.control} name="name" label="Name" />
+                      <TextFormField control={createForm.control} name="name" label="Name" />
                       <SelectFormField
-                        control={form.control}
+                        control={createForm.control}
                         name="type"
                         label="Type"
                         options={SERVICE_TYPE_OPTIONS}
                       />
                       <TextFormField
-                        control={form.control}
+                        control={createForm.control}
                         name="locationLabel"
                         label="Location"
                         placeholder="Main Sanctuary"
                       />
                       <div className="grid grid-cols-2 gap-3">
                         <SelectFormField
-                          control={form.control}
+                          control={createForm.control}
                           name="defaultDayOfWeek"
                           label="Default day"
                           options={DAY_OPTIONS}
                         />
-                        <TextFormField
-                          control={form.control}
+                        <TimeFormField
+                          control={createForm.control}
                           name="defaultStartTime"
                           label="Start time"
-                          type="time"
                           description="24h local time"
+                          minuteStep={5}
                         />
                       </div>
                     </FieldGroup>
@@ -366,6 +673,201 @@ export default function ServicesPage() {
                     </Button>
                     <Button type="submit" variant="primary" disabled={create.isPending}>
                       Create service
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
+            </SheetContent>
+          </Sheet>
+
+          <Sheet open={editServiceOpen} onOpenChange={setEditServiceOpen}>
+            <SheetContent side="right" inset size="sm" className="p-0">
+              <Form {...editServiceForm}>
+                <form
+                  onSubmit={editServiceForm.handleSubmit(onSaveService)}
+                  className="flex h-full flex-col"
+                >
+                  <SheetHeader className="pr-12">
+                    <SheetTitle>Edit service</SheetTitle>
+                    <SheetDescription>
+                      Update name, type, location, and default schedule.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <TextFormField
+                        control={editServiceForm.control}
+                        name="name"
+                        label="Name"
+                      />
+                      <SelectFormField
+                        control={editServiceForm.control}
+                        name="type"
+                        label="Type"
+                        options={SERVICE_TYPE_OPTIONS}
+                      />
+                      <TextFormField
+                        control={editServiceForm.control}
+                        name="locationLabel"
+                        label="Location"
+                        placeholder="Main Sanctuary"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <SelectFormField
+                          control={editServiceForm.control}
+                          name="defaultDayOfWeek"
+                          label="Default day"
+                          options={DAY_OPTIONS}
+                        />
+                        <TimeFormField
+                          control={editServiceForm.control}
+                          name="defaultStartTime"
+                          label="Start time"
+                          minuteStep={5}
+                        />
+                      </div>
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setEditServiceOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={update.isPending}>
+                      Save changes
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
+            </SheetContent>
+          </Sheet>
+
+          <Sheet
+            open={segmentSheetOpen}
+            onOpenChange={(open) => {
+              setSegmentSheetOpen(open)
+              if (!open) setEditingSegment(null)
+            }}
+          >
+            <SheetContent side="right" inset size="sm" className="p-0">
+              <Form {...segmentForm}>
+                <form
+                  onSubmit={segmentForm.handleSubmit(onSaveSegment)}
+                  className="flex h-full flex-col"
+                >
+                  <SheetHeader className="pr-12">
+                    <SheetTitle>
+                      {editingSegment ? "Edit segment" : "Add segment"}
+                    </SheetTitle>
+                    <SheetDescription>
+                      Set the title, who leads it, duration, and any notes for the run sheet.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <TextFormField
+                        control={segmentForm.control}
+                        name="title"
+                        label="Title"
+                        placeholder="Worship"
+                        autoFocus
+                      />
+                      <TextFormField
+                        control={segmentForm.control}
+                        name="leader"
+                        label="Leader / assignee"
+                        placeholder="Worship Director"
+                      />
+                      <TextFormField
+                        control={segmentForm.control}
+                        name="durationMinutes"
+                        label="Duration (minutes)"
+                        type="number"
+                        inputMode="numeric"
+                      />
+                      <TextareaFormField
+                        control={segmentForm.control}
+                        name="details"
+                        label="Details"
+                        placeholder="Songs, slides, cues…"
+                        rows={3}
+                      />
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setSegmentSheetOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={update.isPending}>
+                      {editingSegment ? "Save segment" : "Add segment"}
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </Form>
+            </SheetContent>
+          </Sheet>
+
+          <Sheet
+            open={volunteerSheetOpen}
+            onOpenChange={(open) => {
+              setVolunteerSheetOpen(open)
+              if (!open) setEditingVolunteer(null)
+            }}
+          >
+            <SheetContent side="right" inset size="sm" className="p-0">
+              <Form {...volunteerForm}>
+                <form
+                  onSubmit={volunteerForm.handleSubmit(onSaveVolunteer)}
+                  className="flex h-full flex-col"
+                >
+                  <SheetHeader className="pr-12">
+                    <SheetTitle>
+                      {editingVolunteer ? "Edit volunteer slot" : "Add volunteer slot"}
+                    </SheetTitle>
+                    <SheetDescription>
+                      Role, assignee, and whether the slot is still needed.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <TextFormField
+                        control={volunteerForm.control}
+                        name="role"
+                        label="Role"
+                        placeholder="Greeter"
+                        autoFocus
+                      />
+                      <TextFormField
+                        control={volunteerForm.control}
+                        name="assigneeName"
+                        label="Assignee"
+                        placeholder="Leave blank for open slot"
+                      />
+                      <SelectFormField
+                        control={volunteerForm.control}
+                        name="status"
+                        label="Status"
+                        options={VOLUNTEER_STATUS_OPTIONS}
+                      />
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setVolunteerSheetOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={update.isPending}>
+                      {editingVolunteer ? "Save slot" : "Add slot"}
                     </Button>
                   </SheetFooter>
                 </form>
@@ -384,6 +886,36 @@ export default function ServicesPage() {
               if (!confirmDelete) return
               await remove.mutateAsync(confirmDelete.id)
               setSelectedId(null)
+            }}
+          />
+
+          <ConfirmAction
+            open={Boolean(confirmDeleteSegment)}
+            onOpenChange={(o) => !o && setConfirmDeleteSegment(null)}
+            title={`Remove “${confirmDeleteSegment?.title}”?`}
+            description="This segment will be removed from the run of service."
+            confirmLabel="Remove"
+            variant="destructive"
+            onConfirm={async () => {
+              if (!confirmDeleteSegment) return
+              saveSegments(sortedSegments.filter((s) => s.id !== confirmDeleteSegment.id))
+              setConfirmDeleteSegment(null)
+            }}
+          />
+
+          <ConfirmAction
+            open={Boolean(confirmDeleteVolunteer)}
+            onOpenChange={(o) => !o && setConfirmDeleteVolunteer(null)}
+            title={`Remove “${confirmDeleteVolunteer?.role}” slot?`}
+            description="This volunteer role will be removed from the service."
+            confirmLabel="Remove"
+            variant="destructive"
+            onConfirm={async () => {
+              if (!confirmDeleteVolunteer) return
+              saveVolunteers(
+                sortedVolunteers.filter((v) => v.id !== confirmDeleteVolunteer.id)
+              )
+              setConfirmDeleteVolunteer(null)
             }}
           />
         </RequireAbility>

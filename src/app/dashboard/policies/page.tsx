@@ -44,7 +44,6 @@ import {
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ConfirmAction } from "@/components/confirm-action"
-import { RichTextEditor } from "@/components/rich-text-editor"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { StatusPill, TablePagination, TablePanel } from "@/components/table-panel"
 import { Can, RequireAbility } from "@/components/auth/can"
@@ -68,6 +67,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import {
+  RichTextFormField,
   SelectFormField,
   TextFormField,
   TextareaFormField,
@@ -387,20 +387,13 @@ export default function PoliciesPage() {
                       className="sm:col-span-2"
                       placeholder="One or two sentences for the policy card"
                     />
-                    <FormField
+                    <RichTextFormField
                       control={form.control}
                       name="bodyHtml"
-                      render={({ field }) => (
-                        <FormItem className="sm:col-span-2">
-                          <FormLabel>Body</FormLabel>
-                          <RichTextEditor
-                            value={field.value}
-                            onChange={(html) => field.onChange(html)}
-                            minHeight="280px"
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      label="Body"
+                      className="sm:col-span-2"
+                      placeholder="Write the policy…"
+                      minHeight="280px"
                     />
                   </div>
                 </SheetBody>

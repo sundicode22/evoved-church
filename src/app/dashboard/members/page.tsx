@@ -56,6 +56,9 @@ import { RowActionsMenu } from "@/components/row-actions-menu"
 
 const COLUMNS: ColumnOption[] = [
   { id: "name", label: "Name" },
+  { id: "email", label: "Email" },
+  { id: "phone", label: "Phone" },
+  { id: "address", label: "Address" },
   { id: "lifecycle", label: "Lifecycle" },
   { id: "household", label: "Household role" },
   { id: "ministries", label: "Ministries" },
@@ -85,9 +88,17 @@ const addPersonFormSchema = createMemberSchema
   .pick({
     firstName: true,
     lastName: true,
+    preferredName: true,
     email: true,
     phoneNumber: true,
     recordedTitle: true,
+    address: true,
+    city: true,
+    state: true,
+    zipCode: true,
+    gender: true,
+    maritalStatus: true,
+    occupation: true,
   })
   .extend({
     personType: personTypeEnumSchema,
@@ -98,11 +109,33 @@ type AddPersonFormValues = z.infer<typeof addPersonFormSchema>
 const ADD_PERSON_DEFAULTS: AddPersonFormValues = {
   firstName: "",
   lastName: "",
+  preferredName: "",
   email: "",
   phoneNumber: "",
   personType: "covenant_member",
   recordedTitle: "",
+  address: "",
+  city: "",
+  state: "",
+  zipCode: "",
+  gender: undefined,
+  maritalStatus: undefined,
+  occupation: "",
 }
+
+const GENDER_OPTIONS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "unspecified", label: "Unspecified" },
+]
+
+const MARITAL_OPTIONS = [
+  { value: "single", label: "Single" },
+  { value: "married", label: "Married" },
+  { value: "widowed", label: "Widowed" },
+  { value: "divorced", label: "Divorced" },
+  { value: "separated", label: "Separated" },
+]
 
 const PERSON_TYPE_OPTIONS = PERSON_TYPES.map((t) => ({ value: t.value, label: t.label }))
 
@@ -166,10 +199,18 @@ export default function MembersPage() {
       await createMember.mutateAsync({
         firstName: values.firstName.trim(),
         lastName: values.lastName.trim(),
+        preferredName: values.preferredName?.trim() || undefined,
         email: values.email?.trim() ?? "",
         phoneNumber: values.phoneNumber?.trim() || undefined,
         personType: values.personType,
         recordedTitle: values.recordedTitle?.trim() || undefined,
+        address: values.address?.trim() || undefined,
+        city: values.city?.trim() || undefined,
+        state: values.state?.trim() || undefined,
+        zipCode: values.zipCode?.trim() || undefined,
+        gender: values.gender || undefined,
+        maritalStatus: values.maritalStatus || undefined,
+        occupation: values.occupation?.trim() || undefined,
         ministryRoles: [],
         backgroundCheckStatus: "none",
       })
@@ -242,137 +283,166 @@ export default function MembersPage() {
                   </>
                 }
               />
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    {isVisible("name") && <TableHead className="pl-4">Name</TableHead>}
-                    {isVisible("lifecycle") && <TableHead>Lifecycle</TableHead>}
-                    {isVisible("household") && <TableHead>Household role</TableHead>}
-                    {isVisible("ministries") && <TableHead>Ministries</TableHead>}
-                    {isVisible("safety") && <TableHead>Child safety</TableHead>}
-                    <TableHead className="w-10" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-10 text-center text-sm text-zinc-500">
-                        Loading…
-                      </TableCell>
+              <div className="w-full overflow-x-auto rounded-lg border border-zinc-200/80 bg-background">
+                <Table className="min-w-[1080px]">
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      {isVisible("name") && <TableHead className="pl-4">Name</TableHead>}
+                      {isVisible("email") && <TableHead>Email</TableHead>}
+                      {isVisible("phone") && <TableHead>Phone</TableHead>}
+                      {isVisible("address") && <TableHead>Address</TableHead>}
+                      {isVisible("lifecycle") && <TableHead>Lifecycle</TableHead>}
+                      {isVisible("household") && <TableHead>Household role</TableHead>}
+                      {isVisible("ministries") && <TableHead>Ministries</TableHead>}
+                      {isVisible("safety") && <TableHead>Child safety</TableHead>}
+                      <TableHead className="w-10" />
                     </TableRow>
-                  )}
-                  {!isLoading && members.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-10 text-center text-sm text-zinc-500">
-                        No members found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {pageRows.map((person: {
-                    id: string
-                    firstName: string
-                    lastName: string
-                    recordedTitle?: string | null
-                    personType: string
-                    householdRole?: string | null
-                    ministryRoles?: string[]
-                    backgroundCheckStatus?: string
-                  }) => (
-                    <TableRow
-                      key={person.id}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedId(person.id)}
-                    >
-                      {isVisible("name") && (
-                        <TableCell className="pl-4">
-                          <div className="flex items-center gap-3">
-                            <div className="flex size-8 items-center justify-center rounded-full bg-brand-soft text-xs font-medium text-brand-ink">
-                              {person.firstName.charAt(0)}
-                              {person.lastName.charAt(0)}
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading && (
+                      <TableRow>
+                        <TableCell colSpan={9} className="py-10 text-center text-sm text-zinc-500">
+                          Loading…
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {!isLoading && members.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={9} className="py-10 text-center text-sm text-zinc-500">
+                          No members yet. Add a person to start your directory.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {pageRows.map((person: {
+                      id: string
+                      firstName: string
+                      lastName: string
+                      preferredName?: string | null
+                      email?: string | null
+                      phoneNumber?: string | null
+                      address?: string | null
+                      city?: string | null
+                      state?: string | null
+                      zipCode?: string | null
+                      recordedTitle?: string | null
+                      personType: string
+                      householdRole?: string | null
+                      ministryRoles?: string[]
+                      backgroundCheckStatus?: string
+                    }) => (
+                      <TableRow
+                        key={person.id}
+                        className="cursor-pointer"
+                        onClick={() => setSelectedId(person.id)}
+                      >
+                        {isVisible("name") && (
+                          <TableCell className="pl-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex size-8 items-center justify-center rounded-full bg-brand-soft text-xs font-medium text-brand-ink">
+                                {person.firstName.charAt(0)}
+                                {person.lastName.charAt(0)}
+                              </div>
+                              <div>
+                                <p className="font-medium text-zinc-900">
+                                  {person.firstName} {person.lastName}
+                                </p>
+                                <p className="text-xs text-zinc-500">
+                                  {person.preferredName
+                                    ? `Goes by ${person.preferredName}`
+                                    : person.recordedTitle || "—"}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium text-zinc-900">
-                                {person.firstName} {person.lastName}
-                              </p>
-                              <p className="text-xs text-zinc-500">
-                                {person.recordedTitle || "Main Location"}
-                              </p>
-                            </div>
-                          </div>
-                        </TableCell>
-                      )}
-                      {isVisible("lifecycle") && (
-                        <TableCell>
-                          <StatusPill tone="success">
-                            {String(person.personType).replaceAll("_", " ")}
-                          </StatusPill>
-                        </TableCell>
-                      )}
-                      {isVisible("household") && (
-                        <TableCell>
-                          {person.householdRole ? (
-                            <Badge
-                              variant="outline"
-                              className="px-1.5 font-normal text-zinc-600"
-                            >
-                              {HOUSEHOLD_ROLE_LABELS[person.householdRole as HouseholdRole] ||
-                                person.householdRole}
-                            </Badge>
-                          ) : (
-                            <span className="text-zinc-400">—</span>
-                          )}
-                        </TableCell>
-                      )}
-                      {isVisible("ministries") && (
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {person.ministryRoles?.length ? (
-                              person.ministryRoles.map((role: string) => (
-                                <span
-                                  key={role}
-                                  className="rounded-md border border-zinc-200 bg-white px-1.5 py-0.5 text-[11px] text-zinc-600"
-                                >
-                                  {role}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="text-zinc-400">None</span>
-                            )}
-                          </div>
-                        </TableCell>
-                      )}
-                      {isVisible("safety") && (
-                        <TableCell>
-                          {person.backgroundCheckStatus === "cleared" ? (
+                          </TableCell>
+                        )}
+                        {isVisible("email") && (
+                          <TableCell className="text-zinc-600">{person.email || "—"}</TableCell>
+                        )}
+                        {isVisible("phone") && (
+                          <TableCell className="text-zinc-600">
+                            {person.phoneNumber || "—"}
+                          </TableCell>
+                        )}
+                        {isVisible("address") && (
+                          <TableCell className="max-w-[220px] truncate text-zinc-600">
+                            {[person.address, person.city, person.state, person.zipCode]
+                              .filter(Boolean)
+                              .join(", ") || "—"}
+                          </TableCell>
+                        )}
+                        {isVisible("lifecycle") && (
+                          <TableCell>
                             <StatusPill tone="success">
-                              <ShieldCheck className="size-3 text-emerald-600" />
-                              Cleared
+                              {String(person.personType).replaceAll("_", " ")}
                             </StatusPill>
-                          ) : person.backgroundCheckStatus === "expired" ? (
-                            <StatusPill tone="warning">Expired</StatusPill>
-                          ) : (
-                            <span className="text-zinc-400">Not required</span>
-                          )}
+                          </TableCell>
+                        )}
+                        {isVisible("household") && (
+                          <TableCell>
+                            {person.householdRole ? (
+                              <Badge
+                                variant="outline"
+                                className="px-1.5 font-normal text-zinc-600"
+                              >
+                                {HOUSEHOLD_ROLE_LABELS[person.householdRole as HouseholdRole] ||
+                                  person.householdRole}
+                              </Badge>
+                            ) : (
+                              <span className="text-zinc-400">—</span>
+                            )}
+                          </TableCell>
+                        )}
+                        {isVisible("ministries") && (
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {person.ministryRoles?.length ? (
+                                person.ministryRoles.map((role: string) => (
+                                  <span
+                                    key={role}
+                                    className="rounded-md border border-zinc-200 bg-white px-1.5 py-0.5 text-[11px] text-zinc-600"
+                                  >
+                                    {role}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-zinc-400">None</span>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
+                        {isVisible("safety") && (
+                          <TableCell>
+                            {person.backgroundCheckStatus === "cleared" ? (
+                              <StatusPill tone="success">
+                                <ShieldCheck className="size-3 text-emerald-600" />
+                                Cleared
+                              </StatusPill>
+                            ) : person.backgroundCheckStatus === "expired" ? (
+                              <StatusPill tone="warning">Expired</StatusPill>
+                            ) : (
+                              <span className="text-zinc-400">Not required</span>
+                            )}
+                          </TableCell>
+                        )}
+                        <TableCell className="pr-3 text-right" onClick={(e) => e.stopPropagation()}>
+                          <RowActionsMenu
+                            groups={[
+                              {
+                                items: [
+                                  {
+                                    label: "Open",
+                                    onClick: () => setSelectedId(person.id),
+                                  },
+                                ],
+                              },
+                            ]}
+                          />
                         </TableCell>
-                      )}
-                      <TableCell className="pr-3 text-right" onClick={(e) => e.stopPropagation()}>
-                        <RowActionsMenu
-                          groups={[
-                            {
-                              items: [
-                                {
-                                  label: "Open",
-                                  onClick: () => setSelectedId(person.id),
-                                },
-                              ],
-                            },
-                          ]}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
               <TablePagination
                 page={page}
                 pageSize={pageSize}
@@ -387,12 +457,12 @@ export default function MembersPage() {
           </div>
 
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetContent side="right" inset size="sm" className="p-0">
+            <SheetContent side="right" inset size="md" className="p-0">
               <form onSubmit={submit} className="flex h-full flex-col">
                 <SheetHeader className="pr-12">
                   <SheetTitle className="font-medium">Add person</SheetTitle>
                   <SheetDescription>
-                    Create a member record. You can attach a household and ministries later.
+                    Create a member record with contact and address details.
                   </SheetDescription>
                 </SheetHeader>
                 <SheetBody>
@@ -407,6 +477,12 @@ export default function MembersPage() {
                       <TextFormField control={form.control} name="lastName" label="Last name" />
                       <TextFormField
                         control={form.control}
+                        name="preferredName"
+                        label="Preferred name"
+                        placeholder="optional"
+                      />
+                      <TextFormField
+                        control={form.control}
                         name="email"
                         label="Email"
                         type="email"
@@ -418,11 +494,42 @@ export default function MembersPage() {
                         label="Phone"
                         placeholder="optional"
                       />
+                      <TextFormField
+                        control={form.control}
+                        name="address"
+                        label="Street address"
+                        placeholder="optional"
+                      />
+                      <div className="grid gap-4 sm:grid-cols-3">
+                        <TextFormField control={form.control} name="city" label="City" />
+                        <TextFormField control={form.control} name="state" label="State" />
+                        <TextFormField control={form.control} name="zipCode" label="ZIP" />
+                      </div>
                       <SelectFormField
                         control={form.control}
                         name="personType"
                         label="Lifecycle"
                         options={PERSON_TYPE_OPTIONS}
+                      />
+                      <SelectFormField
+                        control={form.control}
+                        name="gender"
+                        label="Gender"
+                        placeholder="Optional"
+                        options={GENDER_OPTIONS}
+                      />
+                      <SelectFormField
+                        control={form.control}
+                        name="maritalStatus"
+                        label="Marital status"
+                        placeholder="Optional"
+                        options={MARITAL_OPTIONS}
+                      />
+                      <TextFormField
+                        control={form.control}
+                        name="occupation"
+                        label="Occupation"
+                        placeholder="optional"
                       />
                       <TextFormField
                         control={form.control}

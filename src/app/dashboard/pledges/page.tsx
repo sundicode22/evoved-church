@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import {
+  DateFormField,
   NumberFormField,
   SelectFormField,
   TextFormField,
@@ -315,11 +316,10 @@ export default function PledgesPage() {
                         label="Frequency"
                         options={FREQUENCY_ITEMS}
                       />
-                      <TextFormField
+                      <DateFormField
                         control={form.control}
                         name="startDate"
                         label="Start date"
-                        type="date"
                       />
                     </FieldGroup>
                   </SheetBody>

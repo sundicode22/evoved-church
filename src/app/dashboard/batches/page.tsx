@@ -10,7 +10,7 @@ import { Form } from "@/components/ui/form"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { TextFormField } from "@/components/form-fields"
+import { DateFormField, TextFormField } from "@/components/form-fields"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -270,11 +270,10 @@ export default function BatchesPage() {
                   <SheetBody>
                     <FieldGroup>
                       <TextFormField control={form.control} name="name" label="Name" />
-                      <TextFormField
+                      <DateFormField
                         control={form.control}
                         name="batchDate"
                         label="Batch date"
-                        type="date"
                       />
                       <TextFormField control={form.control} name="notes" label="Notes" />
                     </FieldGroup>

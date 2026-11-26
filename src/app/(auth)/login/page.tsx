@@ -45,19 +45,20 @@ function LoginForm() {
         return
       }
       toast.success("Signed in")
-      // Gate incomplete churches to onboarding
+      // Gate incomplete churches to onboarding; sync cookie so middleware matches API
       let next = redirectTo
       try {
         const { apiClient } = await import("@/lib/axios")
+        const { setOnboardingCompletedCookie } = await import("@/features/onboarding/cookie")
         const status = await apiClient.get<{
           success: boolean
           data: { completed: boolean }
         }>("/settings/onboarding")
-        if (!status.data.data?.completed) next = "/onboarding"
-        else if (redirectTo.startsWith("/onboarding")) next = "/dashboard"
-        else {
-          document.cookie =
-            "evolve_onboarding_completed=1; path=/; max-age=31536000; SameSite=Lax"
+        if (!status.data.data?.completed) {
+          next = "/onboarding"
+        } else {
+          setOnboardingCompletedCookie()
+          if (redirectTo.startsWith("/onboarding")) next = "/dashboard"
         }
       } catch {
         /* keep redirectTo */

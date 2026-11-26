@@ -15,6 +15,7 @@ import {
 import { emailService } from "@/features/communications/resend"
 import { smsService } from "@/features/communications/sms"
 import { DbPaginationResult } from "@/lib/db/pagination"
+import { kanbanService } from "@/features/kanban/service"
 
 /** In-memory assignee / activity when DB write is unavailable. */
 const assigneeStore = new Map<
@@ -37,10 +38,11 @@ function elapsedLabel(from: Date): string {
   return `${Math.floor(hours / 24)}d`
 }
 
-function emptyBoard() {
-  return VISITOR_STAGES.map((id) => ({
-    id,
-    title: VISITOR_STAGE_LABELS[id].toUpperCase(),
+async function emptyBoard() {
+  const cols = await kanbanService.list("visitors")
+  return cols.map((c) => ({
+    id: c.key,
+    title: (c.label || VISITOR_STAGE_LABELS[c.key] || c.key).toUpperCase(),
     totalAmount: 0,
     leadCount: 0,
     leads: [] as Array<Record<string, unknown>>,
@@ -192,16 +194,18 @@ export const visitorService = {
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .orderBy(desc(visitorLeads.createdAt))
 
-      const stages = emptyBoard()
+      const stages = await emptyBoard()
       const stageIndex = Object.fromEntries(stages.map((s, i) => [s.id, i])) as Record<
         string,
         number
       >
+      const fallbackStage = stages[0]?.id || "first_visit"
 
       const source = allLeads.length === 0 && !search ? DEMO_LEADS : allLeads
 
       for (const lead of source) {
-        const stageId = (lead.stage as string) in stageIndex ? (lead.stage as string) : "first_visit"
+        const stageId =
+          (lead.stage as string) in stageIndex ? (lead.stage as string) : fallbackStage
         const col = stages[stageIndex[stageId]]
         const val = Number((lead as { value?: string | number }).value || 0)
         col.totalAmount += val
@@ -248,9 +252,11 @@ export const visitorService = {
       }
     } catch (error) {
       console.error("[visitorService.getVisitorBoard] DB Error:", error)
-      const stages = emptyBoard()
+      const stages = await emptyBoard()
       for (const lead of DEMO_LEADS) {
-        const col = stages.find((s) => s.id === lead.stage)!
+        const col =
+          stages.find((s) => s.id === lead.stage) || stages[0]
+        if (!col) continue
         col.leadCount += 1
         const assigned = assigneeStore.get(lead.id)
         col.leads.push({
@@ -355,7 +361,9 @@ export const visitorService = {
 
       if (lead.length > 0) {
         const row = lead[0]
-        const stageOrder = VISITOR_STAGES
+        const cols = await kanbanService.list("visitors")
+        const stageOrder = cols.map((c) => c.key)
+        const labels = Object.fromEntries(cols.map((c) => [c.key, c.label]))
         const activeIdx = stageOrder.indexOf(row.stage as VisitorStage)
         const assigned = assigneeStore.get(row.id)
         const localActs = activityStore.get(row.id) || []
@@ -369,7 +377,7 @@ export const visitorService = {
               : null,
           stages: stageOrder.map((s, i) => ({
             id: s,
-            label: VISITOR_STAGE_LABELS[s],
+            label: labels[s] || VISITOR_STAGE_LABELS[s] || s,
             completed: i < activeIdx,
             active: i === activeIdx,
           })),
@@ -393,7 +401,10 @@ export const visitorService = {
     }
 
     const demo = DEMO_LEADS.find((l) => l.id === id) || DEMO_LEADS[3]
-    const activeIdx = VISITOR_STAGES.indexOf(demo.stage)
+    const cols = await kanbanService.list("visitors")
+    const stageOrder = cols.map((c) => c.key)
+    const labels = Object.fromEntries(cols.map((c) => [c.key, c.label]))
+    const activeIdx = stageOrder.indexOf(demo.stage)
     const assigned = assigneeStore.get(demo.id)
     const localActs = activityStore.get(demo.id) || []
     return {
@@ -404,9 +415,9 @@ export const visitorService = {
       stage: demo.stage,
       pipeline: "Visitor Pipeline",
       assignee: assigned ? { name: assigned.name, role: assigned.role } : null,
-      stages: VISITOR_STAGES.map((s, i) => ({
+      stages: stageOrder.map((s, i) => ({
         id: s,
-        label: VISITOR_STAGE_LABELS[s],
+        label: labels[s] || VISITOR_STAGE_LABELS[s] || s,
         completed: i < activeIdx,
         active: i === activeIdx,
       })),
@@ -548,7 +559,9 @@ export const visitorService = {
         leadId: id,
         type: "stage_change",
         title: `Stage: ${oldStage} → ${input.stage}`,
-        description: input.reason || `Lead moved to ${VISITOR_STAGE_LABELS[input.stage]}`,
+        description:
+          input.reason ||
+          `Lead moved to ${VISITOR_STAGE_LABELS[input.stage] || input.stage}`,
       })
 
       return updated

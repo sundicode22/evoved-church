@@ -10,6 +10,7 @@ import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import {
+  DateTimeFormField,
   SelectFormField,
   TextareaFormField,
   TextFormField,
@@ -353,20 +354,16 @@ export default function ChurchCalendarPage() {
                         </>
                       )}
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <TextFormField
-                          control={form.control}
-                          name="startsAt"
-                          label="Starts"
-                          type="datetime-local"
-                        />
-                        <TextFormField
-                          control={form.control}
-                          name="endsAt"
-                          label="Ends"
-                          type="datetime-local"
-                        />
-                      </div>
+                      <DateTimeFormField
+                        control={form.control}
+                        name="startsAt"
+                        label="Starts"
+                      />
+                      <DateTimeFormField
+                        control={form.control}
+                        name="endsAt"
+                        label="Ends"
+                      />
 
                       <div className="grid grid-cols-2 gap-3">
                         <TextFormField

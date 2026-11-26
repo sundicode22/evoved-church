@@ -58,8 +58,8 @@ export const PERMISSION_CATALOG = [
   // Announcements / forms
   { key: "announcements.read", label: "View announcements", groupName: "Announcements" },
   { key: "announcements.write", label: "Create & post announcements", groupName: "Announcements" },
-  { key: "blog.read", label: "View portal blog posts", groupName: "Blog" },
-  { key: "blog.write", label: "Write & publish portal blog posts", groupName: "Blog" },
+  { key: "blog.read", label: "View blog posts", groupName: "Blog" },
+  { key: "blog.write", label: "Write & publish blog posts", groupName: "Blog" },
   { key: "forms.read", label: "View church forms", groupName: "Forms" },
   { key: "forms.write", label: "Create & publish forms", groupName: "Forms" },
   // Import / migration
@@ -100,8 +100,8 @@ export const NAV_PERMISSION: Record<string, PermissionKey | PermissionKey[]> = {
   "/dashboard/campaigns": "campaigns.read",
   "/dashboard/announcements": "announcements.read",
   "/dashboard/blog": "blog.read",
-  "/dashboard/portal": "blog.read",
   "/dashboard/forms": "forms.read",
   "/dashboard/metrics": "reports.read",
+  "/dashboard/reports": "reports.read",
   "/dashboard/settings": "settings.read",
 }

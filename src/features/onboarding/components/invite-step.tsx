@@ -80,14 +80,14 @@ export function InviteStep({ emails, onChange }: InviteStepProps) {
           {emails.map((email) => (
             <li
               key={email}
-              className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-brand-soft py-1 pr-1.5 pl-3 text-sm text-brand-ink shadow-xs"
+              className="flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand-soft py-1 pr-1.5 pl-3 text-sm text-brand-ink shadow-xs"
             >
               {email}
               <button
                 type="button"
                 aria-label={`Remove ${email}`}
                 onClick={() => onChange(emails.filter((e) => e !== email))}
-                className="rounded-full p-0.5 hover:bg-emerald-100"
+                className="rounded-full p-0.5 hover:bg-brand/10"
               >
                 <X className="size-3.5" />
               </button>

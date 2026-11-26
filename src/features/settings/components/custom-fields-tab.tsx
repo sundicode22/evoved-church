@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { createCustomFieldSchema } from "@/features/settings/schemas"
 import { apiClient, type ApiResponse } from "@/lib/axios"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -65,7 +67,7 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
     defaultValues: EMPTY_FIELD,
   })
 
-  const { data: fields = [] } = useQuery({
+  const { data: fields = [], isLoading } = useQuery({
     queryKey: ["custom-fields"],
     queryFn: async () => {
       const res = await apiClient.get<ApiResponse<CustomField[]>>("/settings/custom-fields")
@@ -87,8 +89,8 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
   })
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="w-full space-y-4 text-left">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-zinc-900">Custom fields</h2>
           <p className="text-xs text-zinc-500">Extend members, visitors, and groups with your own fields.</p>
@@ -100,17 +102,19 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
         ) : null}
       </div>
 
-      {fields.length === 0 ? (
-        <Empty className="border border-dashed py-12">
+      {isLoading ? (
+        <Skeleton className="h-40 w-full rounded-xl" />
+      ) : fields.length === 0 ? (
+        <Empty className="border border-dashed py-12 text-left">
           <EmptyTitle>No custom fields yet</EmptyTitle>
           <EmptyDescription>Create your first field to capture ministry-specific data.</EmptyDescription>
         </Empty>
       ) : (
-        <div className="rounded-xl border bg-white shadow-xs">
+        <div className="w-full overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-xs">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Label</TableHead>
+                <TableHead className="pl-4">Label</TableHead>
                 <TableHead>Key</TableHead>
                 <TableHead>Entity</TableHead>
                 <TableHead>Type</TableHead>
@@ -119,7 +123,7 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
             <TableBody>
               {fields.map((f) => (
                 <TableRow key={f.id}>
-                  <TableCell>{f.fieldLabel}</TableCell>
+                  <TableCell className="pl-4">{f.fieldLabel}</TableCell>
                   <TableCell className="font-mono text-xs">{f.fieldKey}</TableCell>
                   <TableCell>{f.entityType}</TableCell>
                   <TableCell>{f.fieldType}</TableCell>
@@ -170,7 +174,14 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
                 Cancel
               </Button>
               <Button type="submit" variant="primary" disabled={create.isPending}>
-                Save field
+                {create.isPending ? (
+                  <>
+                    <Spinner className="size-3.5" />
+                    Saving…
+                  </>
+                ) : (
+                  "Save field"
+                )}
               </Button>
             </SheetFooter>
           </form>

@@ -35,6 +35,7 @@ import {
   SharedKanbanBoard,
   type KanbanColumnData,
 } from "@/components/kanban/shared-kanban-board"
+import { ManageColumnsSheet } from "@/components/kanban/manage-columns-sheet"
 import {
   ColumnCustomize,
   StatusPill,
@@ -92,6 +93,7 @@ export default function ProjectsPage() {
   const [view, setView] = React.useState<"table" | "board">("table")
   const [search, setSearch] = React.useState("")
   const [open, setOpen] = React.useState(false)
+  const [manageColumnsOpen, setManageColumnsOpen] = React.useState(false)
   const form = useForm<ProjectTaskFormValues>({
     resolver: zodResolver(projectTaskFormSchema),
     defaultValues: PROJECT_TASK_DEFAULTS,
@@ -176,9 +178,22 @@ export default function ProjectsPage() {
           <div className="p-6 md:p-8">
             {view === "board" ? (
               <TablePanel className="overflow-x-auto rounded-lg border bg-background p-4">
+                <div className="mb-3 flex justify-end">
+                  <Can permission="projects.write">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setManageColumnsOpen(true)}
+                    >
+                      Manage columns
+                    </Button>
+                  </Can>
+                </div>
                 <SharedKanbanBoard
                   columns={columns}
                   isLoading={isLoading}
+                  onManageColumns={() => setManageColumnsOpen(true)}
                   onMove={(id, stage) =>
                     updateStage.mutate({ id, stage: stage as ProjectStage })
                   }
@@ -331,6 +346,13 @@ export default function ProjectsPage() {
               </Form>
             </SheetContent>
           </Sheet>
+
+          <ManageColumnsSheet
+            boardType="projects"
+            open={manageColumnsOpen}
+            onOpenChange={setManageColumnsOpen}
+            title="Project board columns"
+          />
         </RequireAbility>
       </SidebarInset>
     </SidebarProvider>

@@ -1,16 +1,15 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { format, parseISO } from "date-fns"
-import { BookOpen, ExternalLink, Plus } from "lucide-react"
+import { BookOpen, Plus } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -29,7 +28,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { TextFormField } from "@/components/form-fields"
+import { RichTextFormField, TextFormField } from "@/components/form-fields"
 import {
   Empty,
   EmptyDescription,
@@ -46,7 +45,6 @@ import {
 } from "@/components/ui/table"
 import { ConfirmAction } from "@/components/confirm-action"
 import { ImageUpload } from "@/components/image-upload"
-import { RichTextEditor } from "@/components/rich-text-editor"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Can, RequireAbility } from "@/components/auth/can"
 import { StatusPill, TableAddButton, TablePanel } from "@/components/table-panel"
@@ -150,25 +148,15 @@ export default function BlogDashboardPage() {
         <RequireAbility permission="blog.read">
           <PageHeader
             title="Blog"
-            description="Write stories with images for the member portal."
+            description="Write church stories with cover images and rich content."
             icon={<BookOpen className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/portal/main"
-                  target="_blank"
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  <ExternalLink className="size-4" strokeWidth={1.75} />
-                  View portal
-                </Link>
-                <Can permission="blog.write">
-                  <TableAddButton onClick={openCreate}>
-                    <Plus className="size-4" strokeWidth={1.75} />
-                    New post
-                  </TableAddButton>
-                </Can>
-              </div>
+              <Can permission="blog.write">
+                <TableAddButton onClick={openCreate}>
+                  <Plus className="size-4" strokeWidth={1.75} />
+                  New post
+                </TableAddButton>
+              </Can>
             }
           />
 
@@ -178,7 +166,7 @@ export default function BlogDashboardPage() {
                 <EmptyHeader>
                   <EmptyTitle>No blog posts</EmptyTitle>
                   <EmptyDescription>
-                    Draft a story with a cover photo — members open it from the portal in one click.
+                    Draft a story with a cover photo and rich body content.
                   </EmptyDescription>
                 </EmptyHeader>
                 <Can permission="blog.write">
@@ -269,16 +257,7 @@ export default function BlogDashboardPage() {
                                             onClick: () => setConfirmPublish(post),
                                           },
                                         ]
-                                      : [
-                                          {
-                                            label: "Open on portal",
-                                            onClick: () =>
-                                              window.open(
-                                                `/portal/main/blog/${post.slug}`,
-                                                "_blank"
-                                              ),
-                                          },
-                                        ]),
+                                      : []),
                                   ],
                                 },
                                 {
@@ -311,7 +290,7 @@ export default function BlogDashboardPage() {
                     {editing ? "Edit post" : "New blog post"}
                   </SheetTitle>
                   <SheetDescription>
-                    Add a cover image and rich body — members read it on the portal.
+                    Add a cover image and rich body for this story.
                   </SheetDescription>
                 </SheetHeader>
                 <SheetBody>
@@ -326,7 +305,7 @@ export default function BlogDashboardPage() {
                       control={form.control}
                       name="excerpt"
                       label="Excerpt"
-                      placeholder="Short preview shown on the portal grid"
+                      placeholder="Short preview shown in the post list"
                     />
                     <FormField
                       control={form.control}
@@ -349,22 +328,13 @@ export default function BlogDashboardPage() {
                       label="Author"
                       placeholder="Pastor name"
                     />
-                    <FormField
+                    <RichTextFormField
                       control={form.control}
                       name="bodyHtml"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Body</FormLabel>
-                          <RichTextEditor
-                            value={field.value}
-                            onChange={(html) => field.onChange(html)}
-                            placeholder="Write the story… use the image button to insert photos inline."
-                            minHeight="280px"
-                            enableImages
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      label="Body"
+                      placeholder="Write the story… use the toolbar for formatting and images."
+                      minHeight="280px"
+                      enableImages
                     />
                   </FieldGroup>
                 </SheetBody>
@@ -389,7 +359,7 @@ export default function BlogDashboardPage() {
             open={Boolean(confirmPublish)}
             onOpenChange={(v) => !v && setConfirmPublish(null)}
             title="Publish this post?"
-            description="Published stories appear on the member portal for everyone to read."
+            description="Published stories become visible for members to read."
             confirmLabel="Publish"
             loading={publish.isPending}
             onConfirm={async () => {

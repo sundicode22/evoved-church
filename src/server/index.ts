@@ -19,7 +19,7 @@ import { followUpsController } from "@/features/follow-ups/controller"
 import { dripsController } from "@/features/drips/controller"
 import { announcementsController } from "@/features/announcements/controller"
 import { formsController } from "@/features/forms/controller"
-import { portalController } from "@/features/portal/controller"
+import { kanbanController } from "@/features/kanban/controller"
 import { givingController } from "@/features/giving/controller"
 import { groupsController } from "@/features/groups/controller"
 import { reportsController } from "@/features/reports/controller"
@@ -59,7 +59,7 @@ export const app = new Elysia({ prefix: "/api" })
   .use(dripsController)
   .use(announcementsController)
   .use(formsController)
-  .use(portalController)
+  .use(kanbanController)
   .use(givingController)
   .use(groupsController)
   .use(reportsController)

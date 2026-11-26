@@ -10,6 +10,7 @@ import {
   jsonb,
   pgEnum,
   unique,
+  uniqueIndex,
 } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
 
@@ -328,10 +329,21 @@ export const members = pgTable("members", {
   personType: personTypeEnum("person_type").default("covenant_member").notNull(),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
+  preferredName: varchar("preferred_name", { length: 100 }),
   email: varchar("email", { length: 255 }),
   phoneNumber: varchar("phone_number", { length: 50 }),
   avatarUrl: text("avatar_url"),
   recordedTitle: varchar("recorded_title", { length: 100 }), // "Reverend", "Elder", "Deacon", "Dr."
+  gender: varchar("gender", { length: 30 }), // male | female | unspecified
+  maritalStatus: varchar("marital_status", { length: 40 }), // single | married | widowed | divorced | separated
+  address: text("address"),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 50 }),
+  zipCode: varchar("zip_code", { length: 20 }),
+  country: varchar("country", { length: 100 }).default("US"),
+  occupation: varchar("occupation", { length: 150 }),
+  notes: text("notes"),
+  membershipDate: timestamp("membership_date"),
   ministryRoles: jsonb("ministry_roles").$type<string[]>().default([]), // ["Worship Team", "Youth Mentor"]
   isHeadOfHousehold: boolean("is_head_of_household").default(false).notNull(),
   birthDate: timestamp("birth_date"),
@@ -388,7 +400,8 @@ export const visitorLeads = pgTable("visitor_leads", {
   campusId: uuid("campus_id").references(() => campuses.id).notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   location: varchar("location", { length: 255 }),
-  stage: visitorStageEnum("stage").default("first_visit").notNull(),
+  /** Flexible kanban column key (see kanban_columns). */
+  stage: varchar("stage", { length: 80 }).default("first_visit").notNull(),
   contactName: varchar("contact_name", { length: 255 }).notNull(),
   contactEmail: varchar("contact_email", { length: 255 }),
   contactPhone: varchar("contact_phone", { length: 50 }),
@@ -784,6 +797,8 @@ export const churchForms = pgTable("church_forms", {
   title: varchar("title", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 120 }).notNull().unique(),
   description: text("description"),
+  /** general | visitor_intake — visitor_intake submissions create visitor leads */
+  purpose: varchar("purpose", { length: 40 }).default("general").notNull(),
   status: varchar("status", { length: 30 }).default("draft").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -810,19 +825,7 @@ export const churchFormSubmissions = pgTable("church_form_submissions", {
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 })
 
-export const portalSettings = pgTable("portal_settings", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  campusId: uuid("campus_id").references(() => campuses.id).notNull().unique(),
-  slug: varchar("slug", { length: 120 }).notNull().unique(),
-  publicDirectory: boolean("public_directory").default(false).notNull(),
-  publicGiving: boolean("public_giving").default(true).notNull(),
-  publicEvents: boolean("public_events").default(true).notNull(),
-  publicGroups: boolean("public_groups").default(true).notNull(),
-  stripeConnected: boolean("stripe_connected").default(false).notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-})
-
-/** Member-portal blog / stories with cover image + rich HTML body. */
+/** Member-facing blog / stories with cover image + rich HTML body. */
 export const blogPosts = pgTable("blog_posts", {
   id: uuid("id").defaultRandom().primaryKey(),
   campusId: uuid("campus_id").references(() => campuses.id),
@@ -983,6 +986,25 @@ export const campaignSends = pgTable("campaign_sends", {
 })
 
 // ==========================================
+// FLEXIBLE KANBAN COLUMNS (visitors + projects)
+// ==========================================
+export const kanbanColumns = pgTable(
+  "kanban_columns",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    boardType: varchar("board_type", { length: 40 }).notNull(),
+    key: varchar("key", { length: 80 }).notNull(),
+    label: varchar("label", { length: 120 }).notNull(),
+    orderIndex: integer("order_index").default(0).notNull(),
+    color: varchar("color", { length: 40 }),
+    isDefault: boolean("is_default").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("kanban_columns_board_key_uidx").on(t.boardType, t.key)]
+)
+
+// ==========================================
 // PROJECTS KANBAN
 // ==========================================
 export const projectStageEnum = pgEnum("project_stage", [
@@ -997,7 +1019,8 @@ export const projectCards = pgTable("project_cards", {
   campusId: uuid("campus_id").references(() => campuses.id),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  stage: projectStageEnum("stage").default("backlog").notNull(),
+  /** Flexible kanban column key (see kanban_columns). */
+  stage: varchar("stage", { length: 80 }).default("backlog").notNull(),
   priority: varchar("priority", { length: 30 }).default("normal").notNull(),
   assigneeName: varchar("assignee_name", { length: 150 }),
   projectName: varchar("project_name", { length: 255 }),
@@ -1126,5 +1149,19 @@ export const resourceBookings = pgTable("resource_bookings", {
   requestedByUserId: text("requested_by_user_id").references(() => users.id),
   status: bookingStatusEnum("status").default("pending").notNull(),
   notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+/** Immutable activity trail for compliance / FP audit. */
+export const auditLogs = pgTable("audit_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campusId: uuid("campus_id").references(() => campuses.id),
+  actorUserId: text("actor_user_id").references(() => users.id),
+  actorName: varchar("actor_name", { length: 255 }),
+  action: varchar("action", { length: 100 }).notNull(), // e.g. ledger.post, member.create
+  entityType: varchar("entity_type", { length: 100 }).notNull(),
+  entityId: varchar("entity_id", { length: 100 }),
+  summary: text("summary").notNull(),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })

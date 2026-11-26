@@ -82,7 +82,7 @@ export function usePublishBlogPost() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: BLOG_KEYS.all })
-      toast.success("Published to member portal")
+      toast.success("Post published")
     },
     onError: (err: Error) => toast.error(err.message || "Could not publish"),
   })

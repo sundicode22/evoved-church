@@ -27,7 +27,7 @@ export function WizardStepper({ steps, current }: WizardStepperProps) {
             <span
               className={cn(
                 "hidden text-sm font-medium sm:block",
-                active ? "text-slate-900" : "text-zinc-400"
+                active ? "text-brand" : "text-zinc-400"
               )}
             >
               {label}

@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import {
   NumberFormField,
+  RichTextFormField,
   SelectFormField,
   TextareaFormField,
   TextFormField,
@@ -329,12 +330,24 @@ export default function CommunicationsPage() {
                       {stepChannel === "email" && (
                         <TextFormField control={stepForm.control} name="subject" label="Subject" />
                       )}
-                      <TextareaFormField
-                        control={stepForm.control}
-                        name="body"
-                        label="Body"
-                        rows={5}
-                      />
+                      {stepChannel === "email" ? (
+                        <RichTextFormField
+                          control={stepForm.control}
+                          name="body"
+                          label="Body"
+                          placeholder="Write the email step…"
+                          minHeight="200px"
+                          enableImages={false}
+                        />
+                      ) : (
+                        <TextareaFormField
+                          control={stepForm.control}
+                          name="body"
+                          label="Body"
+                          rows={5}
+                          placeholder="SMS text (plain)"
+                        />
+                      )}
                     </FieldGroup>
                   </SheetBody>
                   <SheetFooter>

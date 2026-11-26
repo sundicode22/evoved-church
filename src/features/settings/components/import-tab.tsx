@@ -37,6 +37,7 @@ import {
   GIVING_CSV_HEADERS,
   MEMBER_CSV_HEADERS,
 } from "@/features/import/schemas"
+import { Spinner } from "@/components/ui/spinner"
 import { Download, HeartHandshake, Upload, Users } from "lucide-react"
 
 type ImportKind = "members" | "giving"
@@ -230,7 +231,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="w-full space-y-5 text-left">
       <div>
         <h2 className="text-sm font-semibold text-zinc-900">Import CSV</h2>
         <p className="mt-1 text-xs text-zinc-500">
@@ -429,10 +430,18 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
                 variant="outline"
                 disabled={!canEdit || busy || rows.length === 0}
               >
-                {busy ? "Working…" : "Dry run"}
+                {busy ? (
+                  <>
+                    <Spinner className="size-3.5" />
+                    Working…
+                  </>
+                ) : (
+                  "Dry run"
+                )}
               </Button>
               <Button
                 type="button"
+                variant="primary"
                 disabled={!canEdit || busy || rows.length === 0 || !report}
                 onClick={() => setConfirmApply(true)}
               >

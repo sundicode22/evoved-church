@@ -34,192 +34,17 @@ type BatchRow = Omit<GivingBatch, "uniqueContributors" | "totalAmount"> & {
   totalAmount?: number
 }
 
-const daysAgo = (d: number) => new Date(Date.now() - d * 86_400_000).toISOString()
 const now = () => new Date().toISOString()
-const DEMO_CAMPUS = "campus-demo-1"
 
-const fundNames: Record<string, string> = {
-  "fund-1": "General Operating Fund",
-  "fund-2": "Sanctuary Expansion & Capital Campaign",
-  "fund-3": "World Missions & Regional Church Planting",
-  "fund-4": "Benevolence & Community Food Pantry",
-}
+const fundNames: Record<string, string> = {}
 
-/** Demo fund balances bumped when posting without a real journal. */
-const demoFundBalances = new Map<string, number>([
-  ["fund-1", 145890.5],
-  ["fund-2", 320400.0],
-  ["fund-3", 48900.0],
-  ["fund-4", 18250.0],
-])
+/** In-memory balances only when DB post fails — never seeded. */
+const demoFundBalances = new Map<string, number>()
 
-const contributions: ContributionRow[] = [
-  {
-    id: "gc-1",
-    campusId: DEMO_CAMPUS,
-    memberId: "mem-5",
-    fundId: "fund-1",
-    fundName: fundNames["fund-1"],
-    batchId: "gb-1",
-    pledgeId: null,
-    amount: 1250,
-    method: "ach_bank",
-    frequency: "one_time",
-    channel: "online",
-    status: "recorded",
-    journalEntryId: null,
-    donorDisplayName: "Brian Robbin",
-    notes: null,
-    transactionReference: "ACH-10422",
-    isTaxDeductible: true,
-    contributionDate: daysAgo(2),
-    createdAt: daysAgo(2),
-  },
-  {
-    id: "gc-2",
-    campusId: DEMO_CAMPUS,
-    memberId: null,
-    fundId: "fund-2",
-    fundName: fundNames["fund-2"],
-    batchId: "gb-1",
-    pledgeId: "gp-1",
-    amount: 2500,
-    method: "card",
-    frequency: "one_time",
-    channel: "online",
-    status: "recorded",
-    journalEntryId: null,
-    donorDisplayName: "Eleanor Pena",
-    notes: "Capital campaign",
-    transactionReference: "ch_demo_208",
-    isTaxDeductible: true,
-    contributionDate: daysAgo(3),
-    createdAt: daysAgo(3),
-  },
-  {
-    id: "gc-3",
-    campusId: DEMO_CAMPUS,
-    memberId: "mem-4",
-    fundId: "fund-1",
-    fundName: fundNames["fund-1"],
-    batchId: "gb-2",
-    pledgeId: null,
-    amount: 500,
-    method: "check",
-    frequency: "one_time",
-    channel: "in_person",
-    status: "posted_to_ledger",
-    journalEntryId: "je-demo-gc-3",
-    donorDisplayName: "Jane Cooper",
-    notes: null,
-    transactionReference: "#312",
-    isTaxDeductible: true,
-    contributionDate: daysAgo(7),
-    createdAt: daysAgo(7),
-  },
-  {
-    id: "gc-4",
-    campusId: DEMO_CAMPUS,
-    memberId: null,
-    fundId: "fund-3",
-    fundName: fundNames["fund-3"],
-    batchId: null,
-    pledgeId: null,
-    amount: 350,
-    method: "card",
-    frequency: "recurring",
-    channel: "online",
-    status: "recorded",
-    journalEntryId: null,
-    donorDisplayName: "Ahmad Fawaid",
-    notes: null,
-    transactionReference: "sub_miss_115",
-    isTaxDeductible: true,
-    contributionDate: daysAgo(9),
-    createdAt: daysAgo(9),
-  },
-  {
-    id: "gc-5",
-    campusId: DEMO_CAMPUS,
-    memberId: "mem-3",
-    fundId: "fund-4",
-    fundName: fundNames["fund-4"],
-    batchId: "gb-2",
-    pledgeId: null,
-    amount: 200,
-    method: "cash_envelope",
-    frequency: "one_time",
-    channel: "in_person",
-    status: "recorded",
-    journalEntryId: null,
-    donorDisplayName: "Kathryn Murphy",
-    notes: null,
-    transactionReference: "#405",
-    isTaxDeductible: true,
-    contributionDate: daysAgo(7),
-    createdAt: daysAgo(7),
-  },
-]
-
-const batches: BatchRow[] = [
-  {
-    id: "gb-1",
-    campusId: DEMO_CAMPUS,
-    name: "Sunday Online — Nov 22",
-    batchDate: daysAgo(2),
-    status: "open",
-    notes: "Stripe + ACH deposit",
-    createdByUserId: null,
-    createdAt: daysAgo(2),
-    updatedAt: daysAgo(2),
-  },
-  {
-    id: "gb-2",
-    campusId: DEMO_CAMPUS,
-    name: "Sunday Envelope — Nov 17",
-    batchDate: daysAgo(7),
-    status: "open",
-    notes: null,
-    createdByUserId: null,
-    createdAt: daysAgo(7),
-    updatedAt: daysAgo(7),
-  },
-]
-
-const pledges: GivingPledge[] = [
-  {
-    id: "gp-1",
-    campusId: DEMO_CAMPUS,
-    memberId: "mem-demo-eleanor",
-    memberDisplayName: "Eleanor Pena",
-    fundId: "fund-2",
-    fundName: fundNames["fund-2"],
-    amountTotal: 10000,
-    amountGiven: 2500,
-    frequency: "monthly",
-    startDate: daysAgo(60),
-    endDate: null,
-    status: "active",
-    createdAt: daysAgo(60),
-    updatedAt: daysAgo(3),
-  },
-  {
-    id: "gp-2",
-    campusId: DEMO_CAMPUS,
-    memberId: "mem-1",
-    memberDisplayName: "David Johnson",
-    fundId: "fund-1",
-    fundName: fundNames["fund-1"],
-    amountTotal: 6000,
-    amountGiven: 1500,
-    frequency: "monthly",
-    startDate: daysAgo(90),
-    endDate: null,
-    status: "active",
-    createdAt: daysAgo(90),
-    updatedAt: daysAgo(10),
-  },
-]
+/** Empty write fallbacks when DB is unavailable — never seeded demo rows. */
+let contributions: ContributionRow[] = []
+let batches: BatchRow[] = []
+let pledges: GivingPledge[] = []
 
 function summarize(rows: ContributionRow[]): GivingSummary {
   return {
@@ -262,22 +87,21 @@ function findPledge(id: string) {
 
 async function resolveCampusId(preferred?: string | null) {
   if (preferred) return preferred
-  try {
-    const rows = await db.select({ id: campuses.id }).from(campuses).limit(1)
-    if (rows[0]?.id) return rows[0].id
-  } catch {
-    /* demo */
-  }
-  return DEMO_CAMPUS
+  const rows = await db.select({ id: campuses.id }).from(campuses).limit(1)
+  if (!rows[0]?.id) throw new ValidationError("Create a location before recording giving.")
+  return rows[0].id
 }
 
-function mapDbContribution(row: typeof givingContributions.$inferSelect): ContributionRow {
+function mapDbContribution(
+  row: typeof givingContributions.$inferSelect,
+  fundName?: string | null
+): ContributionRow {
   return {
     id: row.id,
     campusId: row.campusId,
     memberId: row.memberId,
     fundId: row.fundId,
-    fundName: fundNames[row.fundId] || "Fund",
+    fundName: fundName || fundNames[row.fundId] || "Fund",
     batchId: row.batchId,
     pledgeId: row.pledgeId,
     amount: Number(row.amount),
@@ -299,21 +123,23 @@ export const givingService = {
   async listContributions(): Promise<GivingListResult> {
     try {
       const rows = await db
-        .select()
+        .select({
+          contribution: givingContributions,
+          fundName: accountingFunds.name,
+        })
         .from(givingContributions)
+        .leftJoin(accountingFunds, eq(givingContributions.fundId, accountingFunds.id))
         .orderBy(desc(givingContributions.contributionDate))
         .limit(200)
-      if (rows.length > 0) {
-        const mapped = rows.map(mapDbContribution)
-        return { contributions: mapped, summary: summarize(mapped) }
-      }
+      const mapped = rows.map((r) => mapDbContribution(r.contribution, r.fundName))
+      return { contributions: mapped, summary: summarize(mapped) }
     } catch (err) {
-      console.error("[givingService.listContributions] falling back to demo", err)
+      console.error("[givingService.listContributions]", err)
+      const sorted = [...contributions].sort((a, b) =>
+        b.contributionDate.localeCompare(a.contributionDate)
+      )
+      return { contributions: sorted, summary: summarize(sorted) }
     }
-    const sorted = [...contributions].sort((a, b) =>
-      b.contributionDate.localeCompare(a.contributionDate)
-    )
-    return { contributions: sorted, summary: summarize(sorted) }
   },
 
   async createContribution(input: CreateContributionInput): Promise<GivingContribution> {
@@ -451,6 +277,8 @@ export const givingService = {
       journalEntryId = `je-giving-${contribution.id}`
     }
 
+    const { writeAuditLog } = await import("@/features/audit/service")
+
     try {
       const [updated] = await db
         .update(givingContributions)
@@ -460,39 +288,57 @@ export const givingService = {
         })
         .where(eq(givingContributions.id, id))
         .returning()
-      if (updated) return mapDbContribution(updated)
+      if (updated) {
+        const mapped = mapDbContribution(updated)
+        void writeAuditLog({
+          campusId: mapped.campusId,
+          actorUserId: postedByUserId,
+          action: "giving.post",
+          entityType: "contribution",
+          entityId: mapped.id,
+          summary: `Posted giving ${mapped.donorDisplayName} · ${mapped.amount}`,
+          metadata: { journalEntryId, fundId: mapped.fundId },
+        })
+        return mapped
+      }
     } catch {
-      /* demo */
+      /* memory fallback */
     }
 
     const demo = findContribution(id)
     demo.status = "posted_to_ledger"
     demo.journalEntryId = journalEntryId
+    void writeAuditLog({
+      campusId: demo.campusId,
+      actorUserId: postedByUserId,
+      action: "giving.post",
+      entityType: "contribution",
+      entityId: demo.id,
+      summary: `Posted giving ${demo.donorDisplayName} · ${demo.amount}`,
+    })
     return { ...demo }
   },
 
   async listBatches(): Promise<GivingBatch[]> {
     try {
       const rows = await db.select().from(givingBatches).orderBy(desc(givingBatches.batchDate))
-      if (rows.length > 0) {
-        return rows.map((b) =>
-          enrichBatch({
-            id: b.id,
-            campusId: b.campusId,
-            name: b.name,
-            batchDate: b.batchDate.toISOString(),
-            status: b.status,
-            notes: b.notes,
-            createdByUserId: b.createdByUserId,
-            createdAt: b.createdAt.toISOString(),
-            updatedAt: b.updatedAt.toISOString(),
-          })
-        )
-      }
+      return rows.map((b) =>
+        enrichBatch({
+          id: b.id,
+          campusId: b.campusId,
+          name: b.name,
+          batchDate: b.batchDate.toISOString(),
+          status: b.status,
+          notes: b.notes,
+          createdByUserId: b.createdByUserId,
+          createdAt: b.createdAt.toISOString(),
+          updatedAt: b.updatedAt.toISOString(),
+        })
+      )
     } catch (err) {
-      console.error("[givingService.listBatches] demo", err)
+      console.error("[givingService.listBatches]", err)
+      return batches.map(enrichBatch)
     }
-    return batches.map(enrichBatch)
   },
 
   async createBatch(input: CreateBatchInput, userId?: string): Promise<GivingBatch> {
@@ -602,28 +448,26 @@ export const givingService = {
   async listPledges(): Promise<GivingPledge[]> {
     try {
       const rows = await db.select().from(givingPledges).orderBy(desc(givingPledges.createdAt))
-      if (rows.length > 0) {
-        return rows.map((p) => ({
-          id: p.id,
-          campusId: p.campusId,
-          memberId: p.memberId,
-          memberDisplayName: "Member",
-          fundId: p.fundId,
-          fundName: fundNames[p.fundId] || "Fund",
-          amountTotal: Number(p.amountTotal),
-          amountGiven: Number(p.amountGiven),
-          frequency: p.frequency,
-          startDate: p.startDate.toISOString(),
-          endDate: p.endDate?.toISOString() || null,
-          status: p.status,
-          createdAt: p.createdAt.toISOString(),
-          updatedAt: p.updatedAt.toISOString(),
-        }))
-      }
+      return rows.map((p) => ({
+        id: p.id,
+        campusId: p.campusId,
+        memberId: p.memberId,
+        memberDisplayName: "Member",
+        fundId: p.fundId,
+        fundName: fundNames[p.fundId] || "Fund",
+        amountTotal: Number(p.amountTotal),
+        amountGiven: Number(p.amountGiven),
+        frequency: p.frequency,
+        startDate: p.startDate.toISOString(),
+        endDate: p.endDate?.toISOString() || null,
+        status: p.status,
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      }))
     } catch (err) {
-      console.error("[givingService.listPledges] demo", err)
+      console.error("[givingService.listPledges]", err)
+      return [...pledges].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     }
-    return [...pledges].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   },
 
   async createPledge(input: CreatePledgeInput): Promise<GivingPledge> {

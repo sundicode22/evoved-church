@@ -70,11 +70,7 @@ export default function DashboardHomePage() {
         <PageHeader title="Dashboard" />
         <div className="flex flex-1 flex-col gap-6 bg-white p-4 md:p-6">
           <section className="rounded-xl bg-white">
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">Dashboard</h1>
-            <p className="mt-1 text-base text-zinc-700">
-              Funds, giving, and the visitor pipeline for this location.
-            </p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-3">
               <StatCard label="Fund net available" value={money(netAvailable)} href="/dashboard/funds" />
               <StatCard label="Giving listed" value={money(givingTotal)} href="/dashboard/giving" />
               <StatCard label="Visitor pipeline" value={String(visitorCount)} href="/dashboard/visitors" />

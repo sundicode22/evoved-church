@@ -12,13 +12,29 @@ export const personTypeEnumSchema = z.enum([
   "inactive_alumni",
 ])
 
+export const genderSchema = z.enum(["male", "female", "unspecified"]).optional()
+export const maritalStatusSchema = z
+  .enum(["single", "married", "widowed", "divorced", "separated"])
+  .optional()
+
 export const createMemberSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
+  preferredName: z.string().optional(),
   email: z.string().email("Valid email required").optional().or(z.literal("")),
   phoneNumber: z.string().optional(),
   personType: personTypeEnumSchema.default("covenant_member"),
-  recordedTitle: z.string().optional(), // "Reverend", "Elder", "Deacon", "Dr."
+  recordedTitle: z.string().optional(),
+  gender: genderSchema,
+  maritalStatus: maritalStatusSchema,
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  country: z.string().optional(),
+  occupation: z.string().optional(),
+  notes: z.string().optional(),
+  membershipDate: z.string().optional(),
   ministryRoles: z.array(z.string()).default([]),
   campusId: z.string().uuid("Campus ID required").optional(),
   categoryId: z.string().uuid().optional(),
@@ -78,4 +94,18 @@ export const HOUSEHOLD_ROLE_LABELS: Record<HouseholdRole, string> = {
   guardian: "Guardian",
   head: "Head of Household",
   other: "Other",
+}
+
+export const GENDER_LABELS: Record<string, string> = {
+  male: "Male",
+  female: "Female",
+  unspecified: "Unspecified",
+}
+
+export const MARITAL_STATUS_LABELS: Record<string, string> = {
+  single: "Single",
+  married: "Married",
+  widowed: "Widowed",
+  divorced: "Divorced",
+  separated: "Separated",
 }

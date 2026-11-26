@@ -10,7 +10,6 @@ import { FieldGroup } from "@/components/ui/field"
 import { TextFormField } from "@/components/form-fields"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Accordion,
@@ -47,6 +46,7 @@ import {
   type RoleRecord,
 } from "@/features/settings/hooks/use-rbac"
 import { createRoleFormSchema } from "@/features/settings/rbac-schemas"
+import { Spinner } from "@/components/ui/spinner"
 import { CheckCircle2, Info, Plus } from "lucide-react"
 
 function groupPermissions(perms: PermissionRecord[]) {
@@ -108,7 +108,14 @@ function CreateRoleSheet({
               Cancel
             </Button>
             <Button type="submit" variant="primary" disabled={create.isPending}>
-              Create role
+              {create.isPending ? (
+                <>
+                  <Spinner className="size-3.5" />
+                  Creating…
+                </>
+              ) : (
+                "Create role"
+              )}
             </Button>
           </SheetFooter>
         </form>
@@ -175,10 +182,18 @@ export function RolesPermissionsTab() {
   const rows = roles ?? []
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize)
 
+  function openRole(roleId: string) {
+    setSelectedId(roleId)
+    setEditorOpen(true)
+  }
+
   return (
     <>
-      <TablePanel>
-        <div className="flex justify-end px-1">
+      <TablePanel className="w-full text-left">
+        <div className="flex items-center justify-between gap-3 px-1">
+          <p className="text-sm text-zinc-500">
+            Click a role to edit its permission matrix.
+          </p>
           <Can permission="settings.roles">
             <Button variant="primary" onClick={() => setDialogOpen(true)}>
               <Plus className="size-4" />
@@ -199,13 +214,17 @@ export function RolesPermissionsTab() {
           <TableBody>
             {pageRows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={5} className="py-10 text-left text-sm text-muted-foreground pl-4">
                   No roles yet.
                 </TableCell>
               </TableRow>
             )}
             {pageRows.map((role) => (
-              <TableRow key={role.id}>
+              <TableRow
+                key={role.id}
+                className="cursor-pointer"
+                onClick={() => openRole(role.id)}
+              >
                 <TableCell className="pl-4 text-foreground">{role.name}</TableCell>
                 <TableCell className="max-w-xs whitespace-normal text-muted-foreground">
                   {role.isAdmin
@@ -220,7 +239,10 @@ export function RolesPermissionsTab() {
                     {role.isAdmin ? "Admin" : "Custom"}
                   </StatusPill>
                 </TableCell>
-                <TableCell className="pr-3 text-right">
+                <TableCell
+                  className="pr-3 text-right"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <RowActionsMenu
                     label="Role"
                     groups={[
@@ -228,10 +250,7 @@ export function RolesPermissionsTab() {
                         items: [
                           {
                             label: "Edit permissions",
-                            onClick: () => {
-                              setSelectedId(role.id)
-                              setEditorOpen(true)
-                            },
+                            onClick: () => openRole(role.id),
                           },
                         ],
                       },
@@ -255,8 +274,8 @@ export function RolesPermissionsTab() {
       </TablePanel>
 
       <Sheet open={editorOpen} onOpenChange={setEditorOpen}>
-        <SheetContent side="right" inset size="lg" className="p-0">
-          <SheetHeader className="pr-12">
+        <SheetContent side="right" inset size="lg" className="isolate bg-white p-0">
+          <SheetHeader className="shrink-0 border-b border-zinc-100 bg-white pr-12">
             <SheetTitle>{selected?.name ?? "Role"}</SheetTitle>
             <SheetDescription>
               {selected?.isAdmin
@@ -264,7 +283,7 @@ export function RolesPermissionsTab() {
                 : selected?.description || "Choose what this role can see and do."}
             </SheetDescription>
           </SheetHeader>
-          <SheetBody className="gap-4">
+          <SheetBody className="gap-4 bg-white">
             {selected?.isAdmin && (
               <Alert className="border-brand/20 bg-brand-soft text-brand-ink">
                 <Info className="size-3.5" />
@@ -274,79 +293,77 @@ export function RolesPermissionsTab() {
                 </AlertDescription>
               </Alert>
             )}
-            <ScrollArea className="h-[min(520px,60vh)] pr-3">
-              <Accordion
-                multiple
-                defaultValue={grouped.slice(0, 2).map(([g]) => g)}
-                className="gap-2 overflow-visible rounded-none border-0"
-              >
-                {grouped.map(([group, items]) => {
-                  const selectedCount = items.filter(
-                    (p) => checked.has(p.key) || selected?.isAdmin
-                  ).length
-                  const allOn = selectedCount === items.length
-                  return (
-                    <AccordionItem
-                      key={group}
-                      value={group}
-                      className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xs data-open:bg-white"
-                    >
-                      <AccordionTrigger className="px-4 py-3 text-sm hover:no-underline">
-                        <div className="flex w-full items-center justify-between gap-3 pr-2 text-left">
-                          <span className="font-semibold text-zinc-900">{group}</span>
-                          <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium tabular-nums text-zinc-700">
-                            {selectedCount}/{items.length}
-                          </span>
+            <Accordion
+              multiple
+              defaultValue={grouped.slice(0, 2).map(([g]) => g)}
+              className="gap-2 overflow-hidden rounded-none border-0 bg-white"
+            >
+              {grouped.map(([group, items]) => {
+                const selectedCount = items.filter(
+                  (p) => checked.has(p.key) || selected?.isAdmin
+                ).length
+                const allOn = selectedCount === items.length
+                return (
+                  <AccordionItem
+                    key={group}
+                    value={group}
+                    className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xs data-open:bg-white"
+                  >
+                    <AccordionTrigger className="bg-white px-4 py-3 text-sm hover:no-underline">
+                      <div className="flex w-full items-center justify-between gap-3 pr-2 text-left">
+                        <span className="font-semibold text-zinc-900">{group}</span>
+                        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium tabular-nums text-zinc-700">
+                          {selectedCount}/{items.length}
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="border-t border-zinc-100 bg-white px-2 pb-2">
+                      {!selected?.isAdmin ? (
+                        <div className="flex justify-end px-2 pt-2">
+                          <Can permission="settings.roles">
+                            <button
+                              type="button"
+                              onClick={() => toggleGroup(items, !allOn)}
+                              className="text-xs font-medium text-[var(--brand-hover)] hover:underline"
+                            >
+                              {allOn ? "Clear group" : "Select all"}
+                            </button>
+                          </Can>
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="border-t border-zinc-100 px-2 pb-2">
-                        {!selected?.isAdmin ? (
-                          <div className="flex justify-end px-2 pt-2">
-                            <Can permission="settings.roles">
-                              <button
-                                type="button"
-                                onClick={() => toggleGroup(items, !allOn)}
-                                className="text-xs font-medium text-[var(--brand-hover)] hover:underline"
-                              >
-                                {allOn ? "Clear group" : "Select all"}
-                              </button>
-                            </Can>
-                          </div>
-                        ) : null}
-                        <div className="space-y-1 pt-1">
-                          {items.map((p) => {
-                            const on = Boolean(selected?.isAdmin || checked.has(p.key))
-                            return (
-                              <label
-                                key={p.key}
-                                className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-zinc-50"
-                              >
-                                <Checkbox
-                                  checked={on}
-                                  disabled={selected?.isAdmin}
-                                  onCheckedChange={(v) => toggle(p.key, Boolean(v))}
-                                />
-                                <span className="text-sm font-medium leading-snug text-zinc-900">
-                                  {p.label}
-                                </span>
-                              </label>
-                            )
-                          })}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  )
-                })}
-              </Accordion>
-            </ScrollArea>
+                      ) : null}
+                      <div className="space-y-1 bg-white pt-1">
+                        {items.map((p) => {
+                          const on = Boolean(selected?.isAdmin || checked.has(p.key))
+                          return (
+                            <label
+                              key={p.key}
+                              className="flex cursor-pointer items-center gap-3 rounded-lg bg-white px-2 py-2.5 hover:bg-zinc-50"
+                            >
+                              <Checkbox
+                                checked={on}
+                                disabled={selected?.isAdmin}
+                                onCheckedChange={(v) => toggle(p.key, Boolean(v))}
+                              />
+                              <span className="text-sm font-medium leading-snug text-zinc-900">
+                                {p.label}
+                              </span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )
+              })}
+            </Accordion>
           </SheetBody>
-          <SheetFooter>
+          <SheetFooter className="bg-[#f4f6f5]">
             <Button type="button" variant="outline" onClick={() => setEditorOpen(false)}>
               Close
             </Button>
             <Can permission="settings.roles">
               <Button
-                variant="accent"
+                variant="primary"
                 disabled={!dirty || save.isPending || selected?.isAdmin}
                 onClick={() =>
                   selected &&
@@ -366,8 +383,17 @@ export function RolesPermissionsTab() {
                 }
                 className="font-normal"
               >
-                <CheckCircle2 className="size-3.5" />
-                Save permissions
+                {save.isPending ? (
+                  <>
+                    <Spinner className="size-3.5" />
+                    Saving…
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="size-3.5" />
+                    Save permissions
+                  </>
+                )}
               </Button>
             </Can>
           </SheetFooter>

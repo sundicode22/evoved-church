@@ -1,15 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { ClipboardList, Plus } from "lucide-react"
+import { ClipboardList, Copy, ExternalLink, Plus, Trash2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { toast } from "sonner"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Sheet,
   SheetBody,
@@ -21,7 +23,7 @@ import {
 } from "@/components/ui/sheet"
 import { FieldGroup } from "@/components/ui/field"
 import { Form } from "@/components/ui/form"
-import { TextFormField, TextareaFormField } from "@/components/form-fields"
+import { SelectFormField, TextFormField, TextareaFormField } from "@/components/form-fields"
 import {
   Empty,
   EmptyDescription,
@@ -41,14 +43,25 @@ import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Can, RequireAbility } from "@/components/auth/can"
 import { StatusPill, TablePanel } from "@/components/table-panel"
 import {
+  useAddFormField,
   useCreateForm,
+  useFormDetail,
   useForms,
   usePublishForm,
+  useRemoveFormField,
+  useUnpublishForm,
+  useVisitorIntakeForm,
 } from "@/features/forms/hooks/use-forms"
-import { createFormSchema, type ChurchForm } from "@/features/forms/schemas"
+import {
+  FORM_FIELD_TYPES,
+  FORM_PURPOSES,
+  createFormSchema,
+  formFieldSchema,
+  type ChurchForm,
+} from "@/features/forms/schemas"
 
 const formBuilderSchema = createFormSchema
-  .pick({ title: true, description: true })
+  .pick({ title: true, description: true, purpose: true })
   .extend({
     slug: z
       .string()
@@ -56,23 +69,321 @@ const formBuilderSchema = createFormSchema
   })
 
 type FormBuilderValues = z.infer<typeof formBuilderSchema>
+const fieldBuilderSchema = formFieldSchema
+  .omit({ options: true })
+  .extend({ optionsText: z.string().optional() })
+type FieldBuilderValues = z.infer<typeof fieldBuilderSchema>
 
-const emptyForm: FormBuilderValues = { title: "", slug: "", description: "" }
+const emptyForm: FormBuilderValues = {
+  title: "",
+  slug: "",
+  description: "",
+  purpose: "general",
+}
+const PURPOSE_OPTIONS = FORM_PURPOSES.map((p) => ({ value: p.value, label: p.label }))
+const emptyField: FieldBuilderValues = {
+  label: "",
+  fieldType: "short_text",
+  required: false,
+  optionsText: "",
+}
+
+const FIELD_TYPE_OPTIONS = FORM_FIELD_TYPES.map((t) => ({ value: t.value, label: t.label }))
+
+function publicUrl(slug: string) {
+  if (typeof window === "undefined") return `/f/${slug}`
+  return `${window.location.origin}/f/${slug}`
+}
+
+function FormBuilderSheet({
+  formId,
+  open,
+  onOpenChange,
+}: {
+  formId: string | null
+  open: boolean
+  onOpenChange: (o: boolean) => void
+}) {
+  const { data: form, isLoading } = useFormDetail(open ? formId : null)
+  const addField = useAddFormField(formId)
+  const removeField = useRemoveFormField(formId)
+  const publish = usePublishForm()
+  const unpublish = useUnpublishForm()
+
+  const fieldForm = useForm<FieldBuilderValues>({
+    resolver: zodResolver(fieldBuilderSchema),
+    defaultValues: emptyField,
+  })
+  const fieldType = fieldForm.watch("fieldType")
+  const locked = form?.status === "published"
+
+  function submitField(values: FieldBuilderValues) {
+    const options =
+      values.fieldType === "multiple_choice" || values.fieldType === "checkboxes"
+        ? (values.optionsText || "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : []
+    if (
+      (values.fieldType === "multiple_choice" || values.fieldType === "checkboxes") &&
+      options.length === 0
+    ) {
+      toast.error("Add at least one option (comma-separated)")
+      return
+    }
+    addField.mutate(
+      {
+        label: values.label,
+        fieldType: values.fieldType,
+        required: values.required,
+        options,
+      },
+      { onSuccess: () => fieldForm.reset(emptyField) }
+    )
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" inset size="lg" className="isolate bg-white p-0">
+        <SheetHeader className="border-b border-zinc-100 bg-white pr-12">
+          <SheetTitle>{form?.title || "Form builder"}</SheetTitle>
+          <SheetDescription>
+            {locked
+              ? "This form is open to the public. Unpublish to add or remove fields."
+              : "Build fields while draft. Publish when ready — people fill it at /f/your-slug."}
+          </SheetDescription>
+        </SheetHeader>
+        <SheetBody className="gap-6 bg-white">
+          {isLoading || !form ? (
+            <div className="flex items-center gap-2 text-sm text-zinc-500">
+              <Spinner className="size-4" /> Loading form…
+            </div>
+          ) : (
+            <>
+              <div className="rounded-xl border border-zinc-200/80 bg-[#f8faf9] p-4 text-sm">
+                <p className="font-medium text-zinc-900">How this is used</p>
+                <ol className="mt-2 list-decimal space-y-1 pl-4 text-zinc-600">
+                  <li>Add fields here (name, email, prayer need, team interest, …).</li>
+                  <li>Publish — the form goes live at a public link.</li>
+                  <li>Share the link (QR, welcome card, portal, email).</li>
+                  <li>Responses are stored as submissions against this form.</li>
+                  {form.purpose === "visitor_intake" ? (
+                    <li>
+                      Visitor intake: each submission also creates a guest in{" "}
+                      <strong className="font-medium text-zinc-800">Visitors</strong>.
+                    </li>
+                  ) : null}
+                </ol>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <code className="rounded-md bg-white px-2 py-1 text-xs text-zinc-800 shadow-xs">
+                    {publicUrl(form.slug)}
+                  </code>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(publicUrl(form.slug))
+                      toast.success("Link copied")
+                    }}
+                  >
+                    <Copy className="size-3.5" />
+                    Copy
+                  </Button>
+                  {form.status === "published" ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(`/f/${form.slug}`, "_blank")}
+                    >
+                      <ExternalLink className="size-3.5" />
+                      Open
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-zinc-900">Fields</h3>
+                  <StatusPill tone={locked ? "success" : "neutral"}>
+                    {form.status}
+                  </StatusPill>
+                </div>
+                {form.fields.length === 0 ? (
+                  <p className="text-sm text-zinc-500">No fields yet.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {form.fields.map((f) => (
+                      <li
+                        key={f.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200/80 bg-white px-3 py-2.5"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-zinc-900">
+                            {f.label}
+                            {f.required ? (
+                              <span className="text-rose-500"> *</span>
+                            ) : null}
+                          </p>
+                          <p className="text-xs text-zinc-500">
+                            {f.fieldType.replaceAll("_", " ")}
+                            {f.options?.length ? ` · ${f.options.join(", ")}` : ""}
+                          </p>
+                        </div>
+                        {!locked ? (
+                          <Button
+                            type="button"
+                            size="icon-sm"
+                            variant="ghost"
+                            disabled={removeField.isPending}
+                            onClick={() => removeField.mutate(f.id)}
+                          >
+                            <Trash2 className="size-3.5 text-zinc-500" />
+                          </Button>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {!locked ? (
+                <Form {...fieldForm}>
+                  <form
+                    onSubmit={fieldForm.handleSubmit(submitField)}
+                    className="space-y-3 rounded-xl border border-dashed border-zinc-300 bg-white p-4"
+                  >
+                    <p className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                      Add field
+                    </p>
+                    <FieldGroup className="gap-3">
+                      <TextFormField
+                        control={fieldForm.control}
+                        name="label"
+                        label="Label"
+                        placeholder="e.g. Prayer request"
+                      />
+                      <SelectFormField
+                        control={fieldForm.control}
+                        name="fieldType"
+                        label="Type"
+                        options={FIELD_TYPE_OPTIONS}
+                      />
+                      {fieldType === "multiple_choice" || fieldType === "checkboxes" ? (
+                        <TextFormField
+                          control={fieldForm.control}
+                          name="optionsText"
+                          label="Options (comma-separated)"
+                          placeholder="Worship, Kids, Hospitality"
+                        />
+                      ) : null}
+                    </FieldGroup>
+                    <label className="flex items-center gap-2 text-sm text-zinc-700">
+                      <input
+                        type="checkbox"
+                        className="size-4 rounded border-zinc-300"
+                        checked={Boolean(fieldForm.watch("required"))}
+                        onChange={(e) => fieldForm.setValue("required", e.target.checked)}
+                      />
+                      Required
+                    </label>
+                    <Button type="submit" variant="primary" disabled={addField.isPending}>
+                      {addField.isPending ? (
+                        <>
+                          <Spinner className="size-3.5" />
+                          Adding…
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="size-3.5" />
+                          Add field
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              ) : (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  Field editing is locked while the form is published so live submissions stay
+                  consistent. Unpublish to change the structure.
+                </p>
+              )}
+            </>
+          )}
+        </SheetBody>
+        <SheetFooter className="bg-[#f4f6f5]">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+          {form?.status === "published" ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={unpublish.isPending}
+              onClick={() => form && unpublish.mutate(form.id)}
+            >
+              {unpublish.isPending ? "Unpublishing…" : "Unpublish"}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="primary"
+              disabled={!form || form.fields.length === 0 || publish.isPending}
+              onClick={() => form && publish.mutate(form.id)}
+            >
+              {publish.isPending ? "Publishing…" : "Publish form"}
+            </Button>
+          )}
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  )
+}
 
 export default function FormsPage() {
   const { data, isLoading } = useForms()
   const create = useCreateForm()
-  const publish = usePublishForm()
-  const [open, setOpen] = React.useState(false)
+  const ensureVisitor = useVisitorIntakeForm(false)
+  const [createOpen, setCreateOpen] = React.useState(false)
+  const [builderId, setBuilderId] = React.useState<string | null>(null)
   const [confirmPublish, setConfirmPublish] = React.useState<ChurchForm | null>(null)
+  const publish = usePublishForm()
   const form = useForm<FormBuilderValues>({
     resolver: zodResolver(formBuilderSchema),
     defaultValues: emptyForm,
   })
+  const purposeWatch = form.watch("purpose")
+
+  React.useEffect(() => {
+    if (purposeWatch === "visitor_intake") {
+      const cur = form.getValues()
+      if (!cur.title.trim()) form.setValue("title", "Visitor Connect")
+      if (!cur.slug.trim()) form.setValue("slug", "visitor-connect")
+      if (!cur.description.trim()) {
+        form.setValue(
+          "description",
+          "Share your details so our welcome team can follow up."
+        )
+      }
+    }
+  }, [purposeWatch, form])
 
   function openCreate() {
     form.reset(emptyForm)
-    setOpen(true)
+    setCreateOpen(true)
+  }
+
+  async function openVisitorIntake() {
+    const existing = (data ?? []).find((f) => f.purpose === "visitor_intake")
+    if (existing) {
+      setBuilderId(existing.id)
+      return
+    }
+    const ensured = await ensureVisitor.refetch()
+    if (ensured.data) setBuilderId(ensured.data.id)
   }
 
   function submit(values: FormBuilderValues) {
@@ -81,12 +392,14 @@ export default function FormsPage() {
         title: values.title,
         slug: values.slug.trim() || undefined,
         description: values.description ?? "",
+        purpose: values.purpose,
         status: "draft",
       },
       {
-        onSuccess: () => {
-          setOpen(false)
+        onSuccess: (created) => {
+          setCreateOpen(false)
           form.reset(emptyForm)
+          setBuilderId(created.id)
         },
       }
     )
@@ -101,27 +414,37 @@ export default function FormsPage() {
         <RequireAbility permission="forms.read">
           <PageHeader
             title="Forms"
-            description="Public intake forms for prayer, serving, and connection."
+            description="Build public intake forms. Draft → add fields → publish → share /f/slug."
             icon={<ClipboardList className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="forms.write">
-                <Button
-                  onClick={openCreate}
-                >
-                  <Plus strokeWidth={2} className="size-3.5" />
-                  New form
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={() => void openVisitorIntake()}>
+                    Visitor form
+                  </Button>
+                  <Button onClick={openCreate}>
+                    <Plus strokeWidth={2} className="size-3.5" />
+                    New form
+                  </Button>
+                </div>
               </Can>
             }
           />
 
-          <div className="p-6 md:p-8">
+          <div className="space-y-4 p-6 md:p-8">
+            <div className="rounded-xl border border-zinc-200/80 bg-white px-4 py-3 text-sm text-zinc-600 shadow-xs">
+              <strong className="font-medium text-zinc-900">How forms work:</strong> create a
+              draft, add the questions you need, then publish. Guests fill it at{" "}
+              <code className="rounded bg-zinc-100 px-1 text-xs">/f/your-slug</code>. Visitor
+              intake forms also create a lead on the Visitors board.
+            </div>
+
             {!isLoading && (data?.length ?? 0) === 0 ? (
               <Empty className="rounded-lg border border-zinc-200/80 py-16">
                 <EmptyHeader>
                   <EmptyTitle>No forms yet</EmptyTitle>
                   <EmptyDescription>
-                    Create a form and publish it at /f/your-slug.
+                    Create a draft, add fields, then publish for public submissions.
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -131,6 +454,7 @@ export default function FormsPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="pl-4">Form</TableHead>
+                      <TableHead>Purpose</TableHead>
                       <TableHead>Fields</TableHead>
                       <TableHead>Submissions</TableHead>
                       <TableHead>Status</TableHead>
@@ -141,16 +465,27 @@ export default function FormsPage() {
                     {isLoading &&
                       [0, 1].map((i) => (
                         <TableRow key={i}>
-                          <TableCell colSpan={5} className="pl-4">
+                          <TableCell colSpan={6} className="pl-4">
                             <Skeleton className="h-6 w-full" />
                           </TableCell>
                         </TableRow>
                       ))}
                     {(data ?? []).map((f) => (
-                      <TableRow key={f.id}>
+                      <TableRow
+                        key={f.id}
+                        className="cursor-pointer"
+                        onClick={() => setBuilderId(f.id)}
+                      >
                         <TableCell className="pl-4">
                           <p className="font-medium text-zinc-900">{f.title}</p>
                           <p className="text-xs text-zinc-400">/f/{f.slug}</p>
+                        </TableCell>
+                        <TableCell>
+                          <StatusPill
+                            tone={f.purpose === "visitor_intake" ? "info" : "neutral"}
+                          >
+                            {f.purpose === "visitor_intake" ? "Visitor intake" : "General"}
+                          </StatusPill>
                         </TableCell>
                         <TableCell>{f.fields.length}</TableCell>
                         <TableCell>{f.submissionCount}</TableCell>
@@ -161,16 +496,23 @@ export default function FormsPage() {
                             {f.status}
                           </StatusPill>
                         </TableCell>
-                        <TableCell className="pr-3 text-right">
+                        <TableCell
+                          className="pr-3 text-right"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <RowActionsMenu
                             label="Form"
                             groups={[
                               {
                                 items: [
                                   {
+                                    label: "Open builder",
+                                    onClick: () => setBuilderId(f.id),
+                                  },
+                                  {
                                     label: "Open public link",
-                                    onClick: () =>
-                                      window.open(`/f/${f.slug}`, "_blank"),
+                                    onClick: () => window.open(`/f/${f.slug}`, "_blank"),
+                                    disabled: f.status !== "published",
                                   },
                                   ...(f.status !== "published"
                                     ? [
@@ -193,44 +535,60 @@ export default function FormsPage() {
             )}
           </div>
 
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetContent side="right" inset size="md" className="p-0">
+          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+            <SheetContent side="right" inset size="md" className="bg-white p-0">
               <Form {...form}>
-              <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
-                <SheetHeader className="pr-12">
-                  <SheetTitle>New form</SheetTitle>
-                  <SheetDescription>
-                    Starts with Name + Email fields. Publish when ready for public submit.
-                  </SheetDescription>
-                </SheetHeader>
-                <SheetBody>
-                  <FieldGroup>
-                    <TextFormField control={form.control} name="title" label="Title" />
-                    <TextFormField
-                      control={form.control}
-                      name="slug"
-                      label="Slug"
-                      placeholder="auto from title"
-                    />
-                    <TextareaFormField
-                      control={form.control}
-                      name="description"
-                      label="Description"
-                    />
-                  </FieldGroup>
-                </SheetBody>
-                <SheetFooter>
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" variant="primary" disabled={create.isPending}>
-                    Create draft
-                  </Button>
-                </SheetFooter>
-              </form>
+                <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
+                  <SheetHeader className="pr-12">
+                    <SheetTitle>New form</SheetTitle>
+                    <SheetDescription>
+                      {purposeWatch === "visitor_intake"
+                        ? "Starts with visitor fields (name, email, phone, source). Submissions create Visitors leads."
+                        : "Creates a draft with Name + Email. You&apos;ll add more fields next."}
+                    </SheetDescription>
+                  </SheetHeader>
+                  <SheetBody>
+                    <FieldGroup>
+                      <SelectFormField
+                        control={form.control}
+                        name="purpose"
+                        label="Purpose"
+                        options={PURPOSE_OPTIONS}
+                      />
+                      <TextFormField control={form.control} name="title" label="Title" />
+                      <TextFormField
+                        control={form.control}
+                        name="slug"
+                        label="Slug"
+                        placeholder="auto from title"
+                      />
+                      <TextareaFormField
+                        control={form.control}
+                        name="description"
+                        label="Description"
+                      />
+                    </FieldGroup>
+                  </SheetBody>
+                  <SheetFooter>
+                    <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={create.isPending}>
+                      {create.isPending ? "Creating…" : "Create draft"}
+                    </Button>
+                  </SheetFooter>
+                </form>
               </Form>
             </SheetContent>
           </Sheet>
+
+          <FormBuilderSheet
+            formId={builderId}
+            open={Boolean(builderId)}
+            onOpenChange={(o) => {
+              if (!o) setBuilderId(null)
+            }}
+          />
 
           <ConfirmAction
             open={Boolean(confirmPublish)}
@@ -238,7 +596,7 @@ export default function FormsPage() {
             title="Publish this form?"
             description={
               confirmPublish
-                ? `It will accept submissions at /f/${confirmPublish.slug}.`
+                ? `It will accept submissions at /f/${confirmPublish.slug}. Field editing locks until you unpublish.`
                 : ""
             }
             confirmLabel="Publish"

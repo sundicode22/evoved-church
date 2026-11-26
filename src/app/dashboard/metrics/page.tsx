@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   Area,
   AreaChart,
@@ -38,10 +39,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RequireAbility } from "@/components/auth/can"
 import { ChartCard } from "@/features/reports/components/chart-card"
 import { StatTile } from "@/features/reports/components/stat-tile"
+import {
+  AuditLogPanel,
+  ReportCatalogPanel,
+} from "@/features/reports/components/report-catalog"
 import { useReportsOverview } from "@/features/reports/hooks/use-reports"
 import { useBranchStore } from "@/store/use-branch-store"
 import { useNomenclatureStore } from "@/features/settings/use-nomenclature"
 import { formatCompact, formatMoney } from "@/lib/format"
+import { AuthSearchParamsFallback } from "@/components/auth-search-params"
 
 const givingConfig = {
   total: { label: "Giving", color: "var(--brand)" },
@@ -77,10 +83,23 @@ const projectConfig = {
   count: { label: "Tasks", color: "var(--brand)" },
 } satisfies ChartConfig
 
-export default function MetricsPage() {
+type MainTab = "reports" | "metrics" | "audit"
+
+function MetricsPageInner() {
+  const router = useRouter()
+  const search = useSearchParams()
+  const rawTab = search.get("tab")
+  const mainTab: MainTab =
+    rawTab === "metrics" || rawTab === "audit" || rawTab === "reports" ? rawTab : "reports"
+
   const locationLabel = useNomenclatureStore((s) => s.nomenclature.campusTermSingular)
   const activeCampus = useBranchStore((s) => s.activeCampus)
   const { data: overview, isLoading } = useReportsOverview()
+
+  function setMainTab(next: string | null) {
+    const tab = (next as MainTab) || "reports"
+    router.replace(`/dashboard/metrics?tab=${tab}`)
+  }
 
   const attendanceHeadcount =
     (overview?.attendance.headcountAdults || 0) +
@@ -114,17 +133,28 @@ export default function MetricsPage() {
       <AppSidebar variant="inset" />
       <SidebarInset className="min-h-screen bg-white">
         <RequireAbility permission="reports.read">
-          <PageHeader title="Reports & Metrics" />
+          <PageHeader
+            title="Reports & Metrics"
+            description={`Operational reports and live health for ${activeCampus.name}.`}
+          />
 
           <div className="space-y-6 bg-white p-6 md:p-8">
-            <section className="rounded-xl bg-white">
-              <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
-                Reports & Metrics
-              </h1>
-              <p className="mt-1 text-base text-zinc-700">
-                Live church health for {activeCampus.name}.
-              </p>
-            </section>
+            <Tabs value={mainTab} onValueChange={setMainTab}>
+              <TabsList>
+                <TabsTrigger value="reports">Reports</TabsTrigger>
+                <TabsTrigger value="metrics">Metrics</TabsTrigger>
+                <TabsTrigger value="audit">Audit log</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="reports" className="mt-6">
+                <ReportCatalogPanel />
+              </TabsContent>
+
+              <TabsContent value="audit" className="mt-6">
+                <AuditLogPanel />
+              </TabsContent>
+
+              <TabsContent value="metrics" className="mt-6 space-y-6">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
               <StatTile
                 title="Attendance"
@@ -576,9 +606,19 @@ export default function MetricsPage() {
                 </ChartCard>
               </TabsContent>
             </Tabs>
+              </TabsContent>
+            </Tabs>
           </div>
         </RequireAbility>
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+export default function MetricsPage() {
+  return (
+    <React.Suspense fallback={<AuthSearchParamsFallback />}>
+      <MetricsPageInner />
+    </React.Suspense>
   )
 }

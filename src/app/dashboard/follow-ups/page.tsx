@@ -11,7 +11,11 @@ import { Form } from "@/components/ui/form"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { TextareaFormField, TextFormField } from "@/components/form-fields"
+import {
+  DateTimeFormField,
+  TextareaFormField,
+  TextFormField,
+} from "@/components/form-fields"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -249,11 +253,10 @@ export default function FollowUpsPage() {
                         name="assignedToName"
                         label="Assignee"
                       />
-                      <TextFormField
+                      <DateTimeFormField
                         control={form.control}
                         name="dueAt"
                         label="Due"
-                        type="datetime-local"
                       />
                       <TextareaFormField control={form.control} name="notes" label="Notes" />
                     </FieldGroup>

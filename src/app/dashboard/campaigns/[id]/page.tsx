@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { DatePicker } from "@/components/date-picker";
 import { TimePicker } from "@/components/time-picker";
+import { RichTextEditor } from "@/components/rich-text-editor";
 import { Can, RequireAbility } from "@/components/auth/can";
 import { ConfirmAction } from "@/components/confirm-action";
 import {
@@ -246,14 +247,13 @@ function CampaignDetailPage() {
                           <Label className="text-xs font-medium">
                             Email body
                           </Label>
-                          <Textarea
-                            rows={8}
+                          <RichTextEditor
                             value={draft.emailBody}
                             disabled={locked}
-                            onChange={(e) =>
-                              patch({ emailBody: e.target.value })
-                            }
-                            className="text-xs"
+                            onChange={(html) => patch({ emailBody: html })}
+                            placeholder="Write your email… use the toolbar for bold, lists, and links."
+                            minHeight="240px"
+                            enableImages={false}
                           />
                         </div>
                       </>
@@ -329,6 +329,7 @@ function CampaignDetailPage() {
                         <TimePicker
                           value={draft.scheduleTime}
                           disabled={locked}
+                          minuteStep={15}
                           onChange={(t) => patch({ scheduleTime: t })}
                         />
                       </div>

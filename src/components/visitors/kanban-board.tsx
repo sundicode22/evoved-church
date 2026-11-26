@@ -35,6 +35,7 @@ import {
   useUpdateLeadStage,
 } from "@/features/visitors/hooks/use-visitor-leads"
 import type { VisitorStage } from "@/features/visitors/schemas"
+import { ManageColumnsSheet } from "@/components/kanban/manage-columns-sheet"
 import {
   Calendar,
   Folder,
@@ -226,6 +227,7 @@ function Column({
   leads,
   onOpen,
   onAction,
+  onManageColumns,
 }: {
   id: string
   title: string
@@ -233,6 +235,7 @@ function Column({
   leads: LeadCard[]
   onOpen: (id: string) => void
   onAction: (id: string, action: FollowUpAction, contactName: string) => void
+  onManageColumns?: () => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id, data: { type: "column", stage: id } })
 
@@ -250,9 +253,18 @@ function Column({
             {count}
           </span>
         </div>
-        <Button variant="ghost" size="icon-sm" className="text-zinc-400">
-          <MoreHorizontal className="size-4" />
-        </Button>
+        {onManageColumns ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-zinc-400"
+            onClick={onManageColumns}
+            aria-label="Manage columns"
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        ) : null}
       </div>
       <SortableContext items={leads.map((l) => l.id)} strategy={verticalListSortingStrategy}>
         <div className="flex min-h-[120px] flex-col gap-2.5 px-2 pb-3">
@@ -269,6 +281,7 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
   const { searchQuery, setSearchQuery, activeView, setActiveView, openLeadDrawer } = useKanbanStore()
   const { data, isLoading } = useVisitorBoard(searchQuery || undefined)
   const updateStage = useUpdateLeadStage()
+  const [manageColumnsOpen, setManageColumnsOpen] = React.useState(false)
   const [activeLead, setActiveLead] = React.useState<LeadCard | null>(null)
   const [followUp, setFollowUp] = React.useState<{
     id: string
@@ -347,8 +360,16 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
                 leads={col.leads || []}
                 onOpen={openLeadDrawer}
                 onAction={onAction}
+                onManageColumns={() => setManageColumnsOpen(true)}
               />
             ))}
+            <button
+              type="button"
+              onClick={() => setManageColumnsOpen(true)}
+              className="flex h-28 w-[200px] shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-white/60 text-sm text-zinc-500 transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-ink"
+            >
+              + Add column
+            </button>
           </div>
           <DragOverlay>
             {activeLead ? (
@@ -366,6 +387,12 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
         contactName={followUp?.contactName}
         action={followUp?.action ?? null}
         onClose={() => setFollowUp(null)}
+      />
+      <ManageColumnsSheet
+        boardType="visitors"
+        open={manageColumnsOpen}
+        onOpenChange={setManageColumnsOpen}
+        title="Visitor pipeline columns"
       />
     </>
   )

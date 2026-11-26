@@ -7,7 +7,6 @@ import {
   CalendarDays,
   ChevronRight,
   Coins,
-  ExternalLink,
   FileText,
   Home,
   Megaphone,
@@ -114,7 +113,6 @@ export function AppSidebar({
         { title: "Drips", url: "/dashboard/communications" },
         { title: "Announcements", url: "/dashboard/announcements" },
         { title: "Blog", url: "/dashboard/blog" },
-        { title: "Portal", url: "/dashboard/portal" },
         { title: "Documents", url: "/dashboard/documents" },
         { title: "Policies", url: "/dashboard/policies" },
       ],
@@ -122,7 +120,11 @@ export function AppSidebar({
     {
       title: "Reports and Metrics",
       icon: Coins,
-      items: [{ title: "Metrics", url: "/dashboard/metrics" }],
+      items: [
+        { title: "Reports", url: "/dashboard/metrics?tab=reports" },
+        { title: "Metrics", url: "/dashboard/metrics?tab=metrics" },
+        { title: "Audit log", url: "/dashboard/metrics?tab=audit" },
+      ],
     },
   ]
 
@@ -191,15 +193,6 @@ export function AppSidebar({
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ) : null}
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                render={<Link href="/portal/main" target="_blank" />}
-                tooltip="View Portal"
-              >
-                <ExternalLink />
-                <span>View Portal</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
             {isAllowed("/dashboard/settings") ? (
               <SidebarMenuItem>
                 <SidebarMenuButton

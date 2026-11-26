@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import {
+  DateTimeFormField,
   NumberFormField,
   SelectFormField,
   TextFormField,
@@ -250,20 +251,16 @@ export default function AppointmentsPage() {
                         min={15}
                         step={15}
                       />
-                      <div className="grid grid-cols-2 gap-3">
-                        <TextFormField
-                          control={form.control}
-                          name="windowStart"
-                          label="Window start"
-                          type="datetime-local"
-                        />
-                        <TextFormField
-                          control={form.control}
-                          name="windowEnd"
-                          label="Window end"
-                          type="datetime-local"
-                        />
-                      </div>
+                      <DateTimeFormField
+                        control={form.control}
+                        name="windowStart"
+                        label="Window start"
+                      />
+                      <DateTimeFormField
+                        control={form.control}
+                        name="windowEnd"
+                        label="Window end"
+                      />
                       <SelectFormField
                         control={form.control}
                         name="status"

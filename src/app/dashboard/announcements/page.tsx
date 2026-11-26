@@ -29,7 +29,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { TextFormField } from "@/components/form-fields"
+import { RichTextFormField, TextFormField } from "@/components/form-fields"
 import {
   Empty,
   EmptyDescription,
@@ -45,7 +45,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { ConfirmAction } from "@/components/confirm-action"
-import { RichTextEditor } from "@/components/rich-text-editor"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Can, RequireAbility } from "@/components/auth/can"
 import { StatusPill, TablePanel } from "@/components/table-panel"
@@ -112,7 +111,7 @@ export default function AnnouncementsPage() {
         <RequireAbility permission="announcements.read">
           <PageHeader
             title="Announcements"
-            description="Post news for the member portal and campus screens."
+            description="Post news for campus screens and church communications."
             icon={<Megaphone className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
               <Can permission="announcements.write">
@@ -249,20 +248,12 @@ export default function AnnouncementsPage() {
                         </Field>
                       )}
                     />
-                    <FormField
+                    <RichTextFormField
                       control={form.control}
                       name="bodyHtml"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Body</FormLabel>
-                          <RichTextEditor
-                            value={field.value}
-                            onChange={(html) => field.onChange(html)}
-                            minHeight="280px"
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      label="Body"
+                      placeholder="Write the announcement…"
+                      minHeight="280px"
                     />
                   </FieldGroup>
                 </SheetBody>
@@ -283,7 +274,7 @@ export default function AnnouncementsPage() {
             open={Boolean(confirmPublish)}
             onOpenChange={(o) => !o && setConfirmPublish(null)}
             title="Publish this announcement?"
-            description="Posted announcements appear on the member portal."
+            description="Posted announcements appear for staff and campus screens."
             confirmLabel="Publish"
             onConfirm={async () => {
               if (confirmPublish) await publish.mutateAsync(confirmPublish.id)
@@ -293,7 +284,7 @@ export default function AnnouncementsPage() {
             open={Boolean(confirmDelete)}
             onOpenChange={(o) => !o && setConfirmDelete(null)}
             title="Delete this announcement?"
-            description="This removes it from the portal and staff list."
+            description="This removes it from the staff list."
             confirmLabel="Delete"
             variant="destructive"
             onConfirm={async () => {

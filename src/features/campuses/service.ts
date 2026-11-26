@@ -1,7 +1,10 @@
 import { db } from "@/lib/db"
 import { campuses } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
-import { provisionCampusBooks } from "@/features/accounting/default-books"
+import {
+  provisionAllCampusBooks,
+  provisionCampusBooks,
+} from "@/features/accounting/default-books"
 import type { CreateCampusInput } from "./schemas"
 
 type CampusRecord = {
@@ -20,7 +23,12 @@ export const campusService = {
   async listCampuses() {
     try {
       const rows = await db.select().from(campuses).where(eq(campuses.isActive, true))
-      return rows.length > 0 ? rows : [...memoryCampuses]
+      // Ensure every location has the standard COA + funds (idempotent).
+      if (rows.length > 0) {
+        await provisionAllCampusBooks()
+        return rows
+      }
+      return [...memoryCampuses]
     } catch {
       return [...memoryCampuses]
     }

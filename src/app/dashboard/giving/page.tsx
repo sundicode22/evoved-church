@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import {
+  DateFormField,
   NumberFormField,
   SelectFormField,
   TextFormField,
@@ -228,16 +229,16 @@ export default function GivingPage() {
           />
 
           <div className="space-y-6 p-6 md:p-8">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {cards.map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-lg border border-zinc-200/80 bg-white px-4 py-3 shadow-xs"
+                  className="rounded-xl border border-zinc-200/80 bg-white px-5 py-6 shadow-xs sm:px-6 sm:py-7"
                 >
-                  <p className="text-[11px] font-medium tracking-wide text-zinc-500 uppercase">
+                  <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase">
                     {card.label}
                   </p>
-                  <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-900">
+                  <p className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-zinc-900 sm:text-3xl">
                     {isLoading ? "—" : formatMoney(card.value)}
                   </p>
                 </div>
@@ -428,11 +429,10 @@ export default function GivingPage() {
                         label="Frequency"
                         options={FREQUENCY_ITEMS}
                       />
-                      <TextFormField
+                      <DateFormField
                         control={form.control}
                         name="contributionDate"
                         label="Date"
-                        type="date"
                       />
                       <TextFormField control={form.control} name="notes" label="Notes" />
                     </FieldGroup>

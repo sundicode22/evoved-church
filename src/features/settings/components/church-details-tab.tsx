@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { Form } from "@/components/ui/form"
 import { FieldGroup } from "@/components/ui/field"
 import { TextFormField } from "@/components/form-fields"
@@ -89,8 +90,8 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <section className="rounded-xl border bg-white p-6 shadow-xs">
+    <div className="max-w-3xl space-y-8 text-left">
+      <section className="rounded-xl border border-zinc-200/80 bg-white p-6 shadow-xs">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-xs font-semibold tracking-wide text-brand">Church details</p>
           {canEdit ? (
@@ -116,7 +117,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={nomenclature.logoUrl} alt="" className="size-full object-cover" />
                 ) : (
-                  <span className="text-[10px] font-semibold tracking-wide text-zinc-700">LOGO</span>
+                  <span className="text-xs font-semibold tracking-tight text-brand">Ev</span>
                 )}
               </div>
               <p className="text-xs text-zinc-400">Max 1 MB</p>
@@ -135,7 +136,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
         </dl>
       </section>
 
-      <section className="rounded-xl border bg-white p-6 shadow-xs">
+      <section className="rounded-xl border border-zinc-200/80 bg-white p-6 shadow-xs">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-xs font-semibold tracking-wide text-brand">Contact details</p>
           {canEdit ? (
@@ -195,8 +196,15 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
               <Button type="button" variant="outline" onClick={() => setChurchOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="accent" disabled={save.isPending}>
-                Save
+              <Button type="submit" variant="primary" disabled={save.isPending}>
+                {save.isPending ? (
+                  <>
+                    <Spinner className="size-3.5" />
+                    Saving…
+                  </>
+                ) : (
+                  "Save"
+                )}
               </Button>
             </SheetFooter>
           </form>
@@ -231,8 +239,15 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
               <Button type="button" variant="outline" onClick={() => setContactOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="accent" disabled={save.isPending}>
-                Save
+              <Button type="submit" variant="primary" disabled={save.isPending}>
+                {save.isPending ? (
+                  <>
+                    <Spinner className="size-3.5" />
+                    Saving…
+                  </>
+                ) : (
+                  "Save"
+                )}
               </Button>
             </SheetFooter>
           </form>

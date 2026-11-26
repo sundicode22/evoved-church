@@ -43,6 +43,8 @@ interface SharedKanbanBoardProps {
   onMove: (cardId: string, toStage: string) => void
   onCardClick?: (cardId: string) => void
   isLoading?: boolean
+  /** Opens column manager (add / rename / reorder / delete). */
+  onManageColumns?: () => void
 }
 
 export function formatElapsed(since: string | undefined, now: number) {
@@ -149,10 +151,12 @@ function Column({
   column,
   now,
   onCardClick,
+  onManageColumns,
 }: {
   column: KanbanColumnData
   now: number | null
   onCardClick?: (id: string) => void
+  onManageColumns?: () => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id, data: { type: "column" } })
   return (
@@ -169,9 +173,18 @@ function Column({
             {column.cards.length}
           </span>
         </div>
-        <Button variant="ghost" size="icon-sm" className="text-zinc-400">
-          <MoreHorizontal className="size-4" />
-        </Button>
+        {onManageColumns ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-zinc-400"
+            onClick={onManageColumns}
+            aria-label="Manage columns"
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        ) : null}
       </div>
       <SortableContext items={column.cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
         <div className="flex min-h-[120px] flex-col gap-2.5 px-2.5 pb-3">
@@ -189,7 +202,13 @@ function Column({
   )
 }
 
-export function SharedKanbanBoard({ columns, onMove, onCardClick, isLoading }: SharedKanbanBoardProps) {
+export function SharedKanbanBoard({
+  columns,
+  onMove,
+  onCardClick,
+  isLoading,
+  onManageColumns,
+}: SharedKanbanBoardProps) {
   // Computed after mount so server and client markup agree.
   const [now, setNow] = React.useState<number | null>(null)
   const [activeCard, setActiveCard] = React.useState<KanbanCardData | null>(null)
@@ -245,8 +264,23 @@ export function SharedKanbanBoard({ columns, onMove, onCardClick, isLoading }: S
     >
       <div className="flex min-w-max items-start gap-4">
         {columns.map((col) => (
-          <Column key={col.id} column={col} now={now} onCardClick={onCardClick} />
+          <Column
+            key={col.id}
+            column={col}
+            now={now}
+            onCardClick={onCardClick}
+            onManageColumns={onManageColumns}
+          />
         ))}
+        {onManageColumns ? (
+          <button
+            type="button"
+            onClick={onManageColumns}
+            className="flex h-28 w-[200px] shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-white/60 text-sm text-zinc-500 transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-ink"
+          >
+            + Add column
+          </button>
+        ) : null}
       </div>
       <DragOverlay>
         {activeCard ? <CardView card={activeCard} now={now} overlay /> : null}
