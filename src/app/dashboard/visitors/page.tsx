@@ -284,12 +284,12 @@ export default function VisitorsPage() {
               {cards.map((c) => (
                 <div
                   key={c.label}
-                  className="rounded-lg border border-zinc-200/80 bg-[#f4f6f5] px-4 py-3 shadow-xs"
+                  className="flex min-h-[112px] flex-col justify-between rounded-xl border border-zinc-200/80 bg-white px-5 py-5 shadow-xs"
                 >
-                  <p className="text-[11px] uppercase tracking-wide text-zinc-400">
-                    {c.label}
+                  <p className="text-sm font-normal text-zinc-500">{c.label}</p>
+                  <p className="text-3xl font-medium tracking-tight text-zinc-900">
+                    {c.value}
                   </p>
-                  <p className="mt-1 text-2xl font-medium text-zinc-900">{c.value}</p>
                 </div>
               ))}
             </div>
