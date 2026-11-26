@@ -40,6 +40,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { ServiceDaySheet } from "@/components/attendance/service-day-sheet"
+import { FormSubmissionsSheet } from "@/components/forms/form-submissions-sheet"
 import {
   Sheet,
   SheetBody,
@@ -100,12 +101,12 @@ import { cn } from "cn"
 
 const formBuilderSchema = z.object({
   title: z.string().min(2, "Title is required"),
-  slug: z
-    .string()
-    .refine((v) => !v || v.trim().length >= 2, "Slug must be at least 2 characters"),
+    slug: z
+      .string()
+      .refine((v) => !v || v.trim().length >= 2, "Slug must be at least 2 characters"),
   description: z.string(),
   purpose: z.enum(["general", "visitor_intake"]),
-})
+  })
 
 type FormBuilderValues = z.infer<typeof formBuilderSchema>
 const fieldBuilderSchema = z.object({
@@ -267,7 +268,6 @@ function FormBuilderSheet({
     defaultValues: emptyField,
   })
   const fieldType = fieldForm.watch("fieldType")
-  const locked = form?.status === "published"
 
   function submitDetails(values: DetailsValues) {
     updateForm.mutate(values)
@@ -275,7 +275,7 @@ function FormBuilderSheet({
 
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event
-    if (!over || active.id === over.id || locked) return
+    if (!over || active.id === over.id) return
     const oldIndex = orderedFields.findIndex((f) => f.id === active.id)
     const newIndex = orderedFields.findIndex((f) => f.id === over.id)
     if (oldIndex < 0 || newIndex < 0) return
@@ -318,14 +318,12 @@ function FormBuilderSheet({
         <SheetHeader className="border-b border-border bg-background pr-12">
           <SheetTitle>{form?.title || "Form builder"}</SheetTitle>
           <SheetDescription>
-            {locked
-              ? "This form is open to the public. Unpublish to add or remove fields."
-              : "Build fields while draft. Publish when ready — people fill it at /f/your-slug."}
+            Edit details and fields anytime — even while published. People fill it at /f/your-slug.
           </SheetDescription>
         </SheetHeader>
         <SheetBody className="gap-6 bg-background">
           {isLoading || !form ? (
-            <div className="flex items-center gap-2 text-sm text-zinc-500">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Spinner className="size-4" /> Loading form…
             </div>
           ) : (
@@ -337,7 +335,9 @@ function FormBuilderSheet({
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-foreground">Form details</p>
-                    <StatusPill tone={locked ? "success" : "neutral"}>{form.status}</StatusPill>
+                    <StatusPill tone={form.status === "published" ? "success" : "neutral"}>
+                      {form.status}
+                    </StatusPill>
                   </div>
                   <FieldGroup className="gap-3">
                     <TextFormField
@@ -374,7 +374,7 @@ function FormBuilderSheet({
                         "Save details"
                       )}
                     </Button>
-                    <code className="rounded-md bg-zinc-50 px-2 py-1 text-xs text-zinc-700">
+                    <code className="rounded-md bg-muted px-2 py-1 text-xs text-foreground">
                       {publicUrl(detailsForm.watch("slug") || form.slug)}
                     </code>
                     <Button
@@ -409,12 +409,12 @@ function FormBuilderSheet({
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-foreground">Fields</h3>
-                  <StatusPill tone={locked ? "success" : "neutral"}>
+                  <StatusPill tone={form.status === "published" ? "success" : "neutral"}>
                     {form.status}
                   </StatusPill>
                 </div>
                 {orderedFields.length === 0 ? (
-                  <p className="text-sm text-zinc-500">No fields yet.</p>
+                  <p className="text-sm text-muted-foreground">No fields yet.</p>
                 ) : (
                   <DndContext
                     sensors={sensors}
@@ -430,7 +430,7 @@ function FormBuilderSheet({
                           <SortableFieldRow
                             key={f.id}
                             field={f}
-                            locked={Boolean(locked)}
+                            locked={false}
                             removing={removeField.isPending}
                             onRemove={() => removeField.mutate(f.id)}
                           />
@@ -439,78 +439,71 @@ function FormBuilderSheet({
                     </SortableContext>
                   </DndContext>
                 )}
-                {!locked && orderedFields.length > 1 ? (
-                  <p className="mt-2 text-xs text-zinc-500">
+                {orderedFields.length > 1 ? (
+                  <p className="mt-2 text-xs text-muted-foreground">
                     Drag the handle to reorder fields.
                   </p>
                 ) : null}
               </div>
 
-              {!locked ? (
-                <Form {...fieldForm}>
-                  <form
-                    onSubmit={fieldForm.handleSubmit(submitField)}
-                    className="space-y-3 rounded-xl border border-dashed border-border bg-card p-4"
-                  >
-                    <p className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
-                      Add field
-                    </p>
-                    <FieldGroup className="gap-3">
+              <Form {...fieldForm}>
+                <form
+                  onSubmit={fieldForm.handleSubmit(submitField)}
+                  className="space-y-3 rounded-xl border border-dashed border-border bg-card p-4"
+                >
+                  <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Add field
+                  </p>
+                  <FieldGroup className="gap-3">
+                    <TextFormField
+                      control={fieldForm.control}
+                      name="label"
+                      label="Label"
+                      placeholder="e.g. Prayer request"
+                    />
+                    <SelectFormField
+                      control={fieldForm.control}
+                      name="fieldType"
+                      label="Type"
+                      options={FIELD_TYPE_OPTIONS}
+                    />
+                    {fieldType === "multiple_choice" || fieldType === "checkboxes" ? (
                       <TextFormField
                         control={fieldForm.control}
-                        name="label"
-                        label="Label"
-                        placeholder="e.g. Prayer request"
+                        name="optionsText"
+                        label="Options (comma-separated)"
+                        placeholder="Worship, Kids, Hospitality"
                       />
-                      <SelectFormField
-                        control={fieldForm.control}
-                        name="fieldType"
-                        label="Type"
-                        options={FIELD_TYPE_OPTIONS}
-                      />
-                      {fieldType === "multiple_choice" || fieldType === "checkboxes" ? (
-                        <TextFormField
-                          control={fieldForm.control}
-                          name="optionsText"
-                          label="Options (comma-separated)"
-                          placeholder="Worship, Kids, Hospitality"
-                        />
-                      ) : null}
-                    </FieldGroup>
-                    <label className="flex items-center gap-2 text-sm text-zinc-700">
-                      <input
-                        type="checkbox"
-                        className="size-4 rounded border-zinc-300"
-                        checked={Boolean(fieldForm.watch("required"))}
-                        onChange={(e) => fieldForm.setValue("required", e.target.checked)}
-                      />
-                      Required
-                    </label>
-                    <Button type="submit" variant="primary" disabled={addField.isPending}>
-                      {addField.isPending ? (
-                        <>
-                          <Spinner className="size-3.5" />
-                          Adding…
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="size-3.5" />
-                          Add field
-                        </>
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              ) : (
-                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                  Field editing is locked while the form is published so live submissions stay
-                  consistent. Unpublish to change the structure.
-                </p>
-              )}
+                    ) : null}
+                  </FieldGroup>
+                  <label className="flex items-center gap-2 text-sm text-foreground">
+                    <input
+                      type="checkbox"
+                      className="size-4 rounded border-border"
+                      checked={Boolean(fieldForm.watch("required"))}
+                      onChange={(e) => fieldForm.setValue("required", e.target.checked)}
+                    />
+                    Required
+                  </label>
+                  <Button type="submit" variant="primary" disabled={addField.isPending}>
+                    {addField.isPending ? (
+                      <>
+                        <Spinner className="size-3.5" />
+                        Adding…
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="size-3.5" />
+                        Add field
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </Form>
             </>
           )}
         </SheetBody>
-        <SheetFooter className="bg-[#f4f6f5]">
+        <SheetFooter className="bg-background">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
@@ -547,8 +540,10 @@ export default function FormsPage() {
   const [builderId, setBuilderId] = React.useState<string | null>(null)
   const [confirmPublish, setConfirmPublish] = React.useState<ChurchForm | null>(null)
   const [serviceDayOpen, setServiceDayOpen] = React.useState(false)
+  const [submissionsFormId, setSubmissionsFormId] = React.useState<string | null>(null)
   const [search, setSearch] = React.useState("")
   const publish = usePublishForm()
+  const unpublish = useUnpublishForm()
 
   const visitorForm = React.useMemo(
     () => (data ?? []).find((f) => f.purpose === "visitor_intake" && f.status === "published"),
@@ -661,9 +656,9 @@ export default function FormsPage() {
                     Visitor form
                   </Button>
                   <Button onClick={openCreate}>
-                    <Plus strokeWidth={2} className="size-3.5" />
-                    New form
-                  </Button>
+                  <Plus strokeWidth={2} className="size-3.5" />
+                  New form
+                </Button>
                 </div>
               </Can>
             }
@@ -710,6 +705,15 @@ export default function FormsPage() {
               onOpenChange={setServiceDayOpen}
               formUrl={formPublicUrl}
               formTitle={visitorForm?.title}
+            />
+
+            <FormSubmissionsSheet
+              formId={submissionsFormId}
+              open={Boolean(submissionsFormId)}
+              onOpenChange={(open) => {
+                if (!open) setSubmissionsFormId(null)
+              }}
+              onEditForm={(id) => setBuilderId(id)}
             />
 
             {!isLoading && (data?.length ?? 0) === 0 ? (
@@ -781,7 +785,19 @@ export default function FormsPage() {
                           </StatusPill>
                         </TableCell>
                         <TableCell>{f.fields.length}</TableCell>
-                        <TableCell>{f.submissionCount}</TableCell>
+                        <TableCell
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSubmissionsFormId(f.id)
+                          }}
+                        >
+                          <button
+                            type="button"
+                            className="rounded-md px-1.5 py-0.5 text-left text-sm font-medium text-brand underline-offset-2 hover:underline"
+                          >
+                            {f.submissionCount}
+                          </button>
+                        </TableCell>
                         <TableCell>
                           <StatusPill
                             tone={f.status === "published" ? "success" : "neutral"}
@@ -803,18 +819,27 @@ export default function FormsPage() {
                                     onClick: () => setBuilderId(f.id),
                                   },
                                   {
+                                    label: "View submissions",
+                                    onClick: () => setSubmissionsFormId(f.id),
+                                  },
+                                  {
                                     label: "Open public link",
                                     onClick: () => window.open(`/f/${f.slug}`, "_blank"),
                                     disabled: f.status !== "published",
                                   },
-                                  ...(f.status !== "published"
+                                  ...(f.status === "published"
                                     ? [
+                                        {
+                                          label: "Unpublish",
+                                          onClick: () => unpublish.mutate(f.id),
+                                        },
+                                      ]
+                                    : [
                                         {
                                           label: "Publish",
                                           onClick: () => setConfirmPublish(f),
                                         },
-                                      ]
-                                    : []),
+                                      ]),
                                 ],
                               },
                             ]}
@@ -831,46 +856,46 @@ export default function FormsPage() {
           <Sheet open={createOpen} onOpenChange={setCreateOpen}>
             <SheetContent side="right" inset size="md" className="bg-background p-0">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
-                  <SheetHeader className="pr-12">
-                    <SheetTitle>New form</SheetTitle>
-                    <SheetDescription>
+              <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
+                <SheetHeader className="pr-12">
+                  <SheetTitle>New form</SheetTitle>
+                  <SheetDescription>
                       {purposeWatch === "visitor_intake"
                         ? "Starts with visitor fields (name, email, phone, source). Submissions create Visitors leads."
                         : "Creates a draft with Name + Email. You&apos;ll add more fields next."}
-                    </SheetDescription>
-                  </SheetHeader>
-                  <SheetBody>
-                    <FieldGroup>
+                  </SheetDescription>
+                </SheetHeader>
+                <SheetBody>
+                  <FieldGroup>
                       <SelectFormField
                         control={form.control}
                         name="purpose"
                         label="Purpose"
                         options={PURPOSE_OPTIONS}
                       />
-                      <TextFormField control={form.control} name="title" label="Title" />
-                      <TextFormField
-                        control={form.control}
-                        name="slug"
-                        label="Slug"
-                        placeholder="auto from title"
-                      />
-                      <TextareaFormField
-                        control={form.control}
-                        name="description"
-                        label="Description"
-                      />
-                    </FieldGroup>
-                  </SheetBody>
-                  <SheetFooter>
+                    <TextFormField control={form.control} name="title" label="Title" />
+                    <TextFormField
+                      control={form.control}
+                      name="slug"
+                      label="Slug"
+                      placeholder="auto from title"
+                    />
+                    <TextareaFormField
+                      control={form.control}
+                      name="description"
+                      label="Description"
+                    />
+                  </FieldGroup>
+                </SheetBody>
+                <SheetFooter>
                     <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" variant="primary" disabled={create.isPending}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="primary" disabled={create.isPending}>
                       {create.isPending ? "Creating…" : "Create draft"}
-                    </Button>
-                  </SheetFooter>
-                </form>
+                  </Button>
+                </SheetFooter>
+              </form>
               </Form>
             </SheetContent>
           </Sheet>

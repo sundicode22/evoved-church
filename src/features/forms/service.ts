@@ -326,11 +326,6 @@ export const formsService = {
 
   async addField(formId: string, input: FormFieldInput): Promise<ChurchForm> {
     const form = await loadForm(formId)
-    if (form.status === "published") {
-      throw new ValidationError(
-        "This form is open for submissions. Unpublish it before adding or changing fields."
-      )
-    }
     const parsed = formFieldSchema.parse(input)
     const nextIndex =
       form.fields.reduce((m, f) => Math.max(m, f.orderIndex), -1) + 1
@@ -350,12 +345,7 @@ export const formsService = {
   },
 
   async removeField(formId: string, fieldId: string): Promise<ChurchForm> {
-    const form = await loadForm(formId)
-    if (form.status === "published") {
-      throw new ValidationError(
-        "This form is open for submissions. Unpublish it before changing fields."
-      )
-    }
+    await loadForm(formId)
     await db
       .delete(churchFormFields)
       .where(and(eq(churchFormFields.id, fieldId), eq(churchFormFields.formId, formId)))
@@ -368,11 +358,6 @@ export const formsService = {
 
   async reorderFields(formId: string, input: ReorderFormFieldsInput): Promise<ChurchForm> {
     const form = await loadForm(formId)
-    if (form.status === "published") {
-      throw new ValidationError(
-        "This form is open for submissions. Unpublish it before changing fields."
-      )
-    }
     const parsed = reorderFormFieldsSchema.parse(input)
     const existingIds = new Set(form.fields.map((f) => f.id))
     if (
