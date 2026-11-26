@@ -1,7 +1,7 @@
 import { auth } from "@/features/auth/auth"
+import { DEFAULT_TENANT_ID } from "@/features/billing/tenant-constants"
 
-/** Legacy single-tenant fallback used before orgs are linked. */
-export const DEFAULT_TENANT_ID = "default"
+export { DEFAULT_TENANT_ID, campusIdFromHeaders } from "@/features/billing/tenant-constants"
 
 /**
  * Resolve the active church tenant id.
@@ -17,9 +17,4 @@ export async function resolveTenantId(requestHeaders?: Headers): Promise<string>
     /* unauthenticated or non-Next context */
   }
   return DEFAULT_TENANT_ID
-}
-
-export function campusIdFromHeaders(h: Headers | { get(name: string): string | null }) {
-  const raw = h.get("x-campus-id")?.trim()
-  return raw || null
 }

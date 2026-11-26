@@ -21,8 +21,18 @@ import {
 import { WizardStepper } from "@/features/onboarding/components/wizard-stepper"
 import { setOnboardingCompletedCookie } from "@/features/onboarding/cookie"
 import { NOMENCLATURE_PRESETS } from "@/features/onboarding/presets"
+import { authClient } from "@/features/auth/auth-client"
 import { apiClient } from "@/lib/axios"
 import { useBranchStore } from "@/store/use-branch-store"
+
+function orgSlugFrom(name: string, fallback: string) {
+  const base = (name || fallback)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 48)
+  return base || fallback || `church-${Date.now().toString(36)}`
+}
 
 const STEPS = ["Church", "Location", "Terminology", "Team"]
 
@@ -107,13 +117,40 @@ export default function OnboardingPage() {
   async function finish() {
     setPending(true)
     try {
+      const churchName = church.churchName.trim()
+      const locationSlug = campus.slug.trim() || orgSlugFrom(campus.campusName, "main")
+      const organizationSlug = orgSlugFrom(churchName, locationSlug)
+
+      // Organization = tenant. Location workspace is created under it.
+      let organizationId: string | null = null
+      try {
+        const createdOrg = await authClient.organization.create({
+          name: churchName || "My Church",
+          slug: organizationSlug,
+        })
+        organizationId =
+          (createdOrg.data as { id?: string } | null | undefined)?.id ??
+          (createdOrg as { data?: { id?: string } }).data?.id ??
+          null
+        if (organizationId) {
+          await authClient.organization.setActive({ organizationId })
+        }
+      } catch {
+        /* org may already exist — keep going with session tenant */
+      }
+
       const selected = NOMENCLATURE_PRESETS.find((p) => p.key === terminology.preset)
-      await apiClient.patch("/settings/nomenclature", {
-        churchName: church.churchName.trim(),
-        campusTermSingular: "Location",
-        campusTermPlural: "Locations",
-        ...selected?.terms,
-      })
+      const tenantParams = organizationId ? { tenantId: organizationId } : undefined
+      await apiClient.patch(
+        "/settings/nomenclature",
+        {
+          churchName,
+          campusTermSingular: "Location",
+          campusTermPlural: "Locations",
+          ...selected?.terms,
+        },
+        { params: tenantParams }
+      )
 
       const created = await resolveCampus()
       if (created) {
@@ -129,6 +166,11 @@ export default function OnboardingPage() {
         setActiveCampus(normalized)
       }
 
+      // Starter plan for this tenant (locations/seats gated by billing)
+      await apiClient
+        .post("/billing/subscription", { planSlug: "starter" })
+        .catch(() => null)
+
       if (invites.length > 0) {
         await apiClient.post("/settings/invites", { emails: invites }).catch(() => null)
         toast.success(
@@ -138,7 +180,7 @@ export default function OnboardingPage() {
         toast.success("Church workspace ready")
       }
 
-      await apiClient.post("/settings/onboarding/complete")
+      await apiClient.post("/settings/onboarding/complete", null, { params: tenantParams })
       setOnboardingCompletedCookie()
 
       router.replace("/dashboard")

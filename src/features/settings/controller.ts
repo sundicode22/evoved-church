@@ -10,11 +10,21 @@ import {
 } from "./rbac-schemas"
 import { formatErrorResponse } from "@/lib/errors"
 import { getUserIdFromHeaders } from "@/features/auth/require-permission"
+import { resolveTenantId, DEFAULT_TENANT_ID } from "@/features/billing/tenant-context"
+
+async function tenantFromRequest(
+  request: Request,
+  queryTenant?: string | null
+): Promise<string> {
+  const fromQuery = typeof queryTenant === "string" ? queryTenant.trim() : ""
+  if (fromQuery && fromQuery !== DEFAULT_TENANT_ID) return fromQuery
+  return resolveTenantId(request.headers)
+}
 
 export const settingsController = new Elysia({ prefix: "/settings" })
-  .get("/nomenclature", async ({ query, set }) => {
+  .get("/nomenclature", async ({ request, query, set }) => {
     try {
-      const tenantId = (query.tenantId as string) || "default"
+      const tenantId = await tenantFromRequest(request, query.tenantId as string | undefined)
       const data = await settingsService.getNomenclature(tenantId)
       return { success: true, data }
     } catch (error) {
@@ -24,9 +34,9 @@ export const settingsController = new Elysia({ prefix: "/settings" })
     }
   })
 
-  .patch("/nomenclature", async ({ body, query, set }) => {
+  .patch("/nomenclature", async ({ request, body, query, set }) => {
     try {
-      const tenantId = (query.tenantId as string) || "default"
+      const tenantId = await tenantFromRequest(request, query.tenantId as string | undefined)
       const parsed = updateNomenclatureSchema.parse(body)
       const data = await settingsService.updateNomenclature(tenantId, parsed)
       return { success: true, data }
@@ -37,9 +47,9 @@ export const settingsController = new Elysia({ prefix: "/settings" })
     }
   })
 
-  .get("/custom-fields", async ({ query, set }) => {
+  .get("/custom-fields", async ({ request, query, set }) => {
     try {
-      const tenantId = (query.tenantId as string) || "default"
+      const tenantId = await tenantFromRequest(request, query.tenantId as string | undefined)
       const entityType = query.entityType as string | undefined
       const data = await settingsService.listCustomFields(tenantId, entityType)
       return { success: true, data }
@@ -50,9 +60,9 @@ export const settingsController = new Elysia({ prefix: "/settings" })
     }
   })
 
-  .post("/custom-fields", async ({ body, query, set }) => {
+  .post("/custom-fields", async ({ request, body, query, set }) => {
     try {
-      const tenantId = (query.tenantId as string) || "default"
+      const tenantId = await tenantFromRequest(request, query.tenantId as string | undefined)
       const parsed = createCustomFieldSchema.parse(body)
       const data = await settingsService.createCustomField(tenantId, parsed)
       set.status = 201
@@ -195,9 +205,9 @@ export const settingsController = new Elysia({ prefix: "/settings" })
     }
   })
 
-  .get("/onboarding", async ({ query, set }) => {
+  .get("/onboarding", async ({ request, query, set }) => {
     try {
-      const tenantId = (query.tenantId as string) || "default"
+      const tenantId = await tenantFromRequest(request, query.tenantId as string | undefined)
       const data = await settingsService.getOnboardingStatus(tenantId)
       return { success: true, data }
     } catch (error) {
@@ -207,9 +217,9 @@ export const settingsController = new Elysia({ prefix: "/settings" })
     }
   })
 
-  .post("/onboarding/complete", async ({ query, set }) => {
+  .post("/onboarding/complete", async ({ request, query, set }) => {
     try {
-      const tenantId = (query.tenantId as string) || "default"
+      const tenantId = await tenantFromRequest(request, query.tenantId as string | undefined)
       const data = await settingsService.completeOnboarding(tenantId)
       set.status = 201
       return { success: true, data }
