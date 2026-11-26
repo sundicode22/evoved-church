@@ -24,12 +24,12 @@ export function SiteHeader() {
           <BreadcrumbList className="text-sm text-foreground">
             <BreadcrumbItem className="hidden md:block">
               <BreadcrumbLink render={<Link href="/dashboard" />}>
-                Home
+                Workspace
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="hidden md:block" />
             <BreadcrumbItem>
-              <BreadcrumbPage>Dashboard</BreadcrumbPage>
+              <BreadcrumbPage>Home</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>

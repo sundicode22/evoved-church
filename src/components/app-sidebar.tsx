@@ -84,9 +84,9 @@ export function AppSidebar({
 
   const groups: NavGroup[] = [
     {
-      title: "Home",
+      title: "Workspace",
       icon: Home01Icon,
-      items: [{ title: "Dashboard", url: "/dashboard" }],
+      items: [{ title: "Workspace", url: "/dashboard" }],
     },
     {
       title: "People",
@@ -189,7 +189,7 @@ export function AppSidebar({
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarMenu>
             {visibleGroups.map((group) =>
-              group.items.length === 1 && group.title === "Home" ? (
+              group.items.length === 1 && group.title === "Workspace" ? (
                 <SidebarMenuItem key={group.title}>
                   <SidebarMenuButton
                     render={<Link href={group.items[0].url} />}

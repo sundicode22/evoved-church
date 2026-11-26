@@ -39,7 +39,7 @@ function money(n: number) {
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" })
 }
 
-export default function DashboardHomePage() {
+export default function WorkspaceHomePage() {
   const { data: funds = [] } = useFunds()
   const { data: giving } = useContributions()
   const { data: board } = useVisitorBoard()
@@ -67,7 +67,7 @@ export default function DashboardHomePage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset className="min-h-screen bg-background">
-        <PageHeader title="Dashboard" />
+        <PageHeader title="Workspace" />
         <div className="flex flex-1 flex-col gap-6 bg-background p-4 md:p-6">
           <section className="rounded-xl bg-background">
             <div className="grid gap-4 sm:grid-cols-3">
@@ -155,7 +155,7 @@ export default function DashboardHomePage() {
           </ChartCard>
 
           <section className="rounded-xl bg-background">
-            <h2 className="text-lg font-semibold text-zinc-950">Go to</h2>
+            <h2 className="text-lg font-semibold text-foreground">Go to</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {[
                 { href: "/dashboard/giving", label: "Add giving" },

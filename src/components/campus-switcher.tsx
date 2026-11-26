@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { Building2, ChevronsUpDown, Plus } from "lucide-react"
 import {
   DropdownMenu,
@@ -23,11 +24,16 @@ import { useNomenclatureStore } from "@/features/settings/use-nomenclature"
 import { useCampuses } from "@/features/campuses/hooks/use-campuses"
 
 export function CampusSwitcher() {
+  const router = useRouter()
   const { isMobile } = useSidebar()
   const { activeCampus, availableCampuses, setActiveCampus } = useBranchStore()
   const campusTermSingular = useNomenclatureStore((s) => s.nomenclature.campusTermSingular)
+  const campusTermPlural = useNomenclatureStore((s) => s.nomenclature.campusTermPlural)
   const churchName = useNomenclatureStore((s) => s.nomenclature.churchName)
   useCampuses()
+
+  const orgLabel = churchName?.trim() || "Organization"
+  const locationLabel = activeCampus.name?.trim() || `Select ${campusTermSingular.toLowerCase()}`
 
   return (
     <SidebarMenu>
@@ -44,22 +50,36 @@ export function CampusSwitcher() {
             <ChurchLogo size="md" markClassName="rounded-lg" />
             <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
               <span className="truncate font-semibold tracking-tight text-foreground">
-                {churchName?.trim() || "LOGO"}
+                {orgLabel}
               </span>
               <span className="truncate text-xs text-muted-foreground">
-                {activeCampus.name || "No location"}
+                Workspace · {locationLabel}
               </span>
             </div>
             <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" strokeWidth={1.75} />
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="min-w-56 rounded-lg p-1"
+            className="min-w-64 rounded-lg p-1"
             align="start"
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
             <DropdownMenuGroup>
-              <DropdownMenuLabel>Locations</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                Organization
+              </DropdownMenuLabel>
+              <div className="px-2 pb-2 pt-0.5">
+                <p className="truncate text-sm font-medium text-foreground">{orgLabel}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Switch {campusTermSingular.toLowerCase()} to change this workspace
+                </p>
+              </div>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                {campusTermPlural} · workspace
+              </DropdownMenuLabel>
               {availableCampuses.map((campus: Campus) => (
                 <DropdownMenuItem
                   key={campus.id}
@@ -68,13 +88,15 @@ export function CampusSwitcher() {
                     campus.id === activeCampus.id ? "bg-brand-soft text-brand-ink" : ""
                   }`}
                 >
-                  <div className="flex size-6 items-center justify-center rounded-md border border-zinc-200 bg-white">
-                    <Building2 className="size-3.5 text-zinc-500" strokeWidth={1.75} />
+                  <div className="flex size-6 items-center justify-center rounded-md border border-border bg-card">
+                    <Building2 className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">{campus.name}</span>
-                    <span className="text-[11px] text-zinc-400 capitalize">
-                      {campus.city} · {campus.type}
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate text-sm">{campus.name}</span>
+                    <span className="truncate text-[11px] text-muted-foreground capitalize">
+                      {campus.city ? `${campus.city} · ` : ""}
+                      {campus.type.replaceAll("_", " ")}
+                      {campus.id === activeCampus.id ? " · active" : ""}
                     </span>
                   </div>
                 </DropdownMenuItem>
@@ -82,11 +104,14 @@ export function CampusSwitcher() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="gap-2 rounded-lg p-2 text-brand">
-                <div className="flex size-6 items-center justify-center rounded-md border border-dashed border-emerald-300 bg-emerald-50/60">
+              <DropdownMenuItem
+                className="gap-2 rounded-lg p-2 text-brand"
+                onClick={() => router.push("/dashboard/settings?tab=locations")}
+              >
+                <div className="flex size-6 items-center justify-center rounded-md border border-dashed border-brand/40 bg-brand-soft">
                   <Plus className="size-3.5" strokeWidth={1.75} />
                 </div>
-                <span className="text-xs font-medium">Add New {campusTermSingular}</span>
+                <span className="text-xs font-medium">Add {campusTermSingular}</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

@@ -41,9 +41,9 @@ export function BillingTab({ canEdit }: { canEdit: boolean }) {
           Multi-tenant pricing
         </AlertTitle>
         <AlertDescription className="mt-1 text-sm leading-relaxed text-muted-foreground">
-          Each church organization is a tenant with its own locations, seats, and plan limits.
-          Location switcher stays inside your church; plans gate how many campuses and staff you can
-          add.
+          Each church organization is a tenant. Inside it, every location has its own workspace
+          (members, visitors, giving, attendance). Plans limit how many locations and staff seats
+          you can add.
         </AlertDescription>
       </Alert>
 
