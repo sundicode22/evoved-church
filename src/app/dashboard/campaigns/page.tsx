@@ -43,6 +43,7 @@ import {
   useColumnVisibility,
   type ColumnOption,
 } from "@/components/table-panel"
+import { TableExportButton } from "@/components/table-export-button"
 import { useCampaigns, useCreateCampaign } from "@/features/campaigns/hooks/use-campaigns"
 import { campaignChannelSchema } from "@/features/campaigns/schemas"
 import { CHANNEL_ITEMS, STATUS_TONE } from "@/features/campaigns/constants"
@@ -95,6 +96,22 @@ export default function CampaignsPage() {
   const total = rows.length
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize)
 
+  const exportPayload = React.useMemo(
+    () => ({
+      filename: "campaigns",
+      title: "Campaigns",
+      headers: ["Campaign", "Channel", "Status", "Recipients", "Schedule"],
+      rows: rows.map((c) => [
+        c.name,
+        c.channel,
+        c.status,
+        c.stats?.total ?? "—",
+        formatDate(c.scheduleAt || c.sentAt),
+      ]),
+    }),
+    [rows]
+  )
+
   function onSubmit(values: CampaignFormValues) {
     create.mutate(
       { name: values.name, channel: values.channel },
@@ -127,6 +144,7 @@ export default function CampaignsPage() {
                 trailing={
                   <>
                     <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                    <TableExportButton payload={exportPayload} />
                     <Can permission="campaigns.write">
                       <TableAddButton onClick={() => setOpen(true)}>
                         <Plus className="size-3.5" strokeWidth={1.75} />

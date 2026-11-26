@@ -17,7 +17,7 @@ const RowSelectContext = React.createContext<RowSelectContextValue | null>(null)
 
 function Table({
   className,
-  selectable = true,
+  selectable = false,
   ...props
 }: React.ComponentProps<"table"> & { selectable?: boolean }) {
   const [selected, setSelected] = React.useState<Set<string>>(() => new Set())

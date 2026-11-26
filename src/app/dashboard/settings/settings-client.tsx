@@ -216,21 +216,12 @@ function MobileSettingsTabs({
 
 export function SettingsClient() {
   const { can, active, sections } = useSettingsSections()
-  const current = sections.find((item) => item.id === active)
 
   return (
     <RequireAbility permission="settings.read">
       <div className="flex min-w-0 flex-1 flex-col bg-white">
         <MobileSettingsTabs sections={sections} active={active} />
         <div className="min-w-0 flex-1 px-4 py-5 md:px-8 md:py-6">
-          <div className="mb-6 max-w-3xl">
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
-              {current?.label ?? "Settings"}
-            </h1>
-            {current?.description ? (
-              <p className="mt-1.5 text-sm text-zinc-500">{current.description}</p>
-            ) : null}
-          </div>
           <div className="w-full max-w-5xl text-left">
             {active === "church_details" ? (
               <ChurchDetailsTab canEdit={can("settings.write")} />

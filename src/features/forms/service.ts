@@ -10,6 +10,7 @@ import {
   formPurposeSchema,
   reorderFormFieldsSchema,
   submitFormSchema,
+  updateFormSchema,
   type ChurchForm,
   type ChurchFormField,
   type ChurchFormSubmission,
@@ -20,6 +21,7 @@ import {
   type PublicFormPayload,
   type ReorderFormFieldsInput,
   type SubmitFormInput,
+  type UpdateFormInput,
 } from "./schemas"
 import { settingsService } from "@/features/settings/service"
 import { visitorService } from "@/features/visitors/service"
@@ -254,6 +256,33 @@ export const formsService = {
     }
 
     return loadForm(form.id)
+  },
+
+  async update(id: string, input: UpdateFormInput): Promise<ChurchForm> {
+    const form = await loadForm(id)
+    const parsed = updateFormSchema.parse(input)
+    const slug = parsed.slug.trim().toLowerCase()
+    if (slug !== form.slug) {
+      const clash = await db
+        .select({ id: churchForms.id })
+        .from(churchForms)
+        .where(eq(churchForms.slug, slug))
+        .limit(1)
+      if (clash[0] && clash[0].id !== id) {
+        throw new ValidationError("Slug already in use")
+      }
+    }
+    await db
+      .update(churchForms)
+      .set({
+        title: parsed.title.trim(),
+        slug,
+        description: parsed.description ?? "",
+        ...(parsed.purpose ? { purpose: parsed.purpose } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(churchForms.id, id))
+    return loadForm(id)
   },
 
   /** Get or create the published visitor intake form used by Visitors + welcome QR. */

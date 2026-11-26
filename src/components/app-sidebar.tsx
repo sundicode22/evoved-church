@@ -22,6 +22,14 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -35,6 +43,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { useNomenclatureStore } from "@/features/settings/use-nomenclature"
 import { useNomenclatureQuery } from "@/features/settings/hooks/use-nomenclature-api"
@@ -234,6 +243,7 @@ function NavCollapsible({
   group: NavGroup
   isActive: (url: string) => boolean
 }) {
+  const { state, isMobile } = useSidebar()
   const openByRoute = group.items.some((item) => isActive(item.url))
   const [open, setOpen] = React.useState(openByRoute)
   const Icon = group.icon
@@ -242,10 +252,53 @@ function NavCollapsible({
     if (openByRoute) setOpen(true)
   }, [openByRoute])
 
+  // Icon rail: flyout to the right (no tooltip on trigger — conflicts with menu).
+  if (state === "collapsed" && !isMobile) {
+    return (
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                isActive={openByRoute}
+                className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground"
+              />
+            }
+          >
+            <Icon />
+            <span>{group.title}</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-56 min-w-56 rounded-lg p-1"
+            side="right"
+            align="start"
+            sideOffset={4}
+          >
+            <DropdownMenuLabel className="px-2 py-1.5 text-xs text-zinc-500">
+              {group.title}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {group.items.map((item) => (
+              <DropdownMenuItem
+                key={item.url}
+                className={isActive(item.url) ? "bg-brand-soft text-brand-ink" : undefined}
+                render={<Link href={item.url} />}
+              >
+                {item.title}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    )
+  }
+
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="group/collapsible">
       <SidebarMenuItem>
-        <CollapsibleTrigger render={<SidebarMenuButton tooltip={group.title} />}>
+        <CollapsibleTrigger
+          render={<SidebarMenuButton tooltip={group.title} isActive={openByRoute} />}
+        >
           <Icon />
           <span>{group.title}</span>
           <ChevronRight

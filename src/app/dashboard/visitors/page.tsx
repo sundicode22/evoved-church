@@ -52,6 +52,7 @@ import {
   useColumnVisibility,
   type ColumnOption,
 } from "@/components/table-panel"
+import { TableExportButton } from "@/components/table-export-button"
 import {
   useCreateLead,
   useVisitorBoard,
@@ -218,6 +219,23 @@ export default function VisitorsPage() {
 
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize)
 
+  const exportPayload = React.useMemo(
+    () => ({
+      filename: "visitors",
+      title: "Visitors",
+      headers: ["Contact", "Email/Phone", "Stage", "Source", "Location", "Assignee"],
+      rows: (rows as Record<string, unknown>[]).map((row) => [
+        String(row.contactName || row.title || ""),
+        String(row.contactEmail || row.contactPhone || ""),
+        String(row.stage || "").replaceAll("_", " "),
+        String(row.source || ""),
+        String(row.location || ""),
+        assigneeLabel(row as { assignedToName?: unknown; assignee?: unknown }),
+      ]),
+    }),
+    [rows]
+  )
+
   const cards = React.useMemo(() => {
     const list = rows as { stage?: string }[]
     const total = list.length
@@ -367,6 +385,7 @@ export default function VisitorsPage() {
                   trailing={
                     <>
                       <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                      <TableExportButton payload={exportPayload} />
                       <Can permission="visitors.write">
                         <TableAddButton onClick={openCreate}>
                           <Plus className="size-3.5" strokeWidth={1.75} />

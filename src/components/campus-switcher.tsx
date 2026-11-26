@@ -39,10 +39,11 @@ export function CampusSwitcher() {
               />
             }
           >
+            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white text-[10px] font-semibold tracking-tight text-black">
+              LOGO
+            </div>
             <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-              <span className="truncate text-base font-semibold tracking-tight text-black">
-                log
-              </span>
+              <span className="truncate font-semibold tracking-tight text-black">LOGO</span>
               <span className="truncate text-xs text-zinc-500">
                 {activeCampus.name || "No location"}
               </span>
@@ -50,7 +51,7 @@ export function CampusSwitcher() {
             <ChevronsUpDown className="ml-auto size-4 text-zinc-400" strokeWidth={1.75} />
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl p-1.5 shadow-xs"
+            className="min-w-56 rounded-lg p-1"
             align="start"
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
@@ -64,9 +65,7 @@ export function CampusSwitcher() {
                   key={campus.id}
                   onClick={() => setActiveCampus(campus)}
                   className={`gap-2 rounded-lg p-2 ${
-                    campus.id === activeCampus.id
-                      ? "bg-brand-soft text-brand-ink"
-                      : ""
+                    campus.id === activeCampus.id ? "bg-brand-soft text-brand-ink" : ""
                   }`}
                 >
                   <div className="flex size-6 items-center justify-center rounded-md border border-zinc-200 bg-white">

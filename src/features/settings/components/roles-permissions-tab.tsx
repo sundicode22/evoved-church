@@ -28,7 +28,8 @@ import {
 } from "@/components/ui/sheet"
 import { Can } from "@/components/auth/can"
 import { RowActionsMenu } from "@/components/row-actions-menu"
-import { StatusPill, TablePagination, TablePanel } from "@/components/table-panel"
+import { StatusPill, TableChrome, TablePagination, TablePanel } from "@/components/table-panel"
+import { TableExportButton } from "@/components/table-export-button"
 import {
   Table,
   TableBody,
@@ -190,14 +191,31 @@ export function RolesPermissionsTab() {
   return (
     <>
       <TablePanel className="w-full text-left">
-        <div className="flex items-center justify-end gap-3 px-1">
-          <Can permission="settings.roles">
-            <Button variant="primary" onClick={() => setDialogOpen(true)}>
-              <Plus className="size-4" />
-              New role
-            </Button>
-          </Can>
-        </div>
+        <TableChrome
+          trailing={
+            <>
+              <TableExportButton
+                payload={{
+                  filename: "roles",
+                  title: "Users and roles",
+                  headers: ["Role", "Description", "Permissions", "Type"],
+                  rows: rows.map((role) => [
+                    role.name,
+                    role.isAdmin ? "Every permission" : role.description || "",
+                    role.isAdmin ? permissions?.length ?? 0 : role.permissionKeys.length,
+                    role.isAdmin ? "Admin" : "Custom",
+                  ]),
+                }}
+              />
+              <Can permission="settings.roles">
+                <Button variant="primary" onClick={() => setDialogOpen(true)}>
+                  <Plus className="size-4" />
+                  New role
+                </Button>
+              </Can>
+            </>
+          }
+        />
         <Table>
           <TableHeader>
             <TableRow>

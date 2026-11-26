@@ -41,7 +41,7 @@ export function TablePanel({
   return (
     <div
       className={cn(
-        "flex flex-col gap-4",
+        "flex flex-col gap-4 rounded-xl border border-zinc-200/80 bg-white p-4 shadow-xs",
         "**:data-[slot=table-container]:overflow-hidden **:data-[slot=table-container]:rounded-lg **:data-[slot=table-container]:border **:data-[slot=table-container]:bg-background",
         className
       )}

@@ -43,7 +43,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Can, RequireAbility } from "@/components/auth/can"
-import { StatusPill, TablePanel } from "@/components/table-panel"
+import { StatusPill, TableChrome, TablePanel } from "@/components/table-panel"
+import { TableExportButton } from "@/components/table-export-button"
 import {
   useAppointmentSchedules,
   useAppointmentSummary,
@@ -177,6 +178,34 @@ export default function AppointmentsPage() {
               </Empty>
             ) : (
               <TablePanel>
+                <TableChrome
+                  trailing={
+                    <TableExportButton
+                      payload={{
+                        filename: "appointments",
+                        title: "Appointment schedules",
+                        headers: [
+                          "Schedule",
+                          "Shepherd",
+                          "Duration",
+                          "Window start",
+                          "Window end",
+                          "Bookings",
+                          "Status",
+                        ],
+                        rows: (schedules ?? []).map((s) => [
+                          s.name,
+                          s.ownerDisplayName || "",
+                          s.durationMinutes,
+                          s.windowStart,
+                          s.windowEnd,
+                          s.bookingCount ?? 0,
+                          s.status,
+                        ]),
+                      }}
+                    />
+                  }
+                />
                 <Table>
                   <TableHeader>
                     <TableRow>

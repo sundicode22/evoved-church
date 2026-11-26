@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ImagePlus, Upload, X } from "lucide-react"
@@ -12,6 +13,8 @@ type ImageUploadProps = {
   className?: string
   label?: string
   hint?: string
+  /** Max file size in bytes. Default ~2.5 MB. */
+  maxBytes?: number
   /** Aspect preview box; default square-ish for group avatars. */
   previewClassName?: string
 }
@@ -27,6 +30,7 @@ export function ImageUpload({
   className,
   label = "Image",
   hint = "PNG, JPG, or WebP up to ~2 MB",
+  maxBytes = 2.5 * 1024 * 1024,
   previewClassName,
 }: ImageUploadProps) {
   const inputRef = React.useRef<HTMLInputElement>(null)
@@ -34,8 +38,15 @@ export function ImageUpload({
 
   function readFile(file: File) {
     if (!onChange) return
-    if (!file.type.startsWith("image/")) return
-    if (file.size > 2.5 * 1024 * 1024) return
+    if (!file.type.startsWith("image/")) {
+      toast.error("Choose a PNG, JPG, WebP, or GIF image")
+      return
+    }
+    if (file.size > maxBytes) {
+      const mb = Math.round((maxBytes / (1024 * 1024)) * 10) / 10
+      toast.error(`Image must be ${mb} MB or smaller`)
+      return
+    }
     const reader = new FileReader()
     reader.onload = () => {
       const result = typeof reader.result === "string" ? reader.result : ""

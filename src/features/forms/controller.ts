@@ -5,6 +5,7 @@ import {
   formFieldSchema,
   reorderFormFieldsSchema,
   submitFormSchema,
+  updateFormSchema,
 } from "./schemas"
 import { apiOk } from "@/lib/api-handler"
 import { formatErrorResponse } from "@/lib/errors"
@@ -36,6 +37,17 @@ export const formsController = new Elysia({ prefix: "/forms" })
   .post("/", ({ body, set }) =>
     apiOk(set, () => formsService.create(createFormSchema.parse(body)), { status: 201 })
   )
+  .patch("/:id", async ({ params, body, set }) => {
+    try {
+      const parsed = updateFormSchema.parse(body)
+      const data = await formsService.update(params.id, parsed)
+      return { success: true, data }
+    } catch (error) {
+      const { status, body: errBody } = formatErrorResponse(error)
+      set.status = status
+      return errBody
+    }
+  })
   .post("/:id/fields", async ({ params, body, set }) => {
     try {
       const parsed = formFieldSchema.parse(body)

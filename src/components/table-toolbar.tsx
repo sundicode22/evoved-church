@@ -4,6 +4,7 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { StatusPill } from "@/components/table-panel"
+import { TableExportButton, type TableExportPayload } from "@/components/table-export-button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import {
   DropdownMenu,
@@ -33,6 +34,9 @@ type TableToolbarProps = {
   search?: string
   onSearchChange?: (value: string) => void
   searchPlaceholder?: string
+  /** Preferred: Excel + PDF menu */
+  exportPayload?: TableExportPayload | null
+  /** Legacy single-click export (CSV). Ignored when exportPayload is set. */
   onExport?: () => void
   onFilter?: () => void
   moreActions?: TableToolbarAction[]
@@ -51,6 +55,7 @@ export function TableToolbar({
   search,
   onSearchChange,
   searchPlaceholder = "Search…",
+  exportPayload,
   onExport,
   onFilter,
   moreActions = [],
@@ -94,12 +99,14 @@ export function TableToolbar({
               Filter
             </Button>
           )}
-          {onExport && (
+          {exportPayload ? (
+            <TableExportButton payload={exportPayload} />
+          ) : onExport ? (
             <Button type="button" variant="secondary" onClick={onExport}>
               <Download className="size-3.5" />
               Export
             </Button>
-          )}
+          ) : null}
           {moreActions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -113,6 +120,7 @@ export function TableToolbar({
                   <DropdownMenuLabel className="text-[10px] tracking-wider text-zinc-400 uppercase">
                     Table options
                   </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
                   {moreActions.map((a) => (
                     <DropdownMenuItem
                       key={a.label}

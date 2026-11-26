@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { toast } from "sonner"
+import { MapPin, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -18,13 +19,22 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
-import { apiClient, type ApiResponse } from "@/lib/axios"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { apiClient } from "@/lib/axios"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { slugify } from "@/features/onboarding/presets"
 import { createCampusSchema } from "@/features/campuses/schemas"
+import { CAMPUS_KEYS, useCampuses } from "@/features/campuses/hooks/use-campuses"
+import { StatusPill, TableChrome, TablePanel } from "@/components/table-panel"
+import { TableExportButton } from "@/components/table-export-button"
 
 const addLocationFormSchema = createCampusSchema
   .pick({ name: true, slug: true })
@@ -33,15 +43,6 @@ const addLocationFormSchema = createCampusSchema
 type AddLocationFormValues = z.infer<typeof addLocationFormSchema>
 
 const ADD_LOCATION_DEFAULTS: AddLocationFormValues = { name: "", city: "", slug: "" }
-
-type Campus = {
-  id: string
-  name: string
-  slug: string
-  city?: string
-  type?: string
-  isMainCampus?: boolean
-}
 
 export function LocationsTab({ canEdit }: { canEdit: boolean }) {
   const qc = useQueryClient()
@@ -54,7 +55,9 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
   React.useEffect(() => {
     const sub = form.watch((values, { name: changed }) => {
       if (changed === "name") {
-        form.setValue("slug", slugify(values.name ?? ""), { shouldValidate: form.formState.isSubmitted })
+        form.setValue("slug", slugify(values.name ?? ""), {
+          shouldValidate: form.formState.isSubmitted,
+        })
       } else if (changed === "slug") {
         const next = slugify(values.slug ?? "")
         if (next !== values.slug) form.setValue("slug", next)
@@ -63,13 +66,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
     return () => sub.unsubscribe()
   }, [form])
 
-  const { data: locations = [], isLoading } = useQuery({
-    queryKey: ["campuses"],
-    queryFn: async () => {
-      const res = await apiClient.get<ApiResponse<Campus[]>>("/campuses")
-      return res.data.data || []
-    },
-  })
+  const { data: locations = [], isLoading } = useCampuses()
 
   const create = useMutation({
     mutationFn: async (values: AddLocationFormValues) => {
@@ -77,12 +74,12 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
         name: values.name.trim(),
         slug: values.slug || slugify(values.name),
         city: values.city.trim(),
-        type: "regional",
+        type: locations.length === 0 ? "main" : "regional",
       })
     },
     onSuccess: () => {
       toast.success("Location created with standard chart of accounts")
-      qc.invalidateQueries({ queryKey: ["campuses"] })
+      qc.invalidateQueries({ queryKey: CAMPUS_KEYS.all })
       qc.invalidateQueries({ queryKey: ["accounting"] })
       setOpen(false)
       form.reset(ADD_LOCATION_DEFAULTS)
@@ -90,38 +87,73 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
     onError: (e: Error) => toast.error(e.message),
   })
 
+  const exportPayload = React.useMemo(
+    () => ({
+      filename: "locations",
+      title: "Locations",
+      headers: ["Name", "Slug", "City", "Type", "Main"],
+      rows: locations.map((l) => [
+        l.name,
+        l.slug,
+        l.city || "",
+        l.type || "",
+        l.isMainCampus ? "Yes" : "No",
+      ]),
+    }),
+    [locations]
+  )
+
   return (
     <div className="w-full space-y-4 text-left">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-zinc-900">Locations</h2>
-          <p className="text-xs text-zinc-500">
-            Each site gets its own General Fund and chart of accounts.
-          </p>
-        </div>
-        {canEdit ? (
-          <Button
-            variant="primary"
-            onClick={() => {
-              form.reset(ADD_LOCATION_DEFAULTS)
-              setOpen(true)
-            }}
-          >
-            Add location
-          </Button>
-        ) : null}
-      </div>
-
       {isLoading ? (
         <Skeleton className="h-40 w-full rounded-xl" />
       ) : locations.length === 0 ? (
-        <Empty className="border border-dashed py-12 text-left">
-          <EmptyTitle>No locations yet</EmptyTitle>
-          <EmptyDescription>Add your first location to scope people and finances.</EmptyDescription>
+        <Empty className="border border-dashed border-zinc-200 py-14">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <MapPin className="size-4" />
+            </EmptyMedia>
+            <EmptyTitle>No locations yet</EmptyTitle>
+            <EmptyDescription>
+              Add your first campus or site. Each location gets its own General Fund and chart of
+              accounts.
+            </EmptyDescription>
+          </EmptyHeader>
+          {canEdit ? (
+            <Button
+              variant="primary"
+              onClick={() => {
+                form.reset(ADD_LOCATION_DEFAULTS)
+                setOpen(true)
+              }}
+            >
+              <Plus className="size-3.5" />
+              Add location
+            </Button>
+          ) : null}
         </Empty>
       ) : (
-        <div className="w-full overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-xs">
-          <Table>
+        <TablePanel>
+          <TableChrome
+            trailing={
+              <>
+                <TableExportButton payload={exportPayload} />
+                {canEdit ? (
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      form.reset(ADD_LOCATION_DEFAULTS)
+                      setOpen(true)
+                    }}
+                  >
+                    <Plus className="size-3.5" />
+                    Add location
+                  </Button>
+                ) : null}
+              </>
+            }
+          />
+          <Table selectable={false}>
             <TableHeader>
               <TableRow>
                 <TableHead className="pl-4">Name</TableHead>
@@ -134,19 +166,21 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
               {locations.map((l) => (
                 <TableRow key={l.id}>
                   <TableCell className="pl-4">
-                    {l.name}
+                    <span className="font-medium text-zinc-900">{l.name}</span>
                     {l.isMainCampus ? (
-                      <span className="ml-2 text-xs text-brand">Main</span>
+                      <StatusPill tone="info" className="ml-2">
+                        Main
+                      </StatusPill>
                     ) : null}
                   </TableCell>
-                  <TableCell className="font-mono text-xs">{l.slug}</TableCell>
+                  <TableCell className="font-mono text-xs text-zinc-600">{l.slug}</TableCell>
                   <TableCell>{l.city || "—"}</TableCell>
-                  <TableCell>{l.type || "—"}</TableCell>
+                  <TableCell className="capitalize">{l.type || "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </div>
+        </TablePanel>
       )}
 
       <Sheet open={open} onOpenChange={setOpen}>

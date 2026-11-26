@@ -6,9 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { Form } from "@/components/ui/form"
+import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { FieldGroup } from "@/components/ui/field"
 import { TextFormField } from "@/components/form-fields"
+import { ImageUpload } from "@/components/image-upload"
 import {
   Sheet,
   SheetBody,
@@ -183,11 +184,22 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
                     label="Email"
                     type="email"
                   />
-                  <TextFormField
+                  <FormField
                     control={churchForm.control}
                     name="logoUrl"
-                    label="Logo URL"
-                    placeholder="https://…"
+                    render={({ field }) => (
+                      <FormItem>
+                        <ImageUpload
+                          label="Church logo"
+                          hint="PNG, JPG, or WebP · max 1 MB"
+                          maxBytes={1024 * 1024}
+                          value={field.value}
+                          onChange={field.onChange}
+                          previewClassName="aspect-square max-h-40 w-auto mx-auto object-contain bg-white"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </FieldGroup>
               </Form>

@@ -57,7 +57,14 @@ import {
 import { ConfirmAction } from "@/components/confirm-action"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Can, RequireAbility } from "@/components/auth/can"
-import { StatusPill, TablePanel } from "@/components/table-panel"
+import {
+  StatusPill,
+  TableAddButton,
+  TableChrome,
+  TablePanel,
+  TableSearch,
+} from "@/components/table-panel"
+import { TableExportButton } from "@/components/table-export-button"
 import {
   useAddFormField,
   useCreateForm,
@@ -67,11 +74,13 @@ import {
   useRemoveFormField,
   useReorderFormFields,
   useUnpublishForm,
+  useUpdateForm,
   useVisitorIntakeForm,
 } from "@/features/forms/hooks/use-forms"
 import {
   FORM_FIELD_TYPES,
   FORM_PURPOSES,
+  updateFormSchema,
   type ChurchForm,
   type ChurchFormField,
 } from "@/features/forms/schemas"
@@ -203,6 +212,7 @@ function FormBuilderSheet({
   onOpenChange: (o: boolean) => void
 }) {
   const { data: form, isLoading } = useFormDetail(open ? formId : null)
+  const updateForm = useUpdateForm(formId)
   const addField = useAddFormField(formId)
   const removeField = useRemoveFormField(formId)
   const reorderFields = useReorderFormFields(formId)
@@ -215,9 +225,30 @@ function FormBuilderSheet({
     useSensor(KeyboardSensor)
   )
 
+  type DetailsValues = z.infer<typeof updateFormSchema>
+  const detailsForm = useForm<DetailsValues>({
+    resolver: zodResolver(updateFormSchema) as Resolver<DetailsValues>,
+    defaultValues: {
+      title: "",
+      slug: "",
+      description: "",
+      purpose: "general",
+    },
+  })
+
   React.useEffect(() => {
     setOrderedFields(form?.fields ?? [])
   }, [form?.fields])
+
+  React.useEffect(() => {
+    if (!form) return
+    detailsForm.reset({
+      title: form.title,
+      slug: form.slug,
+      description: form.description || "",
+      purpose: form.purpose,
+    })
+  }, [form, detailsForm])
 
   const fieldForm = useForm<FieldBuilderValues>({
     resolver: zodResolver(fieldBuilderSchema) as Resolver<FieldBuilderValues>,
@@ -225,6 +256,10 @@ function FormBuilderSheet({
   })
   const fieldType = fieldForm.watch("fieldType")
   const locked = form?.status === "published"
+
+  function submitDetails(values: DetailsValues) {
+    updateForm.mutate(values)
+  }
 
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -283,49 +318,81 @@ function FormBuilderSheet({
             </div>
           ) : (
             <>
-              <div className="rounded-xl border border-zinc-200/80 bg-[#f8faf9] p-4 text-sm">
-                <p className="font-medium text-zinc-900">How this is used</p>
-                <ol className="mt-2 list-decimal space-y-1 pl-4 text-zinc-600">
-                  <li>Add fields here (name, email, prayer need, team interest, …).</li>
-                  <li>Publish — the form goes live at a public link.</li>
-                  <li>Share the link (QR, welcome card, portal, email).</li>
-                  <li>Responses are stored as submissions against this form.</li>
-                  {form.purpose === "visitor_intake" ? (
-                    <li>
-                      Visitor intake: each submission also creates a guest in{" "}
-                      <strong className="font-medium text-zinc-800">Visitors</strong>.
-                    </li>
-                  ) : null}
-                </ol>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <code className="rounded-md bg-white px-2 py-1 text-xs text-zinc-800 shadow-xs">
-                    {publicUrl(form.slug)}
-                  </code>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      void navigator.clipboard.writeText(publicUrl(form.slug))
-                      toast.success("Link copied")
-                    }}
-                  >
-                    <Copy className="size-3.5" />
-                    Copy
-                  </Button>
-                  {form.status === "published" ? (
+              <Form {...detailsForm}>
+                <form
+                  onSubmit={detailsForm.handleSubmit(submitDetails)}
+                  className="space-y-3 rounded-xl border border-zinc-200/80 bg-white p-4 shadow-xs"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-zinc-900">Form details</p>
+                    <StatusPill tone={locked ? "success" : "neutral"}>{form.status}</StatusPill>
+                  </div>
+                  <FieldGroup className="gap-3">
+                    <TextFormField
+                      control={detailsForm.control}
+                      name="title"
+                      label="Title"
+                    />
+                    <TextFormField
+                      control={detailsForm.control}
+                      name="slug"
+                      label="Public slug"
+                      placeholder="visitor-connect"
+                    />
+                    <TextareaFormField
+                      control={detailsForm.control}
+                      name="description"
+                      label="Description"
+                    />
+                    <SelectFormField
+                      control={detailsForm.control}
+                      name="purpose"
+                      label="Purpose"
+                      options={PURPOSE_OPTIONS}
+                    />
+                  </FieldGroup>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button type="submit" variant="primary" disabled={updateForm.isPending}>
+                      {updateForm.isPending ? (
+                        <>
+                          <Spinner className="size-3.5" />
+                          Saving…
+                        </>
+                      ) : (
+                        "Save details"
+                      )}
+                    </Button>
+                    <code className="rounded-md bg-zinc-50 px-2 py-1 text-xs text-zinc-700">
+                      {publicUrl(detailsForm.watch("slug") || form.slug)}
+                    </code>
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(`/f/${form.slug}`, "_blank")}
+                      onClick={() => {
+                        void navigator.clipboard.writeText(
+                          publicUrl(detailsForm.getValues("slug") || form.slug)
+                        )
+                        toast.success("Link copied")
+                      }}
                     >
-                      <ExternalLink className="size-3.5" />
-                      Open
+                      <Copy className="size-3.5" />
+                      Copy
                     </Button>
-                  ) : null}
-                </div>
-              </div>
+                    {form.status === "published" ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(`/f/${form.slug}`, "_blank")}
+                      >
+                        <ExternalLink className="size-3.5" />
+                        Open
+                      </Button>
+                    ) : null}
+                  </div>
+                </form>
+              </Form>
 
               <div>
                 <div className="mb-2 flex items-center justify-between">
@@ -467,12 +534,43 @@ export default function FormsPage() {
   const [createOpen, setCreateOpen] = React.useState(false)
   const [builderId, setBuilderId] = React.useState<string | null>(null)
   const [confirmPublish, setConfirmPublish] = React.useState<ChurchForm | null>(null)
+  const [search, setSearch] = React.useState("")
   const publish = usePublishForm()
   const form = useForm<FormBuilderValues>({
     resolver: zodResolver(formBuilderSchema) as Resolver<FormBuilderValues>,
     defaultValues: emptyForm,
   })
   const purposeWatch = form.watch("purpose")
+
+  const rows = React.useMemo(() => {
+    const q = search.trim().toLowerCase()
+    const list = data ?? []
+    if (!q) return list
+    return list.filter(
+      (f) =>
+        f.title.toLowerCase().includes(q) ||
+        f.slug.toLowerCase().includes(q) ||
+        f.purpose.toLowerCase().includes(q) ||
+        f.status.toLowerCase().includes(q)
+    )
+  }, [data, search])
+
+  const exportPayload = React.useMemo(
+    () => ({
+      filename: "forms",
+      title: "Forms",
+      headers: ["Title", "Slug", "Purpose", "Fields", "Submissions", "Status"],
+      rows: rows.map((f) => [
+        f.title,
+        f.slug,
+        f.purpose === "visitor_intake" ? "Visitor intake" : "General",
+        f.fields.length,
+        f.submissionCount,
+        f.status,
+      ]),
+    }),
+    [rows]
+  )
 
   React.useEffect(() => {
     if (purposeWatch === "visitor_intake") {
@@ -567,6 +665,26 @@ export default function FormsPage() {
               </Empty>
             ) : (
               <TablePanel>
+                <TableChrome
+                  search={
+                    <TableSearch
+                      value={search}
+                      onChange={setSearch}
+                      placeholder="Search forms…"
+                    />
+                  }
+                  trailing={
+                    <>
+                      <TableExportButton payload={exportPayload} />
+                      <Can permission="forms.write">
+                        <TableAddButton onClick={openCreate}>
+                          <Plus strokeWidth={2} className="size-3.5" />
+                          New form
+                        </TableAddButton>
+                      </Can>
+                    </>
+                  }
+                />
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -587,7 +705,7 @@ export default function FormsPage() {
                           </TableCell>
                         </TableRow>
                       ))}
-                    {(data ?? []).map((f) => (
+                    {rows.map((f) => (
                       <TableRow
                         key={f.id}
                         className="cursor-pointer"
@@ -623,7 +741,7 @@ export default function FormsPage() {
                               {
                                 items: [
                                   {
-                                    label: "Open builder",
+                                    label: "Edit form",
                                     onClick: () => setBuilderId(f.id),
                                   },
                                   {

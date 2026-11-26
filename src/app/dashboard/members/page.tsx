@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Download, Plus } from "lucide-react"
+import { Plus } from "lucide-react"
+import { TableExportButton } from "@/components/table-export-button"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -188,6 +189,25 @@ export default function MembersPage() {
   const members = membersResponse?.data || []
   const pageRows = members.slice((page - 1) * pageSize, page * pageSize)
 
+  const exportPayload = React.useMemo(
+    () => ({
+      filename: "members",
+      title: "Members",
+      headers: ["Name", "Email", "Phone", "Type", "Household role", "Background check"],
+      rows: members.map((m) => [
+        [m.firstName, m.lastName].filter(Boolean).join(" "),
+        m.email || "",
+        m.phoneNumber || "",
+        String(m.personType || "").replaceAll("_", " "),
+        m.householdRole
+          ? HOUSEHOLD_ROLE_LABELS[m.householdRole as HouseholdRole] || m.householdRole
+          : "",
+        m.backgroundCheckStatus || "none",
+      ]),
+    }),
+    [members]
+  )
+
   function openCreate() {
     form.reset(ADD_PERSON_DEFAULTS)
     setSheetOpen(true)
@@ -269,10 +289,7 @@ export default function MembersPage() {
                 trailing={
                   <>
                     <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
-                    <Button variant="secondary">
-                      <Download className="size-3.5" strokeWidth={1.75} />
-                      Export
-                    </Button>
+                    <TableExportButton payload={exportPayload} />
                     <Can permission="members.write">
                       <TableAddButton onClick={openCreate}>
                         <Plus className="size-3.5" strokeWidth={1.75} />

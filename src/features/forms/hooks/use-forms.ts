@@ -10,6 +10,7 @@ import type {
   FormFieldInput,
   PublicFormPayload,
   SubmitFormInput,
+  UpdateFormInput,
 } from "../schemas"
 
 export const FORM_KEYS = {
@@ -75,6 +76,22 @@ export function useCreateForm() {
     onError: (e: Error) => toast.error(e.message),
     onSuccess: () => {
       toast.success("Draft form created")
+      qc.invalidateQueries({ queryKey: FORM_KEYS.all })
+    },
+  })
+}
+
+export function useUpdateForm(formId: string | null) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: UpdateFormInput) => {
+      const res = await apiClient.patch<ApiResponse<ChurchForm>>(`/forms/${formId}`, input)
+      return res.data.data!
+    },
+    onError: (e: Error) => toast.error(e.message),
+    onSuccess: (data) => {
+      toast.success("Form details saved")
+      if (formId) qc.setQueryData(FORM_KEYS.detail(formId), data)
       qc.invalidateQueries({ queryKey: FORM_KEYS.all })
     },
   })

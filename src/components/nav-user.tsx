@@ -63,7 +63,7 @@ export function NavUser({
             <ChevronsUpDown className="ml-auto size-4 text-zinc-400" strokeWidth={1.75} />
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl shadow-xs"
+            className="min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}

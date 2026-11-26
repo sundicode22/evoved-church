@@ -48,6 +48,17 @@ export const createFormSchema = z.object({
   fields: z.array(formFieldSchema).optional(),
 })
 
+export const updateFormSchema = z.object({
+  title: z.string().min(2, "Title is required"),
+  slug: z
+    .string()
+    .trim()
+    .min(2, "Slug must be at least 2 characters")
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens"),
+  description: z.string().optional(),
+  purpose: formPurposeSchema.optional(),
+})
+
 export const VISITOR_INTAKE_SLUG = "visitor-connect"
 
 export const submitFormSchema = z.object({
@@ -59,6 +70,7 @@ export const reorderFormFieldsSchema = z.object({
 })
 
 export type CreateFormInput = z.infer<typeof createFormSchema>
+export type UpdateFormInput = z.infer<typeof updateFormSchema>
 export type SubmitFormInput = z.infer<typeof submitFormSchema>
 export type FormFieldInput = z.infer<typeof formFieldSchema>
 export type ReorderFormFieldsInput = z.infer<typeof reorderFormFieldsSchema>

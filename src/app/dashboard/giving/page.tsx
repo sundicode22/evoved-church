@@ -49,6 +49,7 @@ import {
   useColumnVisibility,
   type ColumnOption,
 } from "@/components/table-panel"
+import { TableExportButton } from "@/components/table-export-button"
 import {
   useContributions,
   useCreateContribution,
@@ -175,6 +176,24 @@ export default function GivingPage() {
   )
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
 
+  const exportPayload = React.useMemo(
+    () => ({
+      filename: "giving",
+      title: "Giving",
+      headers: ["Donor", "Fund", "Method", "Channel", "Date", "Amount", "Status"],
+      rows: filtered.map((tx) => [
+        tx.donorDisplayName,
+        tx.fundName,
+        METHOD_LABELS[tx.method] || tx.method,
+        tx.channel.replace("_", " "),
+        formatDate(tx.contributionDate),
+        formatMoney(tx.amount),
+        STATUS_LABELS[tx.status] || tx.status,
+      ]),
+    }),
+    [filtered]
+  )
+
   const fundItems = (funds ?? []).map((f: { id: string; name: string }) => ({
     value: f.id,
     label: f.name,
@@ -259,6 +278,7 @@ export default function GivingPage() {
                 trailing={
                   <>
                     <ColumnCustomize columns={COLUMNS} visible={visible} onToggle={toggle} />
+                    <TableExportButton payload={exportPayload} />
                     <Can permission="accounting.journal.post">
                       <TableAddButton onClick={() => setSheetOpen(true)}>
                         <Plus className="size-3.5" strokeWidth={1.75} />
