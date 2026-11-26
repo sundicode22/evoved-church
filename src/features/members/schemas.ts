@@ -78,10 +78,20 @@ export const attachHouseholdSchema = z.object({
   campusId: z.string().uuid().optional(),
 })
 
+export const createHouseholdSchema = z.object({
+  name: z.string().trim().min(2, "Household name is required"),
+  campusId: z.string().uuid().optional(),
+  address: z.string().trim().optional(),
+  city: z.string().trim().optional(),
+  state: z.string().trim().optional(),
+  zipCode: z.string().trim().optional(),
+})
+
 export type CreateMemberInput = z.infer<typeof createMemberSchema>
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>
 export type UpdatePersonTypeInput = z.infer<typeof updatePersonTypeSchema>
 export type AttachHouseholdInput = z.infer<typeof attachHouseholdSchema>
+export type CreateHouseholdInput = z.infer<typeof createHouseholdSchema>
 export type HouseholdRole = z.infer<typeof householdRoleSchema>
 export type PersonType = z.infer<typeof personTypeEnumSchema>
 

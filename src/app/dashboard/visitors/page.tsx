@@ -358,7 +358,7 @@ export default function VisitorsPage() {
             ) : null}
 
             {view === "board" ? (
-              <TablePanel className="rounded-2xl border-0 bg-[#fbfcfb] p-4 shadow-sm">
+              <TablePanel selectable={false} reorderable={false}>
                 <div className="mb-3 flex justify-end">
                   <Can permission="visitors.write">
                     <TableAddButton onClick={openCreate}>
@@ -398,7 +398,7 @@ export default function VisitorsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      {isVisible("contact") && <TableHead className="pl-4">Contact</TableHead>}
+                      {isVisible("contact") && <TableHead>Contact</TableHead>}
                       {isVisible("stage") && <TableHead>Stage</TableHead>}
                       {isVisible("source") && <TableHead>Source</TableHead>}
                       {isVisible("location") && <TableHead>Location</TableHead>}
@@ -424,11 +424,11 @@ export default function VisitorsPage() {
                     {pageRows.map((row: Record<string, unknown>) => (
                       <TableRow key={String(row.id)}>
                         {isVisible("contact") && (
-                          <TableCell className="pl-4">
-                            <div className="font-medium text-zinc-900">
+                          <TableCell>
+                            <div className="font-medium text-foreground">
                               {String(row.contactName || row.title || "—")}
                             </div>
-                            <div className="text-xs text-zinc-500">
+                            <div className="text-xs text-muted-foreground">
                               {String(row.contactEmail || row.contactPhone || row.title || "")}
                             </div>
                           </TableCell>

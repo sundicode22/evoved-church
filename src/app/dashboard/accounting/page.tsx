@@ -563,7 +563,7 @@ export default function AccountingPage() {
               </TabsContent>
 
               <TabsContent value="budgets">
-                <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
+                <div className="flex flex-col gap-4">
                   <TableToolbar
                     title="Budget lines"
                     description="Allocations by fund, department, and fiscal year."
@@ -666,7 +666,7 @@ export default function AccountingPage() {
               </TabsContent>
 
               <TabsContent value="requisitions">
-                <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
+                <div className="flex flex-col gap-4">
                   <TableToolbar
                     title="Expense requisitions"
                     description="Server-paginated. Approve / reject via confirm — encumbrance stays with the fund."
@@ -828,7 +828,7 @@ export default function AccountingPage() {
               </TabsContent>
 
               <TabsContent value="ledger">
-                <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
+                <div className="flex flex-col gap-4">
                   <TableToolbar
                     title="General ledger"
                     description="Drafts are editable. Posting records who posted — never silent."
@@ -923,7 +923,7 @@ export default function AccountingPage() {
               </TabsContent>
 
               <TabsContent value="coa">
-                <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
+                <div className="flex flex-col gap-4">
                   <TableToolbar
                     title="Chart of accounts"
                     description="This location’s books — starter accounts plus any you add."

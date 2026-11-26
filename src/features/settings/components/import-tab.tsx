@@ -239,7 +239,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
         </p>
       </div>
 
-      <TablePanel className="rounded-xl border-0 bg-white p-0 shadow-sm">
+      <TablePanel>
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">

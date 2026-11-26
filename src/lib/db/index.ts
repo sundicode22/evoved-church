@@ -1,15 +1,23 @@
-import { drizzle } from "drizzle-orm/postgres-js"
-import postgres from "postgres"
+import { Pool } from "pg"
+import { drizzle } from "drizzle-orm/node-postgres"
 import * as schema from "./schema"
 
-const connectionString = process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/evolve_church"
+const connectionString =
+  process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/evolve_church"
 
-// postgres.js connection client
-export const client = postgres(connectionString, {
+/** node-postgres pool — works with Neon’s pooled connection string. */
+export const pool = new Pool({
+  connectionString,
   max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
+  idleTimeoutMillis: 20_000,
+  connectionTimeoutMillis: 10_000,
+  ssl:
+    process.env.DATABASE_SSL === "false"
+      ? false
+      : connectionString.includes("localhost") || connectionString.includes("127.0.0.1")
+        ? false
+        : { rejectUnauthorized: false },
 })
 
-export const db = drizzle(client, { schema })
+export const db = drizzle(pool, { schema })
 export * from "./schema"

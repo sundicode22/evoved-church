@@ -3,7 +3,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { apiClient, ApiResponse, PaginationParams } from "@/lib/axios"
-import { CreateCategoryInput, CreateMemberInput } from "../schemas"
+import {
+  CreateCategoryInput,
+  CreateHouseholdInput,
+  CreateMemberInput,
+} from "../schemas"
 
 export const MEMBER_KEYS = {
   all: ["members"] as const,
@@ -45,6 +49,24 @@ export function useHouseholds() {
       return response.data.data || []
     },
     staleTime: 60 * 1000,
+  })
+}
+
+export function useCreateHousehold() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: CreateHouseholdInput) => {
+      const response = await apiClient.post<ApiResponse<any>>("/members/households", input)
+      return response.data.data
+    },
+    onError: (err: Error) => {
+      toast.error(err.message)
+    },
+    onSuccess: (data) => {
+      toast.success(`${data?.name || "Household"} created`)
+      queryClient.invalidateQueries({ queryKey: MEMBER_KEYS.households() })
+    },
   })
 }
 

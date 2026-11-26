@@ -19,7 +19,7 @@ export function SiteHeader() {
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-1 h-4" />
         <Breadcrumb>
-          <BreadcrumbList className="text-base text-zinc-800">
+          <BreadcrumbList className="text-sm text-zinc-800">
             <BreadcrumbItem className="hidden md:block">
               <BreadcrumbLink render={<Link href="/dashboard" />}>
                 Home

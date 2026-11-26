@@ -262,7 +262,48 @@ export const memberService = {
     return updated
   },
 
-  /** Household directory for Families page â€” real DB only, never seeded demo rows. */
+  async createHousehold(input: {
+    name: string
+    campusId?: string
+    address?: string
+    city?: string
+    state?: string
+    zipCode?: string
+  }) {
+    let campusId = input.campusId
+    if (!campusId) {
+      const c = await db.select().from(campuses).limit(1)
+      campusId = c[0]?.id
+    }
+    if (!campusId) throw new ValidationError("Campus/location required to create household")
+
+    const [hh] = await db
+      .insert(households)
+      .values({
+        name: input.name,
+        campusId,
+        address: input.address || null,
+        city: input.city || null,
+        state: input.state || null,
+        zipCode: input.zipCode || null,
+      })
+      .returning()
+
+    return {
+      id: hh.id,
+      name: hh.name,
+      campusId: hh.campusId,
+      address: hh.address,
+      city: hh.city,
+      state: hh.state,
+      zipCode: hh.zipCode,
+      memberCount: 0,
+      members: [],
+      createdAt: hh.createdAt.toISOString(),
+    }
+  },
+
+  /** Household directory for Families page — real DB only, never seeded demo rows. */
   async listHouseholds() {
     try {
       const rows = await db.select().from(households).orderBy(desc(households.createdAt))

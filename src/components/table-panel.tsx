@@ -29,25 +29,30 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { TableFeaturesProvider, useTableSelection } from "@/components/ui/table"
 
-/** Same frame as the dashboard data table: toolbar, bordered table, footer. */
+/** Toolbar + table + footer — shadcn data-table chrome (select + drag + frame). */
 export function TablePanel({
   children,
   className,
+  selectable = true,
+  reorderable = true,
+  onReorder,
 }: {
   children: React.ReactNode
   className?: string
+  selectable?: boolean
+  reorderable?: boolean
+  onReorder?: (keys: string[]) => void
 }) {
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-4 rounded-xl border border-zinc-200/80 bg-white p-4 shadow-xs",
-        "**:data-[slot=table-container]:overflow-hidden **:data-[slot=table-container]:rounded-lg **:data-[slot=table-container]:border **:data-[slot=table-container]:bg-background",
-        className
-      )}
+    <TableFeaturesProvider
+      selectable={selectable}
+      reorderable={reorderable}
+      onReorder={onReorder}
     >
-      {children}
-    </div>
+      <div className={cn("flex flex-col gap-4", className)}>{children}</div>
+    </TableFeaturesProvider>
   )
 }
 
@@ -96,9 +101,7 @@ export function ColumnCustomize({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-xs">
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="text-[11px] font-medium text-zinc-500">
-            Toggle columns
-          </DropdownMenuLabel>
+          <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
@@ -285,7 +288,7 @@ export function TablePagination({
   page,
   pageSize,
   total,
-  selected = 0,
+  selected,
   onPageChange,
   onPageSizeChange,
   pageSizeOptions = [10, 20, 30, 40, 50],
@@ -298,6 +301,8 @@ export function TablePagination({
   onPageSizeChange?: (size: number) => void
   pageSizeOptions?: number[]
 }) {
+  const { selectedCount } = useTableSelection()
+  const selectedRows = selected ?? selectedCount
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const canPrev = page > 1
   const canNext = page < totalPages
@@ -305,7 +310,7 @@ export function TablePagination({
   return (
     <div className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-muted-foreground tabular-nums">
-        {selected} of {total} row(s) selected.
+        {selectedRows} of {total} row(s) selected.
       </p>
       <div className="flex flex-wrap items-center gap-4">
         {onPageSizeChange ? (

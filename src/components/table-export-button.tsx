@@ -61,9 +61,7 @@ export function TableExportButton({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-44 rounded-lg shadow-xs">
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="text-[11px] font-medium text-zinc-500">
-            Download as
-          </DropdownMenuLabel>
+          <DropdownMenuLabel>Download as</DropdownMenuLabel>
           <DropdownMenuItem onClick={exportExcel} disabled={!ready}>
             <FileSpreadsheet className="size-3.5 text-zinc-500" />
             Excel (.csv)

@@ -3,17 +3,18 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import {
-  CalendarDays,
-  ChevronRight,
-  Coins,
-  FileText,
-  Home,
-  Megaphone,
-  Settings,
-  Users,
-  type LucideIcon,
-} from "lucide-react"
+  AnalyticsUpIcon,
+  ArrowRight01Icon,
+  Calendar03Icon,
+  Coins01Icon,
+  File01Icon,
+  Home01Icon,
+  Megaphone01Icon,
+  Settings01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons"
 import { CampusSwitcher } from "@/components/campus-switcher"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -24,6 +25,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -55,8 +57,20 @@ type SubItem = { title: string; url: string }
 
 type NavGroup = {
   title: string
-  icon: LucideIcon
+  icon: IconSvgElement
   items: SubItem[]
+}
+
+function NavIcon({ icon }: { icon: IconSvgElement }) {
+  return (
+    <HugeiconsIcon
+      icon={icon}
+      size={18}
+      color="currentColor"
+      strokeWidth={1.75}
+      className="shrink-0"
+    />
+  )
 }
 
 export function AppSidebar({
@@ -71,12 +85,12 @@ export function AppSidebar({
   const groups: NavGroup[] = [
     {
       title: "Home",
-      icon: Home,
+      icon: Home01Icon,
       items: [{ title: "Dashboard", url: "/dashboard" }],
     },
     {
       title: "People",
-      icon: Users,
+      icon: UserGroupIcon,
       items: [
         { title: "People", url: "/dashboard/members" },
         { title: "Families", url: "/dashboard/families" },
@@ -90,7 +104,7 @@ export function AppSidebar({
     },
     {
       title: "Finances",
-      icon: Coins,
+      icon: Coins01Icon,
       items: [
         { title: "Giving", url: "/dashboard/giving" },
         { title: "Funds", url: "/dashboard/funds" },
@@ -102,7 +116,7 @@ export function AppSidebar({
     },
     {
       title: "Calendar",
-      icon: CalendarDays,
+      icon: Calendar03Icon,
       items: [
         { title: "Calendar", url: "/dashboard/calendar" },
         { title: "Services", url: "/dashboard/services" },
@@ -116,7 +130,7 @@ export function AppSidebar({
     },
     {
       title: "Communications",
-      icon: Megaphone,
+      icon: Megaphone01Icon,
       items: [
         { title: "Campaigns", url: "/dashboard/campaigns" },
         { title: "Drips", url: "/dashboard/communications" },
@@ -128,7 +142,7 @@ export function AppSidebar({
     },
     {
       title: "Reports and Metrics",
-      icon: Coins,
+      icon: AnalyticsUpIcon,
       items: [
         { title: "Reports", url: "/dashboard/metrics?tab=reports" },
         { title: "Metrics", url: "/dashboard/metrics?tab=metrics" },
@@ -182,7 +196,7 @@ export function AppSidebar({
                     tooltip={group.items[0].title}
                     isActive={isActive(group.items[0].url)}
                   >
-                    <Home />
+                    <NavIcon icon={Home01Icon} />
                     <span>{group.items[0].title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -197,7 +211,7 @@ export function AppSidebar({
                   tooltip="Forms"
                   isActive={isActive("/dashboard/forms")}
                 >
-                  <FileText />
+                  <NavIcon icon={File01Icon} />
                   <span>Forms</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -209,7 +223,7 @@ export function AppSidebar({
                   tooltip="Church Settings"
                   isActive={isActive("/dashboard/settings")}
                 >
-                  <Settings />
+                  <NavIcon icon={Settings01Icon} />
                   <span>Church Settings</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -220,7 +234,7 @@ export function AppSidebar({
                   render={<Link href="/dashboard/settings?tab=roles" />}
                   tooltip="Users and Roles"
                 >
-                  <Users />
+                  <NavIcon icon={UserGroupIcon} />
                   <span>Users and Roles</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -246,7 +260,6 @@ function NavCollapsible({
   const { state, isMobile } = useSidebar()
   const openByRoute = group.items.some((item) => isActive(item.url))
   const [open, setOpen] = React.useState(openByRoute)
-  const Icon = group.icon
 
   React.useEffect(() => {
     if (openByRoute) setOpen(true)
@@ -265,7 +278,7 @@ function NavCollapsible({
               />
             }
           >
-            <Icon />
+            <NavIcon icon={group.icon} />
             <span>{group.title}</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -274,19 +287,21 @@ function NavCollapsible({
             align="start"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="px-2 py-1.5 text-xs text-zinc-500">
-              {group.title}
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{group.title}</DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            {group.items.map((item) => (
-              <DropdownMenuItem
-                key={item.url}
-                className={isActive(item.url) ? "bg-brand-soft text-brand-ink" : undefined}
-                render={<Link href={item.url} />}
-              >
-                {item.title}
-              </DropdownMenuItem>
-            ))}
+            <DropdownMenuGroup>
+              {group.items.map((item) => (
+                <DropdownMenuItem
+                  key={item.url}
+                  className={isActive(item.url) ? "bg-brand-soft text-brand-ink" : undefined}
+                  render={<Link href={item.url} />}
+                >
+                  {item.title}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
@@ -299,9 +314,13 @@ function NavCollapsible({
         <CollapsibleTrigger
           render={<SidebarMenuButton tooltip={group.title} isActive={openByRoute} />}
         >
-          <Icon />
+          <NavIcon icon={group.icon} />
           <span>{group.title}</span>
-          <ChevronRight
+          <HugeiconsIcon
+            icon={ArrowRight01Icon}
+            size={16}
+            color="currentColor"
+            strokeWidth={1.75}
             className={`ml-auto transition-transform duration-200 ${open ? "rotate-90" : ""}`}
           />
         </CollapsibleTrigger>

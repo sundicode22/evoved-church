@@ -133,7 +133,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
           ) : null}
         </Empty>
       ) : (
-        <TablePanel>
+        <TablePanel selectable={false} reorderable={false}>
           <TableChrome
             trailing={
               <>
@@ -153,10 +153,10 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
               </>
             }
           />
-          <Table selectable={false}>
+          <Table selectable={false} reorderable={false}>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-4">Name</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Slug</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Type</TableHead>

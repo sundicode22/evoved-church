@@ -54,13 +54,12 @@ export function ReportCatalogPanel() {
           Real church data as spreadsheet (CSV), printable PDF, or Word doc — not just charts.
         </p>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-zinc-200/80 bg-white">
-        <Table>
+      <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-4">Report</TableHead>
+              <TableHead>Report</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead className="text-right pr-4">Download</TableHead>
+              <TableHead className="text-right">Download</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -74,7 +73,7 @@ export function ReportCatalogPanel() {
             {!isLoading &&
               catalog.map((report) => (
                 <TableRow key={report.id}>
-                  <TableCell className="pl-4">
+                  <TableCell>
                     <p className="font-medium text-zinc-900">{report.title}</p>
                     <p className="mt-0.5 max-w-xl text-xs text-zinc-500">{report.description}</p>
                   </TableCell>
@@ -83,7 +82,7 @@ export function ReportCatalogPanel() {
                       {report.category}
                     </StatusPill>
                   </TableCell>
-                  <TableCell className="pr-4">
+                  <TableCell>
                     <div className="flex flex-wrap justify-end gap-2">
                       <Button
                         size="sm"
@@ -130,7 +129,6 @@ export function ReportCatalogPanel() {
               ))}
           </TableBody>
         </Table>
-      </div>
     </TablePanel>
   )
 }
@@ -174,11 +172,10 @@ export function AuditLogPanel() {
           </Button>
         </div>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-zinc-200/80 bg-white">
-        <Table className="min-w-[900px]">
+      <Table className="min-w-[900px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-4">When</TableHead>
+              <TableHead>When</TableHead>
               <TableHead>Action</TableHead>
               <TableHead>Actor</TableHead>
               <TableHead>Entity</TableHead>
@@ -188,14 +185,14 @@ export function AuditLogPanel() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 pl-4 text-sm text-zinc-500">
+                <TableCell colSpan={5} className="py-10 text-sm text-zinc-500">
                   Loading audit trail…
                 </TableCell>
               </TableRow>
             )}
             {!isLoading && rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 pl-4 text-sm text-zinc-500">
+                <TableCell colSpan={5} className="py-10 text-sm text-zinc-500">
                   No audit events yet. Posting a journal, posting giving, or adding a member will
                   appear here.
                 </TableCell>
@@ -203,7 +200,7 @@ export function AuditLogPanel() {
             )}
             {rows.map((row) => (
               <TableRow key={row.id}>
-                <TableCell className="pl-4 whitespace-nowrap text-xs text-zinc-500">
+                <TableCell className="whitespace-nowrap text-xs text-zinc-500">
                   {new Date(row.createdAt).toLocaleString()}
                 </TableCell>
                 <TableCell>
@@ -227,7 +224,6 @@ export function AuditLogPanel() {
             ))}
           </TableBody>
         </Table>
-      </div>
     </TablePanel>
   )
 }

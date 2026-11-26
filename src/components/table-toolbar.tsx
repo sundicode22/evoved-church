@@ -117,9 +117,7 @@ export function TableToolbar({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-48">
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel className="text-[10px] tracking-wider text-zinc-400 uppercase">
-                    Table options
-                  </DropdownMenuLabel>
+                  <DropdownMenuLabel>Table options</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {moreActions.map((a) => (
                     <DropdownMenuItem

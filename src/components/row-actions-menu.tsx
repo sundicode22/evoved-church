@@ -66,15 +66,11 @@ export function RowActionsMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-44">
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="text-[10px] tracking-wider text-zinc-400 uppercase">
-            {label}
-          </DropdownMenuLabel>
+          <DropdownMenuLabel>{label}</DropdownMenuLabel>
           {groups.map((g, gi) => (
             <div key={g.label || gi}>
               {gi > 0 && <DropdownMenuSeparator />}
-              {g.label && (
-                <DropdownMenuLabel className="text-[10px] text-zinc-400">{g.label}</DropdownMenuLabel>
-              )}
+              {g.label && <DropdownMenuLabel>{g.label}</DropdownMenuLabel>}
               {g.items.map((item) => (
                 <DropdownMenuItem
                   key={item.label}

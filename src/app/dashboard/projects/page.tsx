@@ -171,7 +171,7 @@ export default function ProjectsPage() {
 
           <div className="p-6 md:p-8">
             {view === "board" ? (
-              <TablePanel className="overflow-x-auto rounded-lg border bg-background p-4">
+              <TablePanel>
                 <div className="mb-3 flex justify-end">
                   <Can permission="projects.write">
                     <Button

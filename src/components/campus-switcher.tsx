@@ -57,9 +57,7 @@ export function CampusSwitcher() {
             sideOffset={4}
           >
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium tracking-wider text-zinc-400 uppercase">
-                Locations
-              </DropdownMenuLabel>
+              <DropdownMenuLabel>Locations</DropdownMenuLabel>
               {availableCampuses.map((campus: Campus) => (
                 <DropdownMenuItem
                   key={campus.id}

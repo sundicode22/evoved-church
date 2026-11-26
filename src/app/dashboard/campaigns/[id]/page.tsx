@@ -360,18 +360,13 @@ function CampaignDetailPage() {
                         </div>
                       ))}
                     </div>
-                    <div className="overflow-hidden rounded-lg border border-zinc-200/80 bg-white shadow-xs">
-                      <Table>
+                    <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="px-4">
-                              Recipient
-                            </TableHead>
+                            <TableHead>Recipient</TableHead>
                             <TableHead>Channel</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead>
-                              Provider ID
-                            </TableHead>
+                            <TableHead>Provider ID</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -387,7 +382,7 @@ function CampaignDetailPage() {
                           )}
                           {data.sends.map((s) => (
                             <TableRow key={s.id}>
-                              <TableCell className="px-4 text-xs">
+                              <TableCell className="text-xs">
                                 <p className="font-medium text-zinc-900">
                                   {s.recipientName}
                                 </p>
@@ -419,7 +414,6 @@ function CampaignDetailPage() {
                           ))}
                         </TableBody>
                       </Table>
-                    </div>
                   </div>
                 </TabsContent>
               </Tabs>
