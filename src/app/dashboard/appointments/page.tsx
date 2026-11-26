@@ -134,7 +134,7 @@ export default function AppointmentsPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="appointments.read">
           <PageHeader
             title="Appointments"
@@ -157,10 +157,10 @@ export default function AppointmentsPage() {
               {cards.map((c) => (
                 <div
                   key={c.label}
-                  className="flex min-h-[112px] flex-col justify-between rounded-xl border border-zinc-200/80 bg-white px-5 py-5 shadow-xs"
+                  className="flex min-h-[112px] flex-col justify-between rounded-xl border border-border bg-card px-5 py-5 shadow-xs"
                 >
                   <p className="text-sm font-normal text-zinc-500">{c.label}</p>
-                  <p className="text-3xl font-medium tracking-tight text-zinc-900">
+                  <p className="text-3xl font-medium tracking-tight text-foreground">
                     {c.value}
                   </p>
                 </div>
@@ -229,7 +229,7 @@ export default function AppointmentsPage() {
                     {(schedules ?? []).map((s) => (
                       <TableRow key={s.id}>
                         <TableCell className="pl-4">
-                          <p className="font-medium text-zinc-900">{s.name}</p>
+                          <p className="font-medium text-foreground">{s.name}</p>
                           <p className="text-xs text-zinc-400">/{s.bookingUrlSlug}</p>
                         </TableCell>
                         <TableCell>{s.ownerDisplayName || "—"}</TableCell>

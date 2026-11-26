@@ -92,7 +92,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
 
   return (
     <div className="max-w-3xl space-y-8 text-left">
-      <section className="rounded-xl border border-zinc-200/80 bg-white p-6 shadow-xs">
+      <section className="rounded-xl border border-border bg-card p-6 shadow-xs">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-xs font-semibold tracking-wide text-brand">Church details</p>
           {canEdit ? (
@@ -137,7 +137,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
         </dl>
       </section>
 
-      <section className="rounded-xl border border-zinc-200/80 bg-white p-6 shadow-xs">
+      <section className="rounded-xl border border-border bg-card p-6 shadow-xs">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-xs font-semibold tracking-wide text-brand">Contact details</p>
           {canEdit ? (
@@ -273,7 +273,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-8">
       <dt className="w-32 shrink-0 text-zinc-500">{label}</dt>
-      <dd className="font-medium text-zinc-900">{value}</dd>
+      <dd className="font-medium text-foreground">{value}</dd>
     </div>
   )
 }

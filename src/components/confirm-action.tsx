@@ -58,7 +58,7 @@ export function ConfirmAction({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent size="default" className="gap-4 p-5 sm:max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-base font-semibold text-zinc-900">
+          <AlertDialogTitle className="text-base font-semibold text-foreground">
             {title}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-xs text-zinc-500">

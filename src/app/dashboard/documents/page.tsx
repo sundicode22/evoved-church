@@ -142,11 +142,11 @@ function FolderTile({
     <button
       type="button"
       onClick={onOpen}
-      className="group flex w-full flex-col items-center gap-2 rounded-2xl border border-transparent bg-transparent px-3 py-4 text-center transition-colors hover:border-zinc-200/80 hover:bg-white hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+      className="group flex w-full flex-col items-center gap-2 rounded-2xl border border-transparent bg-transparent px-3 py-4 text-center transition-colors hover:border-border hover:bg-card hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
     >
       <FolderIcon className="size-[4.5rem] transition-transform group-hover:scale-[1.03]" />
       <div className="min-w-0 w-full space-y-1">
-        <p className="truncate text-sm font-medium text-zinc-900">{folder.name}</p>
+        <p className="truncate text-sm font-medium text-foreground">{folder.name}</p>
         <p className="text-xs text-zinc-500">
           {total} {total === 1 ? "item" : "items"}
         </p>
@@ -341,7 +341,7 @@ export default function DocumentsPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <PageHeader
           title="Documents"
           description="Bylaws, minutes, and handbooks with role-based access."
@@ -375,8 +375,8 @@ export default function DocumentsPage() {
               type="button"
               onClick={() => setCurrentFolderId(null)}
               className={cn(
-                "rounded-md px-1.5 py-0.5 transition-colors hover:bg-zinc-100 hover:text-zinc-900",
-                !currentFolderId && "font-medium text-zinc-900"
+                "rounded-md px-1.5 py-0.5 transition-colors hover:bg-zinc-100 hover:text-foreground",
+                !currentFolderId && "font-medium text-foreground"
               )}
             >
               All folders
@@ -388,8 +388,8 @@ export default function DocumentsPage() {
                   type="button"
                   onClick={() => setCurrentFolderId(folder.id)}
                   className={cn(
-                    "max-w-[12rem] truncate rounded-md px-1.5 py-0.5 transition-colors hover:bg-zinc-100 hover:text-zinc-900",
-                    folder.id === currentFolderId && "font-medium text-zinc-900"
+                    "max-w-[12rem] truncate rounded-md px-1.5 py-0.5 transition-colors hover:bg-zinc-100 hover:text-foreground",
+                    folder.id === currentFolderId && "font-medium text-foreground"
                   )}
                 >
                   {folder.name}
@@ -404,7 +404,7 @@ export default function DocumentsPage() {
             <>
               <section className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-sm font-medium text-zinc-900">
+                  <h3 className="text-sm font-medium text-foreground">
                     {currentFolder ? currentFolder.name : "Folders"}
                   </h3>
                   {currentFolder ? (
@@ -443,7 +443,7 @@ export default function DocumentsPage() {
 
               {(currentFolderId || docsHere.length > 0) && (
                 <section className="space-y-3">
-                  <h3 className="text-sm font-medium text-zinc-900">
+                  <h3 className="text-sm font-medium text-foreground">
                     {currentFolder ? "Files in this folder" : "Unfiled files"}
                   </h3>
                   <TablePanel>
@@ -464,7 +464,7 @@ export default function DocumentsPage() {
                                 href={doc.cloudinaryUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex items-center gap-2.5 font-medium text-zinc-900 hover:text-brand"
+                                className="flex items-center gap-2.5 font-medium text-foreground hover:text-brand"
                               >
                                 <FileIcon strokeWidth={1.8} className="size-4 text-brand" />
                                 <span className="truncate">{doc.title}</span>

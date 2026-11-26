@@ -55,10 +55,10 @@ export function NomenclatureTab({ canEdit }: { canEdit: boolean }) {
   return (
     <form
       onSubmit={form.handleSubmit(handleSave)}
-      className="max-w-3xl space-y-6 rounded-lg border border-zinc-200/80 bg-white p-6 text-left shadow-xs md:p-8"
+      className="max-w-3xl space-y-6 rounded-lg border border-border bg-card p-6 text-left shadow-xs md:p-8"
     >
       <div>
-        <h3 className="text-sm font-semibold text-zinc-900">Terminology defaults</h3>
+        <h3 className="text-sm font-semibold text-foreground">Terminology defaults</h3>
         <p className="mt-1 text-xs text-zinc-500">
           Adapt labels to your denomination. Changes update tables, forms, and reports.
         </p>

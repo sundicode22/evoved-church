@@ -181,7 +181,7 @@ export default function ChurchCalendarPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="calendar.read">
           <PageHeader
             title="Calendar"
@@ -200,7 +200,7 @@ export default function ChurchCalendarPage() {
           />
 
           <div className="grid gap-6 p-8 lg:grid-cols-[340px_1fr]">
-            <div className="rounded-lg border border-zinc-200/80 bg-white p-4 shadow-xs">
+            <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
               {month ? (
                 <Calendar
                   mode="single"
@@ -222,9 +222,9 @@ export default function ChurchCalendarPage() {
               )}
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-zinc-200/80 bg-white shadow-xs">
+            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
               <div className="border-b border-zinc-100 px-5 py-4">
-                <h2 className="text-sm font-medium text-zinc-900">
+                <h2 className="text-sm font-medium text-foreground">
                   {selectedDay ? format(selectedDay, "EEEE, MMM d, yyyy") : "Loading…"}
                 </h2>
                 <p className="text-xs text-zinc-400">
@@ -262,7 +262,7 @@ export default function ChurchCalendarPage() {
                               {o.status}
                             </StatusPill>
                           </div>
-                          <h3 className="mt-1.5 text-sm font-medium text-zinc-900">
+                          <h3 className="mt-1.5 text-sm font-medium text-foreground">
                             {o.programTitle}
                           </h3>
                           <p className="mt-0.5 text-xs text-zinc-500">

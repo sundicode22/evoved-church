@@ -146,7 +146,7 @@ export default function CommunicationsPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="campaigns.read">
           <PageHeader
             title="Communications"
@@ -186,10 +186,10 @@ export default function CommunicationsPage() {
                   className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
                     active?.id === s.id
                       ? "border-emerald-300 bg-brand-soft"
-                      : "border-zinc-200/80 bg-white hover:border-emerald-200"
+                      : "border-border bg-card hover:border-emerald-200"
                   }`}
                 >
-                  <p className="text-sm font-medium text-zinc-900">{s.name}</p>
+                  <p className="text-sm font-medium text-foreground">{s.name}</p>
                   <p className="mt-0.5 text-[11px] text-zinc-400">
                     {s.steps.length} steps · {s.enrollmentCount} enrolled
                   </p>
@@ -210,7 +210,7 @@ export default function CommunicationsPage() {
                 <div className="rounded-lg border border-zinc-200/80 bg-[#f4f6f5] px-4 py-3 shadow-xs">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <h2 className="text-sm font-medium text-zinc-900">{active.name}</h2>
+                      <h2 className="text-sm font-medium text-foreground">{active.name}</h2>
                       <p className="text-xs text-zinc-500">
                         Trigger:{" "}
                         {DRIP_TRIGGERS.find((t) => t.value === active.triggerEvent)?.label ||
@@ -231,7 +231,7 @@ export default function CommunicationsPage() {
               {active?.steps.map((st) => (
                 <div
                   key={st.id}
-                  className="rounded-lg border border-zinc-200/80 bg-white p-5 shadow-xs"
+                  className="rounded-lg border border-border bg-card p-5 shadow-xs"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-xs font-medium text-emerald-800">
@@ -241,7 +241,7 @@ export default function CommunicationsPage() {
                       <StatusPill tone="success">
                         +{st.delayHours}h · {st.channel}
                       </StatusPill>
-                      <h3 className="mt-1.5 text-sm font-medium text-zinc-900">
+                      <h3 className="mt-1.5 text-sm font-medium text-foreground">
                         {st.subject || "(SMS message)"}
                       </h3>
                       <p className="mt-1 text-xs text-zinc-500">{st.body}</p>

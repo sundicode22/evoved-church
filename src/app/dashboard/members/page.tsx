@@ -251,7 +251,7 @@ export default function MembersPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="members.read">
           <PageHeader
             title="Members"
@@ -359,7 +359,7 @@ export default function MembersPage() {
                                 {person.lastName.charAt(0)}
                               </div>
                               <div>
-                                <p className="font-medium text-zinc-900">
+                                <p className="font-medium text-foreground">
                                   {person.firstName} {person.lastName}
                                 </p>
                                 <p className="text-xs text-zinc-500">

@@ -68,7 +68,7 @@ export function ReportCatalogPanel() {
               catalog.map((report) => (
                 <TableRow key={report.id}>
                   <TableCell>
-                    <p className="font-medium text-zinc-900">{report.title}</p>
+                    <p className="font-medium text-foreground">{report.title}</p>
                     <p className="mt-0.5 max-w-xl text-xs text-zinc-500">{report.description}</p>
                   </TableCell>
                   <TableCell>

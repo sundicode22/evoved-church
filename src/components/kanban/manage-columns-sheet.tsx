@@ -107,7 +107,7 @@ export function ManageColumnsSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" inset size="md" className="bg-white p-0">
+        <SheetContent side="right" inset size="md" className="bg-background p-0">
           <SheetHeader className="pr-12">
             <SheetTitle>{title}</SheetTitle>
             <SheetDescription>
@@ -117,7 +117,7 @@ export function ManageColumnsSheet({
           </SheetHeader>
           <SheetBody className="gap-5">
             {isLoading ? (
-              <div className="flex items-center gap-2 text-sm text-zinc-500">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Spinner className="size-4" /> Loading columns…
               </div>
             ) : (
@@ -128,7 +128,7 @@ export function ManageColumnsSheet({
                     className="flex items-center gap-2 rounded-lg border border-zinc-200/80 bg-[#f4f6f5] px-3 py-2.5"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-zinc-900">{col.label}</p>
+                      <p className="truncate text-sm font-medium text-foreground">{col.label}</p>
                       <p className="truncate text-[11px] text-zinc-400">{col.key}</p>
                     </div>
                     <Button
@@ -167,7 +167,7 @@ export function ManageColumnsSheet({
                       type="button"
                       variant="ghost"
                       size="icon-sm"
-                      className="size-7 text-zinc-500 hover:text-red-600"
+                      className="size-7 text-muted-foreground hover:text-red-600"
                       disabled={sorted.length <= 1}
                       onClick={() => setDeleting(col)}
                       aria-label="Delete"
@@ -221,7 +221,7 @@ export function ManageColumnsSheet({
       </Sheet>
 
       <Sheet open={Boolean(renaming)} onOpenChange={(o) => !o && setRenaming(null)}>
-        <SheetContent side="right" inset size="sm" className="bg-white p-0">
+        <SheetContent side="right" inset size="sm" className="bg-background p-0">
           <Form {...renameForm}>
             <form
               onSubmit={renameForm.handleSubmit(onRename)}

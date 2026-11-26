@@ -129,13 +129,13 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
         {CARDS.map((card) => (
           <div
             key={card.id}
-            className="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-5 text-left shadow-xs"
+            className="flex flex-col rounded-lg border border-border bg-card p-5 text-left shadow-xs"
           >
-            <div className="mb-3 flex size-10 items-center justify-center rounded-lg border border-zinc-100 bg-white p-2">
+            <div className="mb-3 flex size-10 items-center justify-center rounded-lg border border-border bg-card p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={card.logoSrc} alt={card.logoAlt} className="size-6 object-contain" />
             </div>
-            <h3 className="text-sm font-semibold text-zinc-900">{card.name}</h3>
+            <h3 className="text-sm font-semibold text-foreground">{card.name}</h3>
             <p className="mt-1 flex-1 text-sm leading-relaxed text-zinc-600">{card.description}</p>
             <div className="mt-4">
               <Button

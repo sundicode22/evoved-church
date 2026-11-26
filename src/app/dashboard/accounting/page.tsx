@@ -356,7 +356,7 @@ export default function AccountingPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white dark:bg-zinc-950">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="accounting.read">
           <PageHeader
             title="Fund"
@@ -512,7 +512,7 @@ export default function AccountingPage() {
                       return (
                         <div
                           key={fund.id}
-                          className="space-y-4 rounded-lg border border-zinc-200/80 bg-white p-5 shadow-xs"
+                          className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-xs"
                         >
                           <div className="flex items-start justify-between">
                             <div>
@@ -522,7 +522,7 @@ export default function AccountingPage() {
                               >
                                 {String(fund.type).replace(/_/g, " ")}
                               </StatusPill>
-                              <h3 className="mt-2 text-sm font-medium text-zinc-900">{fund.name}</h3>
+                              <h3 className="mt-2 text-sm font-medium text-foreground">{fund.name}</h3>
                               <HoverCard>
                                 <HoverCardTrigger
                                   render={
@@ -545,7 +545,7 @@ export default function AccountingPage() {
                           </div>
                           <div>
                             <p className="text-[11px] text-zinc-400">Available</p>
-                            <p className="text-xl font-medium tabular-nums text-zinc-900">
+                            <p className="text-xl font-medium tabular-nums text-foreground">
                               ${money(net)}
                             </p>
                           </div>

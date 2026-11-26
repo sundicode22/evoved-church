@@ -4,20 +4,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
 const badgeVariants = cva(
-  "group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs font-normal text-zinc-600 whitespace-nowrap transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full border border-border bg-card px-2.5 py-1 text-xs font-normal text-muted-foreground whitespace-nowrap transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       variant: {
         default:
-          "border-zinc-200 bg-white text-zinc-600 [a]:hover:bg-zinc-50",
+          "border-border bg-card text-muted-foreground [a]:hover:bg-muted",
         secondary:
-          "border-zinc-200 bg-white text-zinc-600 [a]:hover:bg-zinc-50",
+          "border-border bg-card text-muted-foreground [a]:hover:bg-muted",
         destructive:
-          "border-zinc-200 bg-white text-zinc-600 [a]:hover:bg-zinc-50",
+          "border-border bg-card text-muted-foreground [a]:hover:bg-muted",
         outline:
-          "border-zinc-200 bg-white text-zinc-600 [a]:hover:bg-zinc-50",
+          "border-border bg-card text-muted-foreground [a]:hover:bg-muted",
         ghost:
-          "border-transparent bg-transparent text-zinc-600 hover:bg-zinc-50",
+          "border-transparent bg-transparent text-muted-foreground hover:bg-muted",
         link: "border-transparent bg-transparent text-primary underline-offset-4 hover:underline",
       },
     },

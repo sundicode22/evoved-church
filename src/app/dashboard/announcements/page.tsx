@@ -107,7 +107,7 @@ export default function AnnouncementsPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="announcements.read">
           <PageHeader
             title="Announcements"
@@ -156,7 +156,7 @@ export default function AnnouncementsPage() {
                     {(data ?? []).map((a) => (
                       <TableRow key={a.id}>
                         <TableCell className="pl-4">
-                          <p className="font-medium text-zinc-900">
+                          <p className="font-medium text-foreground">
                             {a.isPinned ? (
                               <span className="mr-1.5 text-[10px] font-medium uppercase text-emerald-700">
                                 Pinned

@@ -95,7 +95,7 @@ export default function RoomsPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="facilities.read">
           <PageHeader
             title="Rooms"
@@ -153,7 +153,7 @@ export default function RoomsPage() {
                     {(data ?? []).map((room) => (
                       <TableRow key={room.id}>
                         <TableCell className="pl-4">
-                          <p className="font-medium text-zinc-900">{room.name}</p>
+                          <p className="font-medium text-foreground">{room.name}</p>
                           <p className="text-xs text-zinc-400">
                             {room.locationNote || "No location note"}
                           </p>

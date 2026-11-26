@@ -133,7 +133,7 @@ export default function BatchesPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="accounting.read">
           <PageHeader
             title="Batches"
@@ -197,7 +197,7 @@ export default function BatchesPage() {
                     <TableRow key={batch.id}>
                       {isVisible("name") && (
                         <TableCell className="pl-4">
-                          <div className="font-medium text-zinc-900">{batch.name}</div>
+                          <div className="font-medium text-foreground">{batch.name}</div>
                           {batch.notes && (
                             <div className="mt-0.5 text-xs text-zinc-500">{batch.notes}</div>
                           )}
@@ -221,7 +221,7 @@ export default function BatchesPage() {
                         </TableCell>
                       )}
                       {isVisible("total") && (
-                        <TableCell className="tabular-nums font-medium text-zinc-900">
+                        <TableCell className="tabular-nums font-medium text-foreground">
                           {formatMoney(batch.totalAmount)}
                         </TableCell>
                       )}

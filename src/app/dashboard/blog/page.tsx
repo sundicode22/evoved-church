@@ -144,7 +144,7 @@ export default function BlogDashboardPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="blog.read">
           <PageHeader
             title="Blog"
@@ -216,7 +216,7 @@ export default function BlogDashboardPage() {
                               )}
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-zinc-900">
+                              <p className="truncate text-sm font-medium text-foreground">
                                 {post.title}
                               </p>
                               <p className="truncate text-xs text-zinc-400">{post.excerpt || post.slug}</p>

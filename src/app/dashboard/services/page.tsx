@@ -342,7 +342,7 @@ export default function ServicesPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="services.read">
           <PageHeader
             title="Services"
@@ -359,7 +359,7 @@ export default function ServicesPage() {
           />
 
           <div className="grid gap-6 p-8 lg:grid-cols-[280px_1fr]">
-            <div className="overflow-hidden rounded-lg border border-zinc-200/80 bg-white shadow-xs">
+            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
               <TableToolbar title="All services" count={data?.length} />
               <ScrollArea className="max-h-[70vh]">
                 {isLoading && (
@@ -406,7 +406,7 @@ export default function ServicesPage() {
               </ScrollArea>
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-zinc-200/80 bg-white shadow-xs">
+            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
               {!selected ? (
                 <Empty className="py-16">
                   <EmptyHeader>
@@ -418,7 +418,7 @@ export default function ServicesPage() {
                 <>
                   <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-5 py-4">
                     <div>
-                      <h2 className="text-base font-medium text-zinc-900">{selected.name}</h2>
+                      <h2 className="text-base font-medium text-foreground">{selected.name}</h2>
                       <p className="mt-0.5 text-xs text-zinc-500">
                         {selected.locationLabel || "No location"} ·{" "}
                         {selected.defaultDayOfWeek != null
@@ -472,7 +472,7 @@ export default function ServicesPage() {
                               onClick={() => openEditSegment(seg)}
                             >
                               <div className="flex items-center gap-2">
-                                <p className="text-sm font-medium text-zinc-900">
+                                <p className="text-sm font-medium text-foreground">
                                   {i + 1}. {seg.title}
                                 </p>
                                 <StatusPill className="tabular-nums">
@@ -560,7 +560,7 @@ export default function ServicesPage() {
                             className="min-w-0 flex-1 text-left"
                             onClick={() => openEditVolunteer(v)}
                           >
-                            <p className="text-sm font-medium text-zinc-900">{v.role}</p>
+                            <p className="text-sm font-medium text-foreground">{v.role}</p>
                             <p className="text-xs text-zinc-500">
                               {v.assigneeName || "Open slot"}
                             </p>

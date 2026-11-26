@@ -100,7 +100,7 @@ export function RichTextEditor({
     return (
       <div
         className={cn(
-          "rounded-xl border border-zinc-200/80 bg-white px-4 py-8 text-xs text-zinc-400",
+          "rounded-xl border border-border bg-card px-4 py-8 text-xs text-zinc-400",
           className
         )}
       >
@@ -184,7 +184,7 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs",
+        "overflow-hidden rounded-xl border border-border bg-card shadow-xs",
         disabled && "opacity-60",
         className
       )}

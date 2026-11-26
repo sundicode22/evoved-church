@@ -282,7 +282,7 @@ export function GuestConnectionCard({
         </div>
 
         <div className="flex items-center justify-center border-t border-border bg-muted/30 p-6 md:border-t-0 md:border-l">
-          <div className="rounded-2xl border border-border bg-white p-3 shadow-xs">
+          <div className="rounded-2xl border border-border bg-card p-3 shadow-xs">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={qrDataUrl}

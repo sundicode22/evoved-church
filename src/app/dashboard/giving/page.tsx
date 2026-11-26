@@ -238,7 +238,7 @@ export default function GivingPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="accounting.read">
           <PageHeader
             title="Offering"
@@ -251,12 +251,12 @@ export default function GivingPage() {
               {cards.map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-xl border border-zinc-200/80 bg-white px-5 py-6 shadow-xs sm:px-6 sm:py-7"
+                  className="rounded-xl border border-border bg-card px-5 py-6 shadow-xs sm:px-6 sm:py-7"
                 >
                   <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase">
                     {card.label}
                   </p>
-                  <p className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-zinc-900 sm:text-3xl">
+                  <p className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-foreground sm:text-3xl">
                     {isLoading ? "—" : formatMoney(card.value)}
                   </p>
                 </div>
@@ -320,7 +320,7 @@ export default function GivingPage() {
                   {pageRows.map((tx) => (
                     <TableRow key={tx.id}>
                       {isVisible("donor") && (
-                        <TableCell className="pl-4 font-medium text-zinc-900">
+                        <TableCell className="pl-4 font-medium text-foreground">
                           {tx.donorDisplayName}
                         </TableCell>
                       )}
@@ -345,7 +345,7 @@ export default function GivingPage() {
                         </TableCell>
                       )}
                       {isVisible("amount") && (
-                        <TableCell className="tabular-nums font-medium text-zinc-900">
+                        <TableCell className="tabular-nums font-medium text-foreground">
                           {formatMoney(tx.amount)}
                         </TableCell>
                       )}

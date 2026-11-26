@@ -232,7 +232,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
   return (
     <div className="w-full space-y-5 text-left">
       <div>
-        <h2 className="text-sm font-semibold text-zinc-900">Import CSV</h2>
+        <h2 className="text-sm font-semibold text-foreground">Import CSV</h2>
         <p className="mt-1 text-xs text-zinc-500">
           Migrate from Planning Center, Breeze, Rock, or spreadsheets. Download a template, upload
           your file, dry-run, then apply.
@@ -259,7 +259,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
                         <Icon className="size-4" strokeWidth={1.75} />
                       </span>
                       <div>
-                        <p className="text-sm font-medium text-zinc-900">{item.title}</p>
+                        <p className="text-sm font-medium text-foreground">{item.title}</p>
                         <p className="mt-0.5 max-w-md text-xs text-zinc-500">{item.description}</p>
                       </div>
                     </div>
@@ -362,7 +362,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
                     <p className="text-xs text-zinc-500">Preview · {rows.length} rows</p>
                     <StatusPill>First 5 shown</StatusPill>
                   </div>
-                  <div className="overflow-x-auto bg-white">
+                  <div className="overflow-x-auto bg-background">
                     <Table>
                       <TableHeader>
                         <TableRow>

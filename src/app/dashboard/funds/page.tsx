@@ -68,7 +68,7 @@ export default function FundsPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="accounting.read">
           <PageHeader
             title="Funds"
@@ -132,7 +132,7 @@ export default function FundsPage() {
                     }) => (
                       <TableRow key={fund.id}>
                         {isVisible("name") && (
-                          <TableCell className="pl-4 font-medium text-zinc-900">
+                          <TableCell className="pl-4 font-medium text-foreground">
                             {fund.name}
                           </TableCell>
                         )}
@@ -147,7 +147,7 @@ export default function FundsPage() {
                           </TableCell>
                         )}
                         {isVisible("balance") && (
-                          <TableCell className="tabular-nums font-medium text-zinc-900">
+                          <TableCell className="tabular-nums font-medium text-foreground">
                             {formatMoney(Number(fund.balance || 0))}
                           </TableCell>
                         )}

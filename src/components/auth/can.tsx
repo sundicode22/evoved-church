@@ -82,8 +82,8 @@ export function RequireAbility({
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center gap-2 p-12 text-sm text-zinc-500">
-        <Spinner className="size-4 text-emerald-600" />
+      <div className="flex flex-1 items-center justify-center gap-2 bg-background p-12 text-sm text-muted-foreground">
+        <Spinner className="size-4 text-brand" />
         Checking access…
       </div>
     )
@@ -91,8 +91,8 @@ export function RequireAbility({
 
   if (!allowed) {
     return (
-      <div className="flex flex-1 items-center justify-center p-12">
-        <Empty className="border border-dashed border-zinc-200 bg-white max-w-md">
+      <div className="flex flex-1 items-center justify-center bg-background p-12">
+        <Empty className="max-w-md border border-dashed border-border bg-card">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Lock className="size-4" />

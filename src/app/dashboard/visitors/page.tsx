@@ -288,7 +288,7 @@ export default function VisitorsPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="visitors.read">
           <PageHeader
             title="Visitors"
@@ -302,10 +302,10 @@ export default function VisitorsPage() {
               {cards.map((c) => (
                 <div
                   key={c.label}
-                  className="flex min-h-[112px] flex-col justify-between rounded-xl border border-zinc-200/80 bg-white px-5 py-5 shadow-xs"
+                  className="flex min-h-[112px] flex-col justify-between rounded-xl border border-border bg-card px-5 py-5 shadow-xs"
                 >
                   <p className="text-sm font-normal text-zinc-500">{c.label}</p>
-                  <p className="text-3xl font-medium tracking-tight text-zinc-900">
+                  <p className="text-3xl font-medium tracking-tight text-foreground">
                     {c.value}
                   </p>
                 </div>
@@ -313,8 +313,8 @@ export default function VisitorsPage() {
             </div>
 
             {intakeForm ? (
-              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-200/80 bg-white px-4 py-3 text-sm text-zinc-600 shadow-xs">
-                <span className="font-medium text-zinc-900">{intakeForm.title}</span>
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm text-zinc-600 shadow-xs">
+                <span className="font-medium text-foreground">{intakeForm.title}</span>
                 <StatusPill tone={intakeForm.status === "published" ? "success" : "neutral"}>
                   {intakeForm.status}
                 </StatusPill>
@@ -346,13 +346,13 @@ export default function VisitorsPage() {
                 ) : null}
                 <Link
                   href="/dashboard/forms"
-                  className="inline-flex h-8 items-center rounded-lg border border-border bg-white px-3 text-sm shadow-xs hover:bg-input/50"
+                  className="inline-flex h-8 items-center rounded-lg border border-border bg-background px-3 text-sm shadow-xs hover:bg-input/50"
                 >
                   Edit in form builder
                 </Link>
               </div>
             ) : intakeLoading ? (
-              <div className="rounded-xl border border-zinc-200/80 bg-white px-4 py-3 text-sm text-zinc-500 shadow-xs">
+              <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-zinc-500 shadow-xs">
                 Loading visitor form…
               </div>
             ) : null}

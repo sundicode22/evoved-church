@@ -131,14 +131,14 @@ function MetricsPageInner() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="reports.read">
           <PageHeader
             title="Reports & Metrics"
             description={`Operational reports and live health for ${activeCampus.name}.`}
           />
 
-          <div className="space-y-6 bg-white p-6 md:p-8">
+          <div className="space-y-6 bg-background p-6 md:p-8">
             <Tabs value={mainTab} onValueChange={setMainTab}>
               <TabsList>
                 <TabsTrigger value="reports">Reports</TabsTrigger>

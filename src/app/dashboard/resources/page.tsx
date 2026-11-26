@@ -109,7 +109,7 @@ export default function ResourcesPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="facilities.read">
           <PageHeader
             title="Resources"
@@ -167,7 +167,7 @@ export default function ResourcesPage() {
                     {(data ?? []).map((r) => (
                       <TableRow key={r.id}>
                         <TableCell className="pl-4">
-                          <p className="font-medium text-zinc-900">{r.name}</p>
+                          <p className="font-medium text-foreground">{r.name}</p>
                           <p className="text-xs text-zinc-400">
                             {r.description || "No description"}
                           </p>

@@ -11,7 +11,7 @@ function minuteOptions(step: number) {
 }
 
 const selectClass =
-  "h-10 w-full appearance-none rounded-lg border border-input bg-white px-3.5 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
+  "h-10 w-full appearance-none rounded-lg border border-input bg-background px-3.5 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
 
 interface TimePickerProps {
   /** 24-hour "HH:mm" string, e.g. "14:30". */

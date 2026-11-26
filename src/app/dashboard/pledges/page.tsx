@@ -174,7 +174,7 @@ export default function PledgesPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="accounting.read">
           <PageHeader
             title="Pledges"
@@ -234,14 +234,14 @@ export default function PledgesPage() {
                   )}
                   {pageRows.map((pledge) => (
                     <TableRow key={pledge.id}>
-                      <TableCell className="pl-4 font-medium text-zinc-900">
+                      <TableCell className="pl-4 font-medium text-foreground">
                         {pledge.memberDisplayName}
                       </TableCell>
                       <TableCell className="text-zinc-600">{pledge.fundName}</TableCell>
                       <TableCell className="capitalize text-zinc-600">
                         {pledge.frequency.replace("_", " ")}
                       </TableCell>
-                      <TableCell className="tabular-nums text-zinc-900">
+                      <TableCell className="tabular-nums text-foreground">
                         {formatMoney(pledge.amountTotal)}
                       </TableCell>
                       <TableCell className="tabular-nums text-zinc-600">

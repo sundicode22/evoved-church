@@ -68,7 +68,7 @@ export function TableToolbar({
         {icon}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>
+            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
             {typeof count === "number" && (
               <StatusPill className="tabular-nums">{count}</StatusPill>
             )}
@@ -85,7 +85,7 @@ export function TableToolbar({
               value={search ?? ""}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
-              className="border-zinc-200 bg-white pl-9 shadow-xs"
+              className="border-border bg-background pl-9 shadow-xs"
             />
           </div>
         )}

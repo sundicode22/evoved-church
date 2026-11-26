@@ -160,7 +160,7 @@ function SortableFieldRow({
         transition,
       }}
       className={cn(
-        "flex items-center gap-2 rounded-lg border border-zinc-200/80 bg-white px-2 py-2.5",
+        "flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-2.5",
         isDragging && "z-10 shadow-md ring-1 ring-brand/30"
       )}
     >
@@ -178,7 +178,7 @@ function SortableFieldRow({
         <span className="size-8 shrink-0" aria-hidden />
       )}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-zinc-900">
+        <p className="text-sm font-medium text-foreground">
           {field.label}
           {field.required ? <span className="text-rose-500"> *</span> : null}
         </p>
@@ -302,8 +302,8 @@ function FormBuilderSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" inset size="lg" className="isolate bg-white p-0">
-        <SheetHeader className="border-b border-zinc-100 bg-white pr-12">
+      <SheetContent side="right" inset size="lg" className="isolate bg-background p-0">
+        <SheetHeader className="border-b border-border bg-background pr-12">
           <SheetTitle>{form?.title || "Form builder"}</SheetTitle>
           <SheetDescription>
             {locked
@@ -311,7 +311,7 @@ function FormBuilderSheet({
               : "Build fields while draft. Publish when ready — people fill it at /f/your-slug."}
           </SheetDescription>
         </SheetHeader>
-        <SheetBody className="gap-6 bg-white">
+        <SheetBody className="gap-6 bg-background">
           {isLoading || !form ? (
             <div className="flex items-center gap-2 text-sm text-zinc-500">
               <Spinner className="size-4" /> Loading form…
@@ -321,10 +321,10 @@ function FormBuilderSheet({
               <Form {...detailsForm}>
                 <form
                   onSubmit={detailsForm.handleSubmit(submitDetails)}
-                  className="space-y-3 rounded-xl border border-zinc-200/80 bg-white p-4 shadow-xs"
+                  className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-xs"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-zinc-900">Form details</p>
+                    <p className="text-sm font-semibold text-foreground">Form details</p>
                     <StatusPill tone={locked ? "success" : "neutral"}>{form.status}</StatusPill>
                   </div>
                   <FieldGroup className="gap-3">
@@ -396,7 +396,7 @@ function FormBuilderSheet({
 
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-zinc-900">Fields</h3>
+                  <h3 className="text-sm font-semibold text-foreground">Fields</h3>
                   <StatusPill tone={locked ? "success" : "neutral"}>
                     {form.status}
                   </StatusPill>
@@ -438,7 +438,7 @@ function FormBuilderSheet({
                 <Form {...fieldForm}>
                   <form
                     onSubmit={fieldForm.handleSubmit(submitField)}
-                    className="space-y-3 rounded-xl border border-dashed border-zinc-300 bg-white p-4"
+                    className="space-y-3 rounded-xl border border-dashed border-border bg-card p-4"
                   >
                     <p className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
                       Add field
@@ -625,7 +625,7 @@ export default function FormsPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="forms.read">
           <PageHeader
             title="Forms"
@@ -647,15 +647,15 @@ export default function FormsPage() {
           />
 
           <div className="space-y-4 p-6 md:p-8">
-            <div className="rounded-xl border border-zinc-200/80 bg-white px-4 py-3 text-sm text-zinc-600 shadow-xs">
-              <strong className="font-medium text-zinc-900">How forms work:</strong> create a
+            <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-xs">
+              <strong className="font-medium text-foreground">How forms work:</strong> create a
               draft, add the questions you need, then publish. Guests fill it at{" "}
-              <code className="rounded bg-zinc-100 px-1 text-xs">/f/your-slug</code>. Visitor
+              <code className="rounded bg-muted px-1 text-xs">/f/your-slug</code>. Visitor
               intake forms also create a lead on the Visitors board.
             </div>
 
             {!isLoading && (data?.length ?? 0) === 0 ? (
-              <Empty className="rounded-lg border border-zinc-200/80 py-16">
+              <Empty className="rounded-lg border border-border py-16">
                 <EmptyHeader>
                   <EmptyTitle>No forms yet</EmptyTitle>
                   <EmptyDescription>
@@ -712,8 +712,8 @@ export default function FormsPage() {
                         onClick={() => setBuilderId(f.id)}
                       >
                         <TableCell className="pl-4">
-                          <p className="font-medium text-zinc-900">{f.title}</p>
-                          <p className="text-xs text-zinc-400">/f/{f.slug}</p>
+                          <p className="font-medium text-foreground">{f.title}</p>
+                          <p className="text-xs text-muted-foreground">/f/{f.slug}</p>
                         </TableCell>
                         <TableCell>
                           <StatusPill
@@ -771,7 +771,7 @@ export default function FormsPage() {
           </div>
 
           <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-            <SheetContent side="right" inset size="md" className="bg-white p-0">
+            <SheetContent side="right" inset size="md" className="bg-background p-0">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(submit)} className="flex h-full flex-col">
                   <SheetHeader className="pr-12">

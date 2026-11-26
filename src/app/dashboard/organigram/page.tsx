@@ -153,7 +153,7 @@ function NodeCard({
       {...(overlay ? {} : drag.listeners)}
       {...(overlay ? {} : drag.attributes)}
       className={[
-        "w-64 touch-none select-none rounded-xl bg-white p-4 text-left shadow-sm transition-all",
+        "w-64 touch-none select-none rounded-xl bg-card p-4 text-left shadow-sm transition-all",
         overlay ? "cursor-grabbing shadow-xl rotate-1" : "cursor-grab active:cursor-grabbing",
         drag.isDragging ? "opacity-40" : "",
         drop.isOver && !blocked ? "ring-4 ring-emerald-100 shadow-md" : "hover:shadow-md",
@@ -165,7 +165,7 @@ function NodeCard({
           {node.department && (
             <StatusPill tone="success">{node.department}</StatusPill>
           )}
-          <h3 className="mt-2 text-sm font-medium leading-snug text-zinc-900">{node.title}</h3>
+          <h3 className="mt-2 text-sm font-medium leading-snug text-foreground">{node.title}</h3>
           {showName && (
             <p className="mt-0.5 text-xs font-medium text-emerald-700">{node.name}</p>
           )}
@@ -305,7 +305,7 @@ function RootDropZone({ visible }: { visible: boolean }) {
       className={`mb-6 w-full max-w-md rounded-xl px-4 py-3 text-center text-xs font-medium shadow-xs transition-colors ${
         isOver
           ? "bg-emerald-50 text-emerald-800 shadow-md"
-          : "bg-white text-zinc-500"
+          : "bg-card text-muted-foreground"
       }`}
     >
       Drop here to make this a top-level role
@@ -475,7 +475,7 @@ export default function OrganigramPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="organigram.read">
           <PageHeader
             title="Organigram"

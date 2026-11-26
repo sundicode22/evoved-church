@@ -166,7 +166,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
               {locations.map((l) => (
                 <TableRow key={l.id}>
                   <TableCell className="pl-4">
-                    <span className="font-medium text-zinc-900">{l.name}</span>
+                    <span className="font-medium text-foreground">{l.name}</span>
                     {l.isMainCampus ? (
                       <StatusPill tone="info" className="ml-2">
                         Main

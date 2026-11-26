@@ -92,7 +92,7 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
     <div className="w-full space-y-4 text-left">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-zinc-900">Custom fields</h2>
+          <h2 className="text-sm font-semibold text-foreground">Custom fields</h2>
           <p className="text-xs text-zinc-500">Extend members, visitors, and groups with your own fields.</p>
         </div>
         {canEdit ? (
@@ -110,7 +110,7 @@ export function CustomFieldsTab({ canEdit }: { canEdit: boolean }) {
           <EmptyDescription>Create your first field to capture ministry-specific data.</EmptyDescription>
         </Empty>
       ) : (
-        <div className="w-full overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-xs">
+        <div className="w-full overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
           <Table>
             <TableHeader>
               <TableRow>

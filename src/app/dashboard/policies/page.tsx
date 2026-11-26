@@ -169,7 +169,7 @@ export default function PoliciesPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white dark:bg-zinc-950">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="policies.read">
           <PageHeader
             title="Policies"

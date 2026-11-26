@@ -92,10 +92,10 @@ export function ColumnCustomize({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="outline" size="default" className="border-zinc-200 shadow-xs" />
+          <Button variant="outline" size="default" className="border-border shadow-xs" />
         }
       >
-        <Columns3 className="size-3.5 text-zinc-500" strokeWidth={1.75} />
+        <Columns3 className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
         Columns
         <ChevronDown className="size-3.5 opacity-50" strokeWidth={1.75} />
       </DropdownMenuTrigger>
@@ -129,7 +129,7 @@ export function ViewToggle({
   onChange: (v: "table" | "board") => void
 }) {
   return (
-    <div className="inline-flex h-[39px] items-center rounded-lg border border-zinc-200 bg-zinc-100/80 p-0.5 shadow-xs">
+    <div className="inline-flex h-[39px] items-center rounded-lg border border-border bg-muted/80 p-0.5 shadow-xs">
       {(
         [
           { id: "table", label: "List" },
@@ -143,8 +143,8 @@ export function ViewToggle({
           className={cn(
             "h-full rounded-md px-3 text-sm font-medium transition-colors",
             value === opt.id
-              ? "bg-white text-zinc-900 shadow-xs"
-              : "text-zinc-500 hover:text-zinc-800"
+              ? "bg-background text-foreground shadow-xs"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           {opt.label}
@@ -207,12 +207,12 @@ export function TableSearch({
 }) {
   return (
     <div className={cn("relative w-full min-w-[12rem] max-w-sm sm:w-64", className)}>
-      <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-zinc-400" />
+      <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="border-zinc-200 bg-white pl-9 shadow-xs"
+        className="border-border bg-background pl-9 shadow-xs"
       />
     </div>
   )
@@ -273,7 +273,7 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs font-normal text-zinc-600",
+        "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-normal text-muted-foreground",
         className
       )}
     >

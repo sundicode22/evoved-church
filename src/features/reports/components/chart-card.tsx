@@ -18,7 +18,7 @@ export function ChartCard({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl border border-zinc-200/80 bg-white p-4 shadow-xs sm:p-5",
+        "flex flex-col rounded-xl border border-border bg-card p-4 shadow-xs sm:p-5",
         className
       )}
     >

@@ -128,7 +128,7 @@ function CampaignDetailPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white dark:bg-zinc-950">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="campaigns.read">
           <PageHeader
             title={
@@ -194,7 +194,7 @@ function CampaignDetailPage() {
                 </TabsList>
 
                 <TabsContent value="content">
-                  <div className="space-y-5 rounded-lg border border-zinc-200/80 bg-white p-6 shadow-xs">
+                  <div className="space-y-5 rounded-lg border border-border bg-card p-6 shadow-xs">
                     <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                       <div className="space-y-1.5">
                         <Label className="text-xs font-medium">
@@ -280,7 +280,7 @@ function CampaignDetailPage() {
                 </TabsContent>
 
                 <TabsContent value="audience">
-                  <div className="space-y-4 rounded-lg border border-zinc-200/80 bg-white p-6 shadow-xs">
+                  <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-xs">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium">Send to</Label>
                       <Select
@@ -309,7 +309,7 @@ function CampaignDetailPage() {
                 </TabsContent>
 
                 <TabsContent value="schedule">
-                  <div className="space-y-4 rounded-lg border border-zinc-200/80 bg-white p-6 shadow-xs">
+                  <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-xs">
                     <div className="grid max-w-md grid-cols-1 gap-4">
                       <div className="space-y-1.5">
                         <Label className="text-xs font-medium">
@@ -351,10 +351,10 @@ function CampaignDetailPage() {
                       ].map(([label, value]) => (
                         <div
                           key={label}
-                          className="rounded-lg border border-zinc-200/80 bg-white p-4 shadow-xs"
+                          className="rounded-lg border border-border bg-card p-4 shadow-xs"
                         >
                           <p className="text-xs text-zinc-500">{label}</p>
-                          <p className="mt-1 text-2xl font-medium text-zinc-900">
+                          <p className="mt-1 text-2xl font-medium text-foreground">
                             {value}
                           </p>
                         </div>
@@ -383,7 +383,7 @@ function CampaignDetailPage() {
                           {data.sends.map((s) => (
                             <TableRow key={s.id}>
                               <TableCell className="text-xs">
-                                <p className="font-medium text-zinc-900">
+                                <p className="font-medium text-foreground">
                                   {s.recipientName}
                                 </p>
                                 <p className="text-zinc-400">

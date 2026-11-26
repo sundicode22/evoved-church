@@ -129,7 +129,7 @@ export function FileAttachment({
           {value.map((f) => (
             <li
               key={f.id}
-              className="flex items-center justify-between gap-2 rounded-lg border border-zinc-200/80 bg-white px-2.5 py-2"
+              className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-2.5 py-2"
             >
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium text-zinc-800">{f.name}</p>

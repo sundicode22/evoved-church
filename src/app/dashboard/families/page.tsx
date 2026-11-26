@@ -174,7 +174,7 @@ export default function FamiliesPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="members.read">
           <PageHeader
             title="Families"

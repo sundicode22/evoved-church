@@ -124,7 +124,7 @@ export function ChartOfAccountsAccordion({ accounts }: { accounts: CoaAccount[] 
                       {/* span — never nest a button inside AccordionTrigger's button */}
                       <HoverCardTrigger
                         render={
-                          <span className="cursor-default text-sm font-normal capitalize text-zinc-900 outline-none" />
+                          <span className="cursor-default text-sm font-normal capitalize text-foreground outline-none" />
                         }
                       >
                         {meta.label}

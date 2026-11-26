@@ -105,12 +105,12 @@ function SortableCard({
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <div
         onClick={() => onOpen(lead.id)}
-        className="cursor-grab space-y-2.5 rounded-xl bg-white p-3.5 shadow-sm ring-0 transition-shadow hover:shadow-md active:cursor-grabbing"
+        className="cursor-grab space-y-2.5 rounded-xl bg-card p-3.5 shadow-sm ring-0 transition-shadow hover:shadow-md active:cursor-grabbing"
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-zinc-900">{lead.title}</p>
-            <p className="truncate text-xs text-zinc-500">{lead.location || "Main Sanctuary"}</p>
+            <p className="truncate text-sm font-semibold text-foreground">{lead.title}</p>
+            <p className="truncate text-xs text-muted-foreground">{lead.location || "Main Sanctuary"}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
             <StatusPill>{lead.elapsed || "1m"}</StatusPill>
@@ -171,7 +171,7 @@ function SortableCard({
             >
               {lead.contactAvatar || lead.contactName.charAt(0)}
             </span>
-            <span className="max-w-[110px] truncate text-xs text-zinc-600">{lead.contactName}</span>
+            <span className="max-w-[110px] truncate text-xs text-muted-foreground">{lead.contactName}</span>
           </div>
           {lead.amount && (
             <span className="text-sm font-semibold text-emerald-700">{lead.amount}</span>
@@ -185,8 +185,8 @@ function SortableCard({
             >
               {lead.assignee.avatar || lead.assignee.name.charAt(0)}
             </span>
-            <span className="truncate text-[11px] text-zinc-600">{lead.assignee.name}</span>
-            <span className="ml-auto rounded-md bg-white px-1.5 py-0.5 text-[10px] font-medium capitalize text-zinc-500 shadow-xs">
+            <span className="truncate text-[11px] text-muted-foreground">{lead.assignee.name}</span>
+            <span className="ml-auto rounded-md bg-card px-1.5 py-0.5 text-[10px] font-medium capitalize text-muted-foreground shadow-xs">
               {lead.assignee.role || "user"}
             </span>
           </div>
@@ -244,7 +244,7 @@ function Column({
       <div className="flex items-center justify-between px-3 py-3">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold tracking-wide text-zinc-700">{title}</span>
-          <span className="rounded-full bg-white px-1.5 py-0.5 text-[11px] font-medium text-zinc-600 shadow-xs">
+          <span className="rounded-full bg-card px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs">
             {count}
           </span>
         </div>
@@ -337,7 +337,7 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
   const board = (
     <>
       {isLoading ? (
-        <div className="px-2 text-sm text-zinc-500">Loading visitor board…</div>
+        <div className="px-2 text-sm text-muted-foreground">Loading visitor board…</div>
       ) : (
         <DndContext
           sensors={sensors}
@@ -361,16 +361,16 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
             <button
               type="button"
               onClick={() => setManageColumnsOpen(true)}
-              className="flex h-28 w-[200px] shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-white/60 text-sm text-zinc-500 transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-ink"
+              className="flex h-28 w-[200px] shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-card/60 text-sm text-muted-foreground transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-ink"
             >
               + Add column
             </button>
           </div>
           <DragOverlay>
             {activeLead ? (
-              <div className="w-[280px] rotate-1 space-y-1 rounded-xl bg-white p-3.5 shadow-lg">
+              <div className="w-[280px] rotate-1 space-y-1 rounded-xl bg-card p-3.5 shadow-lg">
                 <p className="text-sm font-semibold">{activeLead.title}</p>
-                <p className="text-xs text-zinc-500">{activeLead.contactName}</p>
+                <p className="text-xs text-muted-foreground">{activeLead.contactName}</p>
               </div>
             ) : null}
           </DragOverlay>
@@ -398,10 +398,10 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
 
   return (
     <div className="flex h-full flex-col bg-[#fbfcfb]">
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white px-6 py-4 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-background px-6 py-4 shadow-sm">
         <div>
-          <h1 className="text-xl font-medium tracking-tight text-zinc-900">Visitor Pipeline</h1>
-          <p className="text-sm text-zinc-500">
+          <h1 className="text-xl font-medium tracking-tight text-foreground">Visitor Pipeline</h1>
+          <p className="text-sm text-muted-foreground">
             {data?.totalLeads ?? 0} guests across {stages.length} stages
           </p>
         </div>
@@ -412,7 +412,7 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search visitors..."
-              className="h-10 w-64 bg-white pl-10 shadow-xs"
+              className="h-10 w-64 bg-background pl-10 shadow-xs"
             />
           </div>
           <div className="flex h-10 items-center rounded-lg bg-zinc-100/80 p-0.5 shadow-xs">
@@ -420,7 +420,7 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
               type="button"
               onClick={() => setActiveView("board")}
               className={`h-full rounded-md px-3.5 text-sm font-medium ${
-                activeView === "board" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"
+                activeView === "board" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
               }`}
             >
               Board
@@ -429,7 +429,7 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
               type="button"
               onClick={() => setActiveView("list")}
               className={`h-full rounded-md px-3.5 text-sm font-medium ${
-                activeView === "list" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"
+                activeView === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
               }`}
             >
               List

@@ -66,10 +66,10 @@ export default function DashboardHomePage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <PageHeader title="Dashboard" />
-        <div className="flex flex-1 flex-col gap-6 bg-white p-4 md:p-6">
-          <section className="rounded-xl bg-white">
+        <div className="flex flex-1 flex-col gap-6 bg-background p-4 md:p-6">
+          <section className="rounded-xl bg-background">
             <div className="grid gap-4 sm:grid-cols-3">
               <StatCard label="Fund net available" value={money(netAvailable)} href="/dashboard/funds" />
               <StatCard label="Giving listed" value={money(givingTotal)} href="/dashboard/giving" />
@@ -154,7 +154,7 @@ export default function DashboardHomePage() {
             </ChartContainer>
           </ChartCard>
 
-          <section className="rounded-xl bg-white">
+          <section className="rounded-xl bg-background">
             <h2 className="text-lg font-semibold text-zinc-950">Go to</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {[
@@ -168,7 +168,7 @@ export default function DashboardHomePage() {
                 <Link
                   key={l.href}
                   href={l.href}
-                  className="rounded-lg bg-zinc-100 px-3.5 py-2 text-base text-zinc-900 hover:bg-brand-soft"
+                  className="rounded-lg bg-zinc-100 px-3.5 py-2 text-base text-foreground hover:bg-brand-soft"
                 >
                   {l.label}
                 </Link>

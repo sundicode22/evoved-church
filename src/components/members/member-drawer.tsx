@@ -143,7 +143,7 @@ export function MemberDrawer({
 
                 <ScrollArea className="min-h-0 flex-1 pr-1">
                   <TabsContent value="profile" className="mt-0 space-y-4 pb-4">
-                    <ul className="space-y-3 rounded-xl border border-zinc-200/70 bg-white p-4 text-sm">
+                    <ul className="space-y-3 rounded-xl border border-border bg-card p-4 text-sm">
                       {member.preferredName ? (
                         <>
                           <li className="flex items-start gap-2.5">
@@ -268,7 +268,7 @@ export function MemberDrawer({
                         </EmptyHeader>
                       </Empty>
                     ) : (
-                      <div className="space-y-3 rounded-xl border border-zinc-200/70 bg-white p-4">
+                      <div className="space-y-3 rounded-xl border border-border bg-card p-4">
                         {(member.householdPeers || []).map(
                           (peer: {
                             id: string
@@ -283,7 +283,7 @@ export function MemberDrawer({
                               className="flex items-center justify-between gap-2"
                             >
                               <div>
-                                <p className="text-sm font-medium text-zinc-900">
+                                <p className="text-sm font-medium text-foreground">
                                   {peer.firstName} {peer.lastName}
                                 </p>
                                 <p className="text-xs text-zinc-400 capitalize">
@@ -317,7 +317,7 @@ export function MemberDrawer({
                           )}
                           onValueChange={(v) => v && setRole(v as HouseholdRole)}
                         >
-                          <SelectTrigger className="h-9 w-full bg-white">
+                          <SelectTrigger className="h-9 w-full bg-background">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -341,7 +341,7 @@ export function MemberDrawer({
                         <AccordionContent>
                           <p className="text-sm text-zinc-600">
                             Current type:{" "}
-                            <strong className="capitalize text-zinc-900">
+                            <strong className="capitalize text-foreground">
                               {String(member.personType || "").replace(/_/g, " ")}
                             </strong>
                             . Changes are audited with who updated the type.

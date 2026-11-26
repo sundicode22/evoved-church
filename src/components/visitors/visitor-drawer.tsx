@@ -66,7 +66,7 @@ export function VisitorDrawer() {
     <Sheet open={isDrawerOpen} onOpenChange={(open) => !open && closeLeadDrawer()}>
       <SheetContent side="right" inset size="xl" className="p-0 sm:max-w-4xl">
         {isLoading || !lead ? (
-          <div className="flex h-full min-h-80 items-center justify-center gap-2 text-sm text-zinc-500">
+          <div className="flex h-full min-h-80 items-center justify-center gap-2 text-sm text-muted-foreground">
             <Spinner className="size-4" />
             Loading visitor…
           </div>
@@ -75,7 +75,7 @@ export function VisitorDrawer() {
             <SheetHeader className="pr-12 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 space-y-1">
-                  <SheetTitle className="text-lg text-zinc-900">{lead.title}</SheetTitle>
+                  <SheetTitle className="text-lg text-foreground">{lead.title}</SheetTitle>
                   <SheetDescription>
                     {lead.leadNumber} · {lead.location || "Main Sanctuary"}
                     {lead.createdAt ? (
@@ -169,8 +169,8 @@ export function VisitorDrawer() {
                           s.active
                             ? "bg-brand-soft font-semibold text-brand-ink"
                             : s.completed
-                              ? "bg-zinc-100 text-zinc-500"
-                              : "bg-white text-zinc-400"
+                              ? "bg-zinc-100 text-muted-foreground"
+                              : "bg-card text-muted-foreground"
                         }`}
                       >
                         {s.label}
@@ -196,10 +196,10 @@ export function VisitorDrawer() {
               )}
 
               {lead.assignee && (
-                <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#f6f8f6] px-3 py-2 text-xs text-zinc-600 shadow-xs">
+                <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#f6f8f6] px-3 py-2 text-xs text-muted-foreground shadow-xs">
                   <User className="size-3.5 text-zinc-400" />
                   Assigned to <strong>{lead.assignee.name}</strong>
-                  <span className="rounded-md bg-white px-1.5 py-0.5 text-[10px] font-medium capitalize shadow-xs">
+                  <span className="rounded-md bg-card px-1.5 py-0.5 text-[10px] font-medium capitalize shadow-xs">
                     {lead.assignee.role || "user"}
                   </span>
                 </div>
@@ -243,10 +243,10 @@ export function VisitorDrawer() {
                           }) => (
                             <li key={act.id} className="relative pb-5 last:pb-0">
                               <span className="absolute -left-[0.85rem] top-1.5 size-2.5 rounded-full bg-emerald-500 shadow-sm ring-2 ring-white" />
-                              <div className="rounded-xl bg-white p-3 shadow-sm">
-                                <p className="text-sm font-medium text-zinc-900">{act.title}</p>
+                              <div className="rounded-xl bg-card p-3 shadow-sm">
+                                <p className="text-sm font-medium text-foreground">{act.title}</p>
                                 {act.description && (
-                                  <p className="mt-0.5 text-xs text-zinc-500">{act.description}</p>
+                                  <p className="mt-0.5 text-xs text-muted-foreground">{act.description}</p>
                                 )}
                                 <p className="mt-2 text-[11px] text-zinc-400">
                                   {act.performedByUserId
@@ -323,7 +323,7 @@ export function VisitorDrawer() {
                       render={
                         <button
                           type="button"
-                          className="flex w-full items-center gap-2.5 rounded-xl text-left outline-none hover:bg-white/70"
+                          className="flex w-full items-center gap-2.5 rounded-xl text-left outline-none hover:bg-card/70"
                         />
                       }
                     >
@@ -333,22 +333,22 @@ export function VisitorDrawer() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-zinc-900">
+                        <p className="truncate text-sm font-medium text-foreground">
                           {lead.contact?.name || lead.contactName}
                         </p>
-                        <p className="truncate text-xs text-zinc-500">
+                        <p className="truncate text-xs text-muted-foreground">
                           {lead.contact?.source || lead.source || "Walk-in"}
                         </p>
                       </div>
                     </HoverCardTrigger>
                     <HoverCardContent className="w-64 space-y-1.5 p-3">
-                      <p className="text-sm font-medium text-zinc-900">
+                      <p className="text-sm font-medium text-foreground">
                         {lead.contact?.name || lead.contactName}
                       </p>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted-foreground">
                         Source: {lead.contact?.source || lead.source || "—"}
                       </p>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted-foreground">
                         {lead.contact?.email || lead.contactEmail || "No email"}
                       </p>
                     </HoverCardContent>
@@ -356,7 +356,7 @@ export function VisitorDrawer() {
 
                   <Separator />
 
-                  <ul className="space-y-2.5 text-xs text-zinc-600">
+                  <ul className="space-y-2.5 text-xs text-muted-foreground">
                     <li className="flex items-center gap-2">
                       <Mail className="size-3.5 text-zinc-400" />
                       <span className="truncate">

@@ -160,7 +160,7 @@ export default function ProjectsPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="projects.read">
           <PageHeader
             title="Projects"
@@ -248,7 +248,7 @@ export default function ProjectsPage() {
                     {pageRows.map((card) => (
                       <TableRow key={card.id}>
                         {isVisible("title") && (
-                          <TableCell className="pl-4 font-medium text-zinc-900">
+                          <TableCell className="pl-4 font-medium text-foreground">
                             {card.title}
                           </TableCell>
                         )}

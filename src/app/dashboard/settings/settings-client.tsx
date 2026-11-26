@@ -160,11 +160,11 @@ export function SettingsMenu() {
                         "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
                         isActive
                           ? "bg-brand-soft font-medium text-brand-ink"
-                          : "text-zinc-600 hover:bg-white hover:text-zinc-900"
+                          : "text-muted-foreground hover:bg-card hover:text-foreground"
                       )}
                     >
                       <Icon
-                        className={cn("size-4 shrink-0", isActive ? "text-brand" : "text-zinc-400")}
+                        className={cn("size-4 shrink-0", isActive ? "text-brand" : "text-muted-foreground")}
                         strokeWidth={1.75}
                       />
                       <span className="truncate">{item.label}</span>
@@ -188,7 +188,7 @@ function MobileSettingsTabs({
   active: SectionId
 }) {
   return (
-    <div className="border-b border-zinc-200/80 bg-white px-4 py-3 md:hidden">
+    <div className="border-b border-border bg-card px-4 py-3 md:hidden">
       <div className="flex gap-1.5 overflow-x-auto pb-0.5">
         {sections.map((item) => {
           const Icon = item.icon
@@ -201,7 +201,7 @@ function MobileSettingsTabs({
                 "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
                 isActive
                   ? "border-brand/30 bg-brand-soft font-medium text-brand-ink"
-                  : "border-zinc-200 bg-white text-zinc-600"
+                  : "border-border bg-card text-muted-foreground"
               )}
             >
               <Icon className="size-3.5" strokeWidth={1.75} />

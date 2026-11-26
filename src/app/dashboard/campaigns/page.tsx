@@ -130,7 +130,7 @@ export default function CampaignsPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="campaigns.read">
           <PageHeader
             title="Campaigns"
@@ -187,7 +187,7 @@ export default function CampaignsPage() {
                         <TableCell className="pl-4">
                           <Link
                             href={`/dashboard/campaigns/${c.id}`}
-                            className="font-medium text-zinc-900 hover:text-brand"
+                            className="font-medium text-foreground hover:text-brand"
                           >
                             {c.name}
                           </Link>

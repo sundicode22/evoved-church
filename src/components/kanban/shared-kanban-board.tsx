@@ -72,7 +72,7 @@ function CardView({
   return (
     <div
       onClick={onClick}
-      className={`space-y-2.5 rounded-xl bg-white p-3.5 shadow-sm transition-shadow hover:shadow-md ${
+      className={`space-y-2.5 rounded-xl bg-card p-3.5 shadow-sm transition-shadow hover:shadow-md ${
         overlay ? "rotate-1 cursor-grabbing shadow-lg" : "cursor-grab active:cursor-grabbing"
       }`}
     >
@@ -90,8 +90,8 @@ function CardView({
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold leading-snug text-zinc-900">{card.title}</h4>
-        {card.subtitle && <p className="mt-0.5 truncate text-xs text-zinc-500">{card.subtitle}</p>}
+        <h4 className="text-sm font-semibold leading-snug text-foreground">{card.title}</h4>
+        {card.subtitle && <p className="mt-0.5 truncate text-xs text-muted-foreground">{card.subtitle}</p>}
       </div>
 
       <div className="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
@@ -165,7 +165,7 @@ function Column({
       <div className="flex items-center justify-between px-3 py-3">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold tracking-wide text-zinc-700">{column.title}</span>
-          <span className="rounded-full bg-white px-1.5 py-0.5 text-[11px] font-medium text-zinc-600 shadow-xs">
+          <span className="rounded-full bg-card px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs">
             {column.cards.length}
           </span>
         </div>
@@ -272,7 +272,7 @@ export function SharedKanbanBoard({
           <button
             type="button"
             onClick={onManageColumns}
-            className="flex h-28 w-[200px] shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-white/60 text-sm text-zinc-500 transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-ink"
+            className="flex h-28 w-[200px] shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-card/60 text-sm text-muted-foreground transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-ink"
           >
             + Add column
           </button>

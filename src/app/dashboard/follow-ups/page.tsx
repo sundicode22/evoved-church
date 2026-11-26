@@ -117,7 +117,7 @@ export default function FollowUpsPage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="followups.read">
           <PageHeader
             title="Follow-ups"
@@ -170,7 +170,7 @@ export default function FollowUpsPage() {
                     {(data ?? []).map((row) => (
                       <TableRow key={row.id}>
                         <TableCell className="pl-4">
-                          <p className="font-medium text-zinc-900">{row.title}</p>
+                          <p className="font-medium text-foreground">{row.title}</p>
                           {row.notes && (
                             <p className="text-xs text-zinc-400 line-clamp-1">{row.notes}</p>
                           )}

@@ -132,7 +132,7 @@ export default function GroupsPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="groups.read">
           <PageHeader
             title="Groups"
@@ -223,7 +223,7 @@ export default function GroupsPage() {
                                 </div>
                               )}
                               <div>
-                                <div className="font-medium text-zinc-900">{group.name}</div>
+                                <div className="font-medium text-foreground">{group.name}</div>
                                 {group.description && (
                                   <div className="mt-0.5 line-clamp-1 text-xs text-zinc-500">
                                     {group.description}
