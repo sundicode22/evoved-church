@@ -1,31 +1,25 @@
 "use client"
 
 import type { ReactNode } from "react"
-import Link from "next/link"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ModeToggle } from "@/components/mode-toggle"
 import { NotificationsDropdown } from "@/components/notifications-dropdown"
+import { ChurchLogo } from "@/components/church-logo"
 
 /**
- * Slim shell bar from shadcn sidebar-07: trigger, breadcrumb, optional actions.
- * Page title blocks and descriptions stay out of this bar.
+ * Slim shell bar: trigger + church logo (no page titles / descriptions).
+ * Nav already names the route; the logo carries authenticity.
  */
 export function PageHeader({
-  title,
   actions,
   children,
 }: {
-  title: ReactNode
+  /** @deprecated Unused — kept so existing call sites keep typechecking. */
+  title?: ReactNode
+  /** @deprecated Unused — page descriptions are not shown. */
   description?: ReactNode
+  /** @deprecated Unused — icons are not shown in the shell bar. */
   icon?: ReactNode
   actions?: ReactNode
   children?: ReactNode
@@ -37,19 +31,7 @@ export function PageHeader({
         <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-1 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList className="text-sm text-foreground">
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink render={<Link href="/dashboard" />}>
-                  Home
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{title}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <ChurchLogo size="sm" showName nameClassName="text-sm" />
         </div>
         <div className="flex shrink-0 items-center gap-1 pr-3">
           {actions}

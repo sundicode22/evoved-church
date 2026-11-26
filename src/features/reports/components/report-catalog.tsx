@@ -48,12 +48,6 @@ export function ReportCatalogPanel() {
 
   return (
     <TablePanel className="w-full text-left">
-      <div className="mb-3">
-        <h2 className="text-sm font-semibold text-zinc-900">Downloadable reports</h2>
-        <p className="mt-1 text-xs text-zinc-500">
-          Real church data as spreadsheet (CSV), printable PDF, or Word doc — not just charts.
-        </p>
-      </div>
       <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -139,38 +133,30 @@ export function AuditLogPanel() {
 
   return (
     <TablePanel className="w-full text-left">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-zinc-900">Audit log</h2>
-          <p className="mt-1 text-xs text-zinc-500">
-            Who did what and when — ledger posts, giving posts, member creates, and more.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={isFetching}
-            onClick={() => void refetch()}
-          >
-            {isFetching ? <Spinner className="size-3.5" /> : null}
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            variant="primary"
-            disabled={download.isPending}
-            onClick={() =>
-              void download.mutateAsync({ reportId: "audit", format: "csv" }).then(
-                () => toast.success("Audit log CSV downloaded"),
-                (e: Error) => toast.error(e.message)
-              )
-            }
-          >
-            {download.isPending ? <Spinner className="size-3.5" /> : <Download className="size-3.5" />}
-            Export CSV
-          </Button>
-        </div>
+      <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={isFetching}
+          onClick={() => void refetch()}
+        >
+          {isFetching ? <Spinner className="size-3.5" /> : null}
+          Refresh
+        </Button>
+        <Button
+          size="sm"
+          variant="primary"
+          disabled={download.isPending}
+          onClick={() =>
+            void download.mutateAsync({ reportId: "audit", format: "csv" }).then(
+              () => toast.success("Audit log CSV downloaded"),
+              (e: Error) => toast.error(e.message)
+            )
+          }
+        >
+          {download.isPending ? <Spinner className="size-3.5" /> : <Download className="size-3.5" />}
+          Export CSV
+        </Button>
       </div>
       <Table className="min-w-[900px]">
           <TableHeader>

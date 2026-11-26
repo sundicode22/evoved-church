@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { FileSearch } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -21,11 +20,7 @@ export default function AuditLogPage() {
       <AppSidebar variant="inset" />
       <SidebarInset className="min-h-screen bg-background">
         <RequireAbility permission="reports.read">
-          <PageHeader
-            title="Audit log"
-            description="Who did what and when across the church workspace."
-            icon={<FileSearch className="size-5 text-brand" strokeWidth={1.75} />}
-          />
+          <PageHeader />
           <div className="w-full p-6 md:p-8">
             <AuditLogPanel />
           </div>

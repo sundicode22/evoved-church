@@ -17,6 +17,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { ChurchLogo } from "@/components/church-logo"
 import { useBranchStore, type Campus } from "@/store/use-branch-store"
 import { useNomenclatureStore } from "@/features/settings/use-nomenclature"
 import { useCampuses } from "@/features/campuses/hooks/use-campuses"
@@ -25,6 +26,7 @@ export function CampusSwitcher() {
   const { isMobile } = useSidebar()
   const { activeCampus, availableCampuses, setActiveCampus } = useBranchStore()
   const campusTermSingular = useNomenclatureStore((s) => s.nomenclature.campusTermSingular)
+  const churchName = useNomenclatureStore((s) => s.nomenclature.churchName)
   useCampuses()
 
   return (
@@ -39,16 +41,16 @@ export function CampusSwitcher() {
               />
             }
           >
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white text-[10px] font-semibold tracking-tight text-black">
-              LOGO
-            </div>
+            <ChurchLogo size="md" markClassName="rounded-lg" />
             <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold tracking-tight text-black">LOGO</span>
-              <span className="truncate text-xs text-zinc-500">
+              <span className="truncate font-semibold tracking-tight text-foreground">
+                {churchName?.trim() || "LOGO"}
+              </span>
+              <span className="truncate text-xs text-muted-foreground">
                 {activeCampus.name || "No location"}
               </span>
             </div>
-            <ChevronsUpDown className="ml-auto size-4 text-zinc-400" strokeWidth={1.75} />
+            <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" strokeWidth={1.75} />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="min-w-56 rounded-lg p-1"
