@@ -303,7 +303,7 @@ export const memberService = {
     }
   },
 
-  /** Household directory for Families page — real DB only, never seeded demo rows. */
+  /** Household directory for Families page - real DB only, never seeded demo rows. */
   async listHouseholds() {
     try {
       const rows = await db.select().from(households).orderBy(desc(households.createdAt))
