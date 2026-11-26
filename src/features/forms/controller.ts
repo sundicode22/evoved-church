@@ -9,9 +9,12 @@ import {
 } from "./schemas"
 import { apiOk } from "@/lib/api-handler"
 import { formatErrorResponse } from "@/lib/errors"
+import { campusIdFromHeaders } from "@/features/billing/tenant-context"
 
 export const formsController = new Elysia({ prefix: "/forms" })
-  .get("/", ({ set }) => apiOk(set, () => formsService.list()))
+  .get("/", ({ request, set }) =>
+    apiOk(set, () => formsService.list(campusIdFromHeaders(request.headers)))
+  )
   .get("/visitor-intake", ({ set }) =>
     apiOk(set, () => formsService.ensureVisitorIntakeForm())
   )

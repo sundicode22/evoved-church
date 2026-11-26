@@ -7,11 +7,12 @@ import {
 } from "./schemas"
 import { qrService } from "./qr-service"
 import { formatErrorResponse } from "@/lib/errors"
+import { campusIdFromHeaders } from "@/features/billing/tenant-context"
 
 export const attendanceController = new Elysia({ prefix: "/attendance" })
-  .get("/sessions", async ({ set }) => {
+  .get("/sessions", async ({ request, set }) => {
     try {
-      const data = await attendanceService.listSessions()
+      const data = await attendanceService.listSessions(campusIdFromHeaders(request.headers))
       return { success: true, data }
     } catch (error) {
       const { status, body } = formatErrorResponse(error)
@@ -20,10 +21,11 @@ export const attendanceController = new Elysia({ prefix: "/attendance" })
     }
   })
 
-  .post("/sessions", async ({ body, set }) => {
+  .post("/sessions", async ({ request, body, set }) => {
     try {
       const parsed = createAttendanceSessionSchema.parse(body)
-      const data = await attendanceService.createSession(parsed)
+      const campusId = parsed.campusId || campusIdFromHeaders(request.headers) || undefined
+      const data = await attendanceService.createSession({ ...parsed, campusId })
       set.status = 201
       return { success: true, data }
     } catch (error) {

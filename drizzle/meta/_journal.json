@@ -64,6 +64,13 @@
       "when": 1795700000000,
       "tag": "0008_kanban_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795800000000,
+      "tag": "0009_saas_plans_tenancy",
+      "breakpoints": true
     }
   ]
 }

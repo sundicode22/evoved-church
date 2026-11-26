@@ -163,8 +163,14 @@ function mapVisitorAnswers(
 }
 
 export const formsService = {
-  async list(): Promise<ChurchForm[]> {
-    const forms = await db.select().from(churchForms).orderBy(desc(churchForms.updatedAt))
+  async list(campusId?: string | null): Promise<ChurchForm[]> {
+    const forms = campusId
+      ? await db
+          .select()
+          .from(churchForms)
+          .where(eq(churchForms.campusId, campusId))
+          .orderBy(desc(churchForms.updatedAt))
+      : await db.select().from(churchForms).orderBy(desc(churchForms.updatedAt))
     const result: ChurchForm[] = []
     for (const f of forms) {
       result.push(await loadForm(f.id))

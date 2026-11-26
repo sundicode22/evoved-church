@@ -264,6 +264,8 @@ export const twoFactors = pgTable("two_factors", {
 // ==========================================
 export const campuses = pgTable("campuses", {
   id: uuid("id").defaultRandom().primaryKey(),
+  /** Better Auth organization id — tenant boundary for multi-church SaaS. */
+  organizationId: text("organization_id").references(() => organizations.id),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 100 }).notNull().unique(),
   type: campusTypeEnum("type").default("regional").notNull(),
@@ -278,6 +280,48 @@ export const campuses = pgTable("campuses", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
+
+// ==========================================
+// SAAS PRICING / TENANT SUBSCRIPTIONS
+// ==========================================
+/** Product catalog for Evolve ChMS (church SaaS), not church giving Stripe. */
+export const saasPlans = pgTable("saas_plans", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  slug: varchar("slug", { length: 60 }).notNull().unique(),
+  name: varchar("name", { length: 120 }).notNull(),
+  description: text("description"),
+  priceMonthlyCents: integer("price_monthly_cents").default(0).notNull(),
+  currencyCode: varchar("currency_code", { length: 10 }).default("USD").notNull(),
+  maxLocations: integer("max_locations").default(1).notNull(),
+  maxSeats: integer("max_seats").default(3).notNull(),
+  features: jsonb("features").$type<string[]>().default([]),
+  isActive: boolean("is_active").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const tenantSubscriptions = pgTable(
+  "tenant_subscriptions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    /** Better Auth organization id (or legacy nomenclature tenant string). */
+    organizationId: text("organization_id").notNull(),
+    planId: uuid("plan_id")
+      .references(() => saasPlans.id)
+      .notNull(),
+    status: varchar("status", { length: 40 }).default("active").notNull(), // trial | active | past_due | canceled
+    billingInterval: varchar("billing_interval", { length: 20 }).default("month").notNull(),
+    stripeCustomerId: varchar("stripe_customer_id", { length: 120 }),
+    stripeSubscriptionId: varchar("stripe_subscription_id", { length: 120 }),
+    currentPeriodStart: timestamp("current_period_start"),
+    currentPeriodEnd: timestamp("current_period_end"),
+    trialEndsAt: timestamp("trial_ends_at"),
+    canceledAt: timestamp("canceled_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("tenant_subscriptions_org_uidx").on(t.organizationId)]
+)
 
 // ==========================================
 // ORGANIGRAM NODES (DYNAMIC REPORTING TREE)

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import {
   Building2,
+  CreditCard,
   ListPlus,
   MapPin,
   Plug,
@@ -21,6 +22,7 @@ import { ImportTab } from "@/features/settings/components/import-tab"
 import { CustomFieldsTab } from "@/features/settings/components/custom-fields-tab"
 import { LocationsTab } from "@/features/settings/components/locations-tab"
 import { NomenclatureTab } from "@/features/settings/components/nomenclature-tab"
+import { BillingTab } from "@/features/settings/components/billing-tab"
 import type { PermissionKey } from "@/features/auth/permissions-catalog"
 import { cn } from "cn"
 
@@ -28,6 +30,7 @@ type SectionId =
   | "church_details"
   | "locations"
   | "defaults"
+  | "billing"
   | "integrations"
   | "extra_fields"
   | "roles"
@@ -62,6 +65,13 @@ const SECTION_GROUPS: { label: string; items: SettingsSection[] }[] = [
         label: "Defaults",
         description: "Terminology and product wording.",
         icon: SlidersHorizontal,
+      },
+      {
+        id: "billing",
+        label: "Billing & plans",
+        description: "Multi-tenant SaaS plans, seats, and locations.",
+        icon: CreditCard,
+        permission: "settings.read",
       },
     ],
   },
@@ -113,6 +123,8 @@ const TAB_ALIASES: Record<string, SectionId> = {
   church_details: "church_details",
   extra_fields: "extra_fields",
   defaults: "defaults",
+  billing: "billing",
+  plans: "billing",
 }
 
 function useSettingsSections() {
@@ -228,6 +240,7 @@ export function SettingsClient() {
             ) : null}
             {active === "locations" ? <LocationsTab canEdit={can("settings.write")} /> : null}
             {active === "defaults" ? <NomenclatureTab canEdit={can("settings.write")} /> : null}
+            {active === "billing" ? <BillingTab canEdit={can("settings.write")} /> : null}
             {active === "integrations" ? (
               <IntegrationsTab canEdit={can("settings.write")} />
             ) : null}

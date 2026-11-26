@@ -62,15 +62,22 @@ const demoSessions: AttendanceSession[] = [
 ]
 
 export const attendanceService = {
-  async listSessions(): Promise<AttendanceSession[]> {
+  async listSessions(campusId?: string | null): Promise<AttendanceSession[]> {
     try {
       const { attendanceSessions } = await import("@/lib/db/schema")
-      const { desc } = await import("drizzle-orm")
-      const rows = await db
-        .select()
-        .from(attendanceSessions)
-        .orderBy(desc(attendanceSessions.sessionDate))
-        .limit(50)
+      const { desc, eq } = await import("drizzle-orm")
+      const rows = campusId
+        ? await db
+            .select()
+            .from(attendanceSessions)
+            .where(eq(attendanceSessions.campusId, campusId))
+            .orderBy(desc(attendanceSessions.sessionDate))
+            .limit(50)
+        : await db
+            .select()
+            .from(attendanceSessions)
+            .orderBy(desc(attendanceSessions.sessionDate))
+            .limit(50)
       if (rows.length > 0) {
         return rows.map((row) => ({
           id: row.id,
@@ -88,7 +95,9 @@ export const attendanceService = {
     } catch (err) {
       console.info("[attendance] listSessions falling back to demo", err)
     }
-    return [...demoSessions].sort((a, b) => b.sessionDate.localeCompare(a.sessionDate))
+    const demo = [...demoSessions].sort((a, b) => b.sessionDate.localeCompare(a.sessionDate))
+    if (!campusId) return demo
+    return demo.filter((s) => s.campusId === campusId)
   },
 
   async createSession(input: {

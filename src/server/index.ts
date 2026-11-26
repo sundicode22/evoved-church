@@ -24,6 +24,7 @@ import { givingController } from "@/features/giving/controller"
 import { groupsController } from "@/features/groups/controller"
 import { reportsController } from "@/features/reports/controller"
 import { blogController } from "@/features/blog/controller"
+import { billingController } from "@/features/billing/controller"
 import { formatErrorResponse } from "@/lib/errors"
 
 export const app = new Elysia({ prefix: "/api" })
@@ -64,5 +65,6 @@ export const app = new Elysia({ prefix: "/api" })
   .use(groupsController)
   .use(reportsController)
   .use(blogController)
+  .use(billingController)
 
 export type App = typeof app

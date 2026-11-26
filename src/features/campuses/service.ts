@@ -1,14 +1,16 @@
 import { db } from "@/lib/db"
 import { campuses } from "@/lib/db/schema"
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import {
   provisionAllCampusBooks,
   provisionCampusBooks,
 } from "@/features/accounting/default-books"
+import { billingService } from "@/features/billing/service"
 import type { CreateCampusInput } from "./schemas"
 
 type CampusRecord = {
   id: string
+  organizationId?: string | null
   name: string
   slug: string
   type: CreateCampusInput["type"]
@@ -20,13 +22,26 @@ type CampusRecord = {
 const memoryCampuses: CampusRecord[] = []
 
 export const campusService = {
-  async listCampuses() {
+  async listCampuses(organizationId?: string | null) {
     try {
-      const rows = await db.select().from(campuses).where(eq(campuses.isActive, true))
+      const rows = organizationId
+        ? await db
+            .select()
+            .from(campuses)
+            .where(and(eq(campuses.isActive, true), eq(campuses.organizationId, organizationId)))
+        : await db.select().from(campuses).where(eq(campuses.isActive, true))
       // Ensure every location has the standard COA + funds (idempotent).
       if (rows.length > 0) {
         await provisionAllCampusBooks()
         return rows
+      }
+      // If org filter returned empty but unscoped rows exist (legacy), show those once.
+      if (organizationId) {
+        const legacy = await db.select().from(campuses).where(eq(campuses.isActive, true))
+        if (legacy.length > 0) {
+          await provisionAllCampusBooks()
+          return legacy
+        }
       }
       return [...memoryCampuses]
     } catch {
@@ -44,7 +59,11 @@ export const campusService = {
     return memoryCampuses.find((c) => c.slug === slug) || null
   },
 
-  async createCampus(input: CreateCampusInput) {
+  async createCampus(input: CreateCampusInput, organizationId?: string | null) {
+    if (organizationId) {
+      await billingService.assertCanAddLocation(organizationId)
+    }
+
     const isMain = (input.type ?? "main") === "main"
     const payload = {
       name: input.name,
@@ -52,6 +71,7 @@ export const campusService = {
       type: input.type ?? "main",
       city: input.city || "",
       isMainCampus: isMain,
+      organizationId: organizationId || null,
     }
 
     try {
@@ -64,6 +84,7 @@ export const campusService = {
           city: payload.city,
           isMainCampus: isMain,
           isActive: true,
+          organizationId: payload.organizationId,
         })
         .returning()
       if (row) {
@@ -76,14 +97,14 @@ export const campusService = {
 
     const created: CampusRecord = {
       id: `campus-${crypto.randomUUID()}`,
+      organizationId: payload.organizationId,
       name: payload.name,
       slug: payload.slug,
       type: payload.type,
       city: payload.city,
       isMainCampus: isMain,
     }
-    memoryCampuses.unshift(created)
-    await provisionCampusBooks(created.id)
+    memoryCampuses.push(created)
     return created
   },
 }
