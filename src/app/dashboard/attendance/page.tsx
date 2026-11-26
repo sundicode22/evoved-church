@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { format, parseISO } from "date-fns"
-import { ExternalLink, QrCode, Users } from "lucide-react"
+import { ExternalLink, Users } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -26,14 +26,18 @@ import {
 } from "@/components/ui/table"
 import { RequireAbility } from "@/components/auth/can"
 import { TablePanel } from "@/components/table-panel"
+import { GuestConnectionCard } from "@/components/attendance/guest-connection-card"
 import {
   useAttendanceQRCode,
   useAttendanceSessions,
 } from "@/features/attendance/hooks/use-attendance"
+import { useBranchStore } from "@/store/use-branch-store"
 
 export default function AttendancePage() {
+  const activeCampus = useBranchStore((s) => s.activeCampus)
+  const campusSlug = activeCampus.slug || "main-campus"
   const { data: sessions, isLoading } = useAttendanceSessions()
-  const { data: qr } = useAttendanceQRCode("main-campus")
+  const { data: qr } = useAttendanceQRCode(campusSlug)
 
   return (
     <SidebarProvider
@@ -46,45 +50,17 @@ export default function AttendancePage() {
             title="Attendance"
             description="Service sessions and guest check-in links."
             icon={<Users className="size-5 text-brand" strokeWidth={1.75} />}
-            actions={
-              qr?.targetUrl ? (
-                <Link
-                  href={qr.targetUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={buttonVariants({
-                    variant: "outline",
-                    className: "h-8 gap-1.5 text-xs font-normal",
-                  })}
-                >
-                  <QrCode className="size-3.5" strokeWidth={1.75} />
-                  Connection card
-                  <ExternalLink className="size-3" />
-                </Link>
-              ) : null
-            }
           />
 
           <div className="space-y-6 p-6 md:p-8">
-            {qr?.qrDataUrl && (
-              <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-muted/50 p-4 shadow-xs">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={qr.qrDataUrl}
-                  alt="Check-in QR"
-                  className="size-24 rounded-md border border-border bg-white p-1"
-                />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Guest connection card</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Print or display this QR for first-time guests.
-                  </p>
-                  <p className="mt-2 break-all text-[11px] text-emerald-700 dark:text-emerald-400">
-                    {qr.targetUrl}
-                  </p>
-                </div>
-              </div>
-            )}
+            {qr?.qrDataUrl && qr?.targetUrl ? (
+              <GuestConnectionCard
+                qrDataUrl={qr.qrDataUrl}
+                targetUrl={qr.targetUrl}
+                campusName={activeCampus.name || "Main campus"}
+                className="max-w-3xl"
+              />
+            ) : null}
 
             {!isLoading && (sessions?.length ?? 0) === 0 ? (
               <Empty className="rounded-lg border border-border py-16">
