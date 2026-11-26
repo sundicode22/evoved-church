@@ -52,6 +52,7 @@ import {
   usePledges,
 } from "@/features/giving/hooks/use-giving"
 import { useFunds } from "@/features/accounting/hooks/use-funds"
+import { useMembers } from "@/features/members/hooks/use-members"
 import {
   PLEDGE_FREQUENCIES,
   type GivingPledge,
@@ -60,7 +61,8 @@ import {
 const todayISO = () => new Date().toISOString().slice(0, 10)
 
 const pledgeFormSchema = z.object({
-  memberDisplayName: z.string().trim().min(1, "Member name is required"),
+  memberId: z.string().optional(),
+  memberDisplayName: z.string().trim().min(1, "Member is required"),
   fundId: z.string().min(1, "Fund is required"),
   amountTotal: z
     .number({ error: "Total pledged is required" })
@@ -72,6 +74,7 @@ const pledgeFormSchema = z.object({
 type PledgeFormValues = z.infer<typeof pledgeFormSchema>
 
 const pledgeDefaults = (fundId: string, startDate = ""): Partial<PledgeFormValues> => ({
+  memberId: "",
   memberDisplayName: "",
   fundId,
   amountTotal: undefined,
@@ -94,6 +97,7 @@ function formatMoney(n: number) {
 export default function PledgesPage() {
   const { data, isLoading } = usePledges()
   const { data: funds } = useFunds()
+  const { data: membersPage } = useMembers({ page: 1, pageSize: 200 })
   const create = useCreatePledge()
   const remove = useDeletePledge()
 
@@ -104,6 +108,16 @@ export default function PledgesPage() {
   const [deleteTarget, setDeleteTarget] = React.useState<GivingPledge | null>(null)
 
   const defaultFundId = funds?.[0]?.id ?? "fund-1"
+  const members = (membersPage?.data ?? []) as Array<{
+    id: string
+    firstName: string
+    lastName: string
+  }>
+  const hasMembers = members.length > 0
+  const memberItems = members.map((m) => ({
+    value: m.id,
+    label: `${m.firstName} ${m.lastName}`.trim(),
+  }))
 
   const form = useForm<PledgeFormValues>({
     resolver: zodResolver(pledgeFormSchema),
@@ -129,10 +143,12 @@ export default function PledgesPage() {
   }))
 
   function onSubmit(values: PledgeFormValues) {
+    const selected = memberItems.find((m) => m.value === values.memberId)
     create.mutate(
       {
-        memberId: `mem-pledge-${crypto.randomUUID().slice(0, 8)}`,
-        memberDisplayName: values.memberDisplayName,
+        memberId:
+          values.memberId || `mem-pledge-${crypto.randomUUID().slice(0, 8)}`,
+        memberDisplayName: selected?.label || values.memberDisplayName,
         fundId: values.fundId,
         fundName: fundItems.find((f) => f.value === values.fundId)?.label,
         amountTotal: values.amountTotal,
@@ -288,11 +304,30 @@ export default function PledgesPage() {
                   </SheetHeader>
                   <SheetBody>
                     <FieldGroup>
-                      <TextFormField
-                        control={form.control}
-                        name="memberDisplayName"
-                        label="Member name"
-                      />
+                      {hasMembers ? (
+                        <SelectFormField
+                          control={form.control}
+                          name="memberId"
+                          label="Member"
+                          placeholder="Select a member"
+                          options={memberItems}
+                          onValueChange={(value) => {
+                            const selected = memberItems.find((m) => m.value === value)
+                            form.setValue(
+                              "memberDisplayName",
+                              selected?.label || "",
+                              { shouldValidate: true }
+                            )
+                          }}
+                        />
+                      ) : (
+                        <TextFormField
+                          control={form.control}
+                          name="memberDisplayName"
+                          label="Member name"
+                          placeholder="No members yet — type a name"
+                        />
+                      )}
                       <SelectFormField
                         control={form.control}
                         name="fundId"

@@ -146,7 +146,7 @@ export function AppSidebar({
       items: [
         { title: "Reports", url: "/dashboard/metrics?tab=reports" },
         { title: "Metrics", url: "/dashboard/metrics?tab=metrics" },
-        { title: "Audit log", url: "/dashboard/metrics?tab=audit" },
+        { title: "Audit log", url: "/dashboard/audit" },
       ],
     },
   ]

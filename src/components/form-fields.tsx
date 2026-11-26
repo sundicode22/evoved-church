@@ -179,9 +179,11 @@ export function SelectFormField<T extends FieldValues>({
   className,
   placeholder = "Select…",
   options,
+  onValueChange,
 }: BaseProps<T> & {
   placeholder?: string
   options: { value: string; label: string }[]
+  onValueChange?: (value: string) => void
 }) {
   return (
     <FormField<T, FieldPath<T>>
@@ -193,7 +195,11 @@ export function SelectFormField<T extends FieldValues>({
           <Select
             value={field.value ?? ""}
             items={options}
-            onValueChange={(v) => field.onChange(v ?? "")}
+            onValueChange={(v) => {
+              const next = v ?? ""
+              field.onChange(next)
+              onValueChange?.(next)
+            }}
             disabled={disabled}
           >
             <FormControl>
