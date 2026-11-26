@@ -1,31 +1,22 @@
 "use client"
 
-import { useForm } from "react-hook-form"
+import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Plus, X } from "lucide-react"
+import {
+  inviteDraftSchema,
+  type InviteDraftValues,
+  type OnboardingFormValues,
+} from "@/features/onboarding/schemas"
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export function InviteStep() {
+  const parent = useFormContext<OnboardingFormValues>()
+  const invites = useWatch({ control: parent.control, name: "invites" }) ?? []
 
-const inviteDraftSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .refine((v) => v === "" || EMAIL_RE.test(v), "Enter a valid email address."),
-})
-
-type InviteDraftValues = z.infer<typeof inviteDraftSchema>
-
-interface InviteStepProps {
-  emails: string[]
-  onChange: (emails: string[]) => void
-}
-
-export function InviteStep({ emails, onChange }: InviteStepProps) {
-  const form = useForm<InviteDraftValues>({
+  const draft = useForm<InviteDraftValues>({
     resolver: zodResolver(inviteDraftSchema),
     defaultValues: { email: "" },
   })
@@ -33,20 +24,20 @@ export function InviteStep({ emails, onChange }: InviteStepProps) {
   function add(values: InviteDraftValues) {
     const value = values.email.trim().toLowerCase()
     if (!value) return
-    if (emails.includes(value)) {
-      form.setError("email", { message: "That email is already added." })
+    if (invites.includes(value)) {
+      draft.setError("email", { message: "That email is already added." })
       return
     }
-    onChange([...emails, value])
-    form.reset({ email: "" })
+    parent.setValue("invites", [...invites, value], { shouldDirty: true })
+    draft.reset({ email: "" })
   }
 
   return (
     <div className="space-y-4">
-      <Form {...form}>
-        <form noValidate onSubmit={form.handleSubmit(add)}>
+      <Form {...draft}>
+        <form noValidate onSubmit={draft.handleSubmit(add)}>
           <FormField
-            control={form.control}
+            control={draft.control}
             name="email"
             render={({ field }) => (
               <FormItem>
@@ -75,9 +66,9 @@ export function InviteStep({ emails, onChange }: InviteStepProps) {
           />
         </form>
       </Form>
-      {emails.length > 0 ? (
+      {invites.length > 0 ? (
         <ul className="flex flex-wrap gap-2">
-          {emails.map((email) => (
+          {invites.map((email) => (
             <li
               key={email}
               className="flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand-soft py-1 pr-1.5 pl-3 text-sm text-brand-ink shadow-xs"
@@ -86,7 +77,13 @@ export function InviteStep({ emails, onChange }: InviteStepProps) {
               <button
                 type="button"
                 aria-label={`Remove ${email}`}
-                onClick={() => onChange(emails.filter((e) => e !== email))}
+                onClick={() =>
+                  parent.setValue(
+                    "invites",
+                    invites.filter((e) => e !== email),
+                    { shouldDirty: true }
+                  )
+                }
                 className="rounded-full p-0.5 hover:bg-brand/10"
               >
                 <X className="size-3.5" />
@@ -95,7 +92,7 @@ export function InviteStep({ emails, onChange }: InviteStepProps) {
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-muted-foreground">
           Optional — you can invite people any time from Settings.
         </p>
       )}

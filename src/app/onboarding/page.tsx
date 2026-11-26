@@ -2,37 +2,30 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Form } from "@/components/ui/form"
 import { BrandMark } from "@/features/auth/components/brand-mark"
-import { CampusStep, type CampusStepValues } from "@/features/onboarding/components/campus-step"
-import {
-  ChurchStep,
-  ONBOARDING_STEP_FORM_ID,
-  type ChurchStepValues,
-} from "@/features/onboarding/components/church-step"
+import { CampusStep } from "@/features/onboarding/components/campus-step"
+import { ChurchStep } from "@/features/onboarding/components/church-step"
 import { InviteStep } from "@/features/onboarding/components/invite-step"
-import {
-  TerminologyStep,
-  type TerminologyStepValues,
-} from "@/features/onboarding/components/terminology-step"
+import { TerminologyStep } from "@/features/onboarding/components/terminology-step"
 import { WizardStepper } from "@/features/onboarding/components/wizard-stepper"
+import {
+  useCompleteOnboarding,
+  useOnboardingStatus,
+} from "@/features/onboarding/hooks/use-onboarding"
 import { setOnboardingCompletedCookie } from "@/features/onboarding/cookie"
-import { NOMENCLATURE_PRESETS } from "@/features/onboarding/presets"
-import { authClient } from "@/features/auth/auth-client"
-import { apiClient } from "@/lib/axios"
-import { useBranchStore } from "@/store/use-branch-store"
-
-function orgSlugFrom(name: string, fallback: string) {
-  const base = (name || fallback)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 48)
-  return base || fallback || `church-${Date.now().toString(36)}`
-}
+import {
+  ONBOARDING_DEFAULT_VALUES,
+  ONBOARDING_STEP_FIELDS,
+  ONBOARDING_STEP_FORM_ID,
+  onboardingFormSchema,
+  type OnboardingFormValues,
+} from "@/features/onboarding/schemas"
 
 const STEPS = ["Church", "Location", "Terminology", "Team"]
 
@@ -43,168 +36,53 @@ const STEP_COPY: { title: string; description: string }[] = [
   { title: "Invite your team", description: "Bring your leaders on board." },
 ]
 
-type CampusPayload = {
-  id: string
-  name: string
-  slug: string
-  type: "main" | "regional" | "satellite" | "church_plant" | "online"
-  city: string
-  isMainCampus: boolean
-}
-
 export default function OnboardingPage() {
   const router = useRouter()
-  const setAvailableCampuses = useBranchStore((s) => s.setAvailableCampuses)
-  const setActiveCampus = useBranchStore((s) => s.setActiveCampus)
-
   const [step, setStep] = React.useState(0)
-  const [church, setChurch] = React.useState<ChurchStepValues>({ churchName: "", denomination: "" })
-  const [campus, setCampus] = React.useState<CampusStepValues>({ campusName: "", city: "", slug: "" })
-  const [terminology, setTerminology] = React.useState<TerminologyStepValues>({ preset: "nondenom" })
-  const [invites, setInvites] = React.useState<string[]>([])
-  const [pending, setPending] = React.useState(false)
-  const [checking, setChecking] = React.useState(true)
+  const status = useOnboardingStatus()
+  const complete = useCompleteOnboarding()
+
+  const form = useForm<OnboardingFormValues>({
+    resolver: zodResolver(onboardingFormSchema),
+    defaultValues: ONBOARDING_DEFAULT_VALUES,
+    mode: "onSubmit",
+  })
 
   const isLastStep = step === STEPS.length - 1
+  const pending = complete.isPending
 
-  // If this account already finished setup, sync the gate cookie and skip the wizard.
   React.useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const status = await apiClient.get<{
-          success: boolean
-          data: { completed: boolean }
-        }>("/settings/onboarding")
-        if (cancelled) return
-        if (status.data.data?.completed) {
-          setOnboardingCompletedCookie()
-          router.replace("/dashboard")
-          return
-        }
-      } catch {
-        /* show wizard */
-      }
-      if (!cancelled) setChecking(false)
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [router])
+    if (!status.isSuccess || !status.data?.completed) return
+    setOnboardingCompletedCookie()
+    router.replace("/dashboard")
+  }, [status.isSuccess, status.data?.completed, router])
 
-  async function resolveCampus(): Promise<CampusPayload | null> {
-    try {
-      const campusRes = await apiClient.post<{ success: boolean; data: CampusPayload }>(
-        "/campuses",
-        {
-          name: campus.campusName.trim(),
-          slug: campus.slug.trim(),
-          city: campus.city.trim(),
-          type: "main",
-        }
-      )
-      return campusRes.data.data ?? null
-    } catch {
-      // Prior attempt may have already created the location — reuse it.
-      const listed = await apiClient
-        .get<{ success: boolean; data: CampusPayload[] }>("/campuses")
-        .catch(() => null)
-      const rows = listed?.data.data ?? []
-      return rows.find((c) => c.slug === campus.slug.trim()) ?? rows[0] ?? null
+  async function onContinue() {
+    const fields = ONBOARDING_STEP_FIELDS[step]
+    if (fields?.length) {
+      const valid = await form.trigger(fields)
+      if (!valid) return
     }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1))
   }
 
-  async function finish() {
-    setPending(true)
-    try {
-      const churchName = church.churchName.trim()
-      const locationSlug = campus.slug.trim() || orgSlugFrom(campus.campusName, "main")
-      const organizationSlug = orgSlugFrom(churchName, locationSlug)
-
-      // Organization = tenant. Location workspace is created under it.
-      let organizationId: string | null = null
-      try {
-        const createdOrg = await authClient.organization.create({
-          name: churchName || "My Church",
-          slug: organizationSlug,
-        })
-        organizationId =
-          (createdOrg.data as { id?: string } | null | undefined)?.id ??
-          (createdOrg as { data?: { id?: string } }).data?.id ??
-          null
-        if (organizationId) {
-          await authClient.organization.setActive({ organizationId })
-        }
-      } catch {
-        /* org may already exist — keep going with session tenant */
-      }
-
-      const selected = NOMENCLATURE_PRESETS.find((p) => p.key === terminology.preset)
-      const tenantParams = organizationId ? { tenantId: organizationId } : undefined
-      await apiClient.patch(
-        "/settings/nomenclature",
-        {
-          churchName,
-          campusTermSingular: "Location",
-          campusTermPlural: "Locations",
-          ...selected?.terms,
-        },
-        { params: tenantParams }
-      )
-
-      const created = await resolveCampus()
-      if (created) {
-        const normalized = {
-          id: created.id,
-          name: created.name,
-          slug: created.slug,
-          type: created.type,
-          city: created.city || campus.city.trim() || "",
-          isMainCampus: true,
-        }
-        setAvailableCampuses([normalized])
-        setActiveCampus(normalized)
-      }
-
-      // Starter plan for this tenant (locations/seats gated by billing)
-      await apiClient
-        .post("/billing/subscription", { planSlug: "starter" })
-        .catch(() => null)
-
-      if (invites.length > 0) {
-        await apiClient.post("/settings/invites", { emails: invites }).catch(() => null)
-        toast.success(
-          `Workspace ready · ${invites.length} invite${invites.length === 1 ? "" : "s"} queued`
-        )
-      } else {
-        toast.success("Church workspace ready")
-      }
-
-      await apiClient.post("/settings/onboarding/complete", null, { params: tenantParams })
-      setOnboardingCompletedCookie()
-
-      router.replace("/dashboard")
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Could not finish setup. Please try again."
-      )
-      setPending(false)
-    }
+  function onFinish(values: OnboardingFormValues) {
+    complete.mutate(values)
   }
 
   const copy = STEP_COPY[step]
 
-  if (checking) {
+  if (status.isLoading || status.data?.completed) {
     return (
-      <main className="relative flex min-h-screen flex-col items-center justify-center bg-[#fbfcfb] px-4 py-10 font-sans">
+      <main className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10 font-sans">
         <BrandMark />
-        <p className="mt-6 text-sm text-zinc-500">Checking your workspace…</p>
+        <p className="mt-6 text-sm text-muted-foreground">Checking your workspace…</p>
       </main>
     )
   }
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center bg-[#fbfcfb] px-4 py-10 font-sans">
+    <main className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10 font-sans">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(100,149,237,0.12),_transparent_55%)]"
@@ -212,60 +90,53 @@ export default function OnboardingPage() {
       <div className="relative z-10 flex w-full max-w-xl flex-col items-center gap-8">
         <BrandMark />
         <WizardStepper steps={STEPS} current={step} />
-        <Card className="w-full gap-0 rounded-2xl border border-zinc-200/60 bg-white py-0 shadow-xs ring-0">
+        <Card className="w-full gap-0 rounded-2xl border border-border/60 bg-card py-0 shadow-xs ring-0">
           <CardHeader className="space-y-2 px-6 pt-6 pb-2 sm:px-8">
-            <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
+            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
               {copy.title}
             </CardTitle>
-            <CardDescription className="text-base text-zinc-600">{copy.description}</CardDescription>
+            <CardDescription className="text-base text-muted-foreground">
+              {copy.description}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-7 px-6 pb-6 sm:px-8">
-            {step === 0 && (
-              <ChurchStep
-                defaultValues={church}
-                onContinue={(values) => {
-                  setChurch(values)
-                  setStep(1)
+            <Form {...form}>
+              <form
+                id={ONBOARDING_STEP_FORM_ID}
+                noValidate
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (isLastStep) {
+                    void form.handleSubmit(onFinish)()
+                    return
+                  }
+                  void onContinue()
                 }}
-              />
-            )}
-            {step === 1 && (
-              <CampusStep
-                defaultValues={campus}
-                onContinue={(values) => {
-                  setCampus(values)
-                  setStep(2)
-                }}
-              />
-            )}
-            {step === 2 && (
-              <TerminologyStep
-                defaultValues={terminology}
-                onContinue={(values) => {
-                  setTerminology(values)
-                  setStep(3)
-                }}
-              />
-            )}
-            {step === 3 && <InviteStep emails={invites} onChange={setInvites} />}
+              >
+                {step === 0 && <ChurchStep />}
+                {step === 1 && <CampusStep />}
+                {step === 2 && <TerminologyStep />}
+                {step === 3 && <InviteStep />}
+              </form>
+            </Form>
 
             <div className="flex items-center justify-between pt-1">
               <Button
                 type="button"
                 variant="ghost"
                 disabled={step === 0 || pending}
-                onClick={() => setStep(step - 1)}
-                className="h-10 gap-1 rounded-lg px-3 text-sm font-medium text-zinc-600"
+                onClick={() => setStep((s) => Math.max(0, s - 1))}
+                className="h-10 gap-1 rounded-lg px-3 text-sm font-medium text-muted-foreground"
               >
                 <ChevronLeft className="size-4" />
                 Back
               </Button>
               <Button
-                {...(isLastStep
-                  ? { type: "button" as const, onClick: () => void finish() }
-                  : { type: "submit" as const, form: ONBOARDING_STEP_FORM_ID })}
+                type={isLastStep ? "submit" : "button"}
+                form={isLastStep ? ONBOARDING_STEP_FORM_ID : undefined}
                 variant="default"
                 disabled={pending}
+                onClick={isLastStep ? undefined : () => void onContinue()}
                 className="h-10 gap-1 px-5 text-sm font-medium"
               >
                 {isLastStep ? (pending ? "Finishing…" : "Finish setup") : "Continue"}
