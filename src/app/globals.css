@@ -161,10 +161,10 @@
     @apply border-border outline-ring/50;
   }
   html {
-    @apply font-sans;
+    @apply h-full overflow-x-hidden font-sans;
   }
   body {
-    @apply bg-background font-normal text-foreground;
+    @apply min-h-full overflow-x-hidden overflow-y-auto bg-background font-normal text-foreground;
   }
   /* Balanced type: medium for headings, normal for body. Avoid heavy bold. */
   b,

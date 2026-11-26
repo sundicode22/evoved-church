@@ -138,14 +138,14 @@ export function SettingsMenu() {
   const { groups, active } = useSettingsSections()
 
   return (
-    <aside className="sticky top-12 hidden h-[calc(100svh-3rem)] w-60 shrink-0 overflow-y-auto border-r border-zinc-200/80 bg-[#fbfcfb] md:block">
+    <aside className="sticky top-12 hidden h-[calc(100svh-3rem)] w-60 shrink-0 overflow-y-auto border-r border-border bg-muted/30 md:block">
       <div className="px-4 pt-5 pb-2">
-        <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase">Settings</p>
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Settings</p>
       </div>
       <nav className="space-y-5 px-2 pb-6">
         {groups.map((group) => (
           <div key={group.label}>
-            <p className="px-2 pb-1.5 text-[11px] font-medium tracking-wide text-zinc-400 uppercase">
+            <p className="px-2 pb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
               {group.label}
             </p>
             <ul className="space-y-0.5">
@@ -219,9 +219,9 @@ export function SettingsClient() {
 
   return (
     <RequireAbility permission="settings.read">
-      <div className="flex min-w-0 flex-1 flex-col bg-white">
+      <div className="flex min-w-0 flex-1 flex-col bg-background">
         <MobileSettingsTabs sections={sections} active={active} />
-        <div className="min-w-0 flex-1 px-4 py-5 md:px-8 md:py-6">
+        <div className="min-w-0 flex-1 overflow-x-hidden px-4 py-5 md:px-8 md:py-6">
           <div className="w-full max-w-5xl text-left">
             {active === "church_details" ? (
               <ChurchDetailsTab canEdit={can("settings.write")} />

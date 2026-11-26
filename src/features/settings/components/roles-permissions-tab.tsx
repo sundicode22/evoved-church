@@ -289,8 +289,8 @@ export function RolesPermissionsTab() {
       </TablePanel>
 
       <Sheet open={editorOpen} onOpenChange={setEditorOpen}>
-        <SheetContent side="right" inset size="lg" className="isolate bg-white p-0">
-          <SheetHeader className="shrink-0 border-b border-zinc-100 bg-white pr-12">
+        <SheetContent side="right" inset size="lg" className="isolate flex flex-col p-0">
+          <SheetHeader className="shrink-0 border-b border-border bg-background pr-12">
             <SheetTitle>{selected?.name ?? "Role"}</SheetTitle>
             <SheetDescription>
               {selected?.isAdmin
@@ -298,7 +298,7 @@ export function RolesPermissionsTab() {
                 : selected?.description || "Choose what this role can see and do."}
             </SheetDescription>
           </SheetHeader>
-          <SheetBody className="gap-4 bg-white">
+          <SheetBody className="gap-3 bg-background">
             {selected?.isAdmin && (
               <Alert className="border-brand/20 bg-brand-soft text-brand-ink">
                 <Info className="size-3.5" />
@@ -310,8 +310,8 @@ export function RolesPermissionsTab() {
             )}
             <Accordion
               multiple
-              defaultValue={grouped.slice(0, 2).map(([g]) => g)}
-              className="gap-2 overflow-hidden rounded-none border-0 bg-white"
+              defaultValue={grouped.slice(0, 1).map(([g]) => g)}
+              className="gap-2 rounded-none border-0 bg-transparent"
             >
               {grouped.map(([group, items]) => {
                 const selectedCount = items.filter(
@@ -322,17 +322,17 @@ export function RolesPermissionsTab() {
                   <AccordionItem
                     key={group}
                     value={group}
-                    className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xs data-open:bg-white"
+                    className="overflow-hidden rounded-xl border border-border bg-card shadow-xs"
                   >
-                    <AccordionTrigger className="bg-white px-4 py-3 text-sm hover:no-underline">
+                    <AccordionTrigger className="bg-card px-4 py-3 text-sm hover:no-underline">
                       <div className="flex w-full items-center justify-between gap-3 pr-2 text-left">
-                        <span className="font-semibold text-zinc-900">{group}</span>
-                        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium tabular-nums text-zinc-700">
+                        <span className="font-semibold text-foreground">{group}</span>
+                        <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
                           {selectedCount}/{items.length}
                         </span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="border-t border-zinc-100 bg-white px-2 pb-2">
+                    <AccordionContent className="border-t border-border bg-card px-2 pb-2">
                       {!selected?.isAdmin ? (
                         <div className="flex justify-end px-2 pt-2">
                           <Can permission="settings.roles">
@@ -346,20 +346,20 @@ export function RolesPermissionsTab() {
                           </Can>
                         </div>
                       ) : null}
-                      <div className="space-y-1 bg-white pt-1">
+                      <div className="space-y-1 pt-1">
                         {items.map((p) => {
                           const on = Boolean(selected?.isAdmin || checked.has(p.key))
                           return (
                             <label
                               key={p.key}
-                              className="flex cursor-pointer items-center gap-3 rounded-lg bg-white px-2 py-2.5 hover:bg-zinc-50"
+                              className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/60"
                             >
                               <Checkbox
                                 checked={on}
                                 disabled={selected?.isAdmin}
                                 onCheckedChange={(v) => toggle(p.key, Boolean(v))}
                               />
-                              <span className="text-sm font-medium leading-snug text-zinc-900">
+                              <span className="text-sm font-medium leading-snug text-foreground">
                                 {p.label}
                               </span>
                             </label>
@@ -372,7 +372,7 @@ export function RolesPermissionsTab() {
               })}
             </Accordion>
           </SheetBody>
-          <SheetFooter className="bg-[#f4f6f5]">
+          <SheetFooter>
             <Button type="button" variant="outline" onClick={() => setEditorOpen(false)}>
               Close
             </Button>

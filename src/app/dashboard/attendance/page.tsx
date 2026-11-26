@@ -40,7 +40,7 @@ export default function AttendancePage() {
       style={{ "--sidebar-width": "16rem", "--header-height": "3.5rem" } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white">
+      <SidebarInset>
         <RequireAbility permission="attendance.read">
           <PageHeader
             title="Attendance"
@@ -67,25 +67,27 @@ export default function AttendancePage() {
 
           <div className="space-y-6 p-6 md:p-8">
             {qr?.qrDataUrl && (
-              <div className="flex flex-wrap items-center gap-4 rounded-lg border border-zinc-200/80 bg-[#f4f6f5] p-4 shadow-xs">
+              <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-muted/50 p-4 shadow-xs">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qr.qrDataUrl}
                   alt="Check-in QR"
-                  className="size-24 rounded-md border border-zinc-200 bg-white p-1"
+                  className="size-24 rounded-md border border-border bg-white p-1"
                 />
                 <div>
-                  <p className="text-sm font-medium text-zinc-900">Guest connection card</p>
-                  <p className="mt-0.5 text-xs text-zinc-500">
+                  <p className="text-sm font-medium text-foreground">Guest connection card</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     Print or display this QR for first-time guests.
                   </p>
-                  <p className="mt-2 break-all text-[11px] text-emerald-700">{qr.targetUrl}</p>
+                  <p className="mt-2 break-all text-[11px] text-emerald-700 dark:text-emerald-400">
+                    {qr.targetUrl}
+                  </p>
                 </div>
               </div>
             )}
 
             {!isLoading && (sessions?.length ?? 0) === 0 ? (
-              <Empty className="rounded-lg border border-zinc-200/80 py-16">
+              <Empty className="rounded-lg border border-border py-16">
                 <EmptyHeader>
                   <EmptyTitle>No sessions</EmptyTitle>
                   <EmptyDescription>
@@ -94,11 +96,11 @@ export default function AttendancePage() {
                 </EmptyHeader>
               </Empty>
             ) : (
-              <TablePanel>
-                <Table>
+              <TablePanel selectable={false} reorderable={false}>
+                <Table selectable={false} reorderable={false}>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="pl-4">Session</TableHead>
+                      <TableHead>Session</TableHead>
                       <TableHead>When</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Headcount</TableHead>
@@ -109,23 +111,23 @@ export default function AttendancePage() {
                     {isLoading &&
                       [0, 1, 2].map((i) => (
                         <TableRow key={i}>
-                          <TableCell colSpan={5} className="pl-4">
+                          <TableCell colSpan={5}>
                             <Skeleton className="h-6 w-full" />
                           </TableCell>
                         </TableRow>
                       ))}
                     {(sessions ?? []).map((s) => (
                       <TableRow key={s.id}>
-                        <TableCell className="pl-4">
-                          <p className="font-medium text-zinc-900">{s.sessionName}</p>
+                        <TableCell>
+                          <p className="font-medium text-foreground">{s.sessionName}</p>
                         </TableCell>
-                        <TableCell className="text-xs text-zinc-600">
+                        <TableCell className="text-xs text-muted-foreground">
                           {format(parseISO(s.sessionDate), "EEE, MMM d · h:mm a")}
                         </TableCell>
                         <TableCell>
                           <StatusPill className="capitalize">{s.sessionType}</StatusPill>
                         </TableCell>
-                        <TableCell className="text-xs">
+                        <TableCell className="text-xs text-muted-foreground">
                           {s.headcountAdults} adults
                           {s.headcountChildren > 0
                             ? ` · ${s.headcountChildren} kids`
