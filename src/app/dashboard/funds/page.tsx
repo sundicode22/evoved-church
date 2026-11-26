@@ -5,7 +5,6 @@ import { Landmark } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -139,9 +138,7 @@ export default function FundsPage() {
                         )}
                         {isVisible("code") && (
                           <TableCell>
-                            <Badge variant="outline" className="px-2 font-mono font-normal">
-                              {fund.code || "—"}
-                            </Badge>
+                            <StatusPill className="font-mono">{fund.code || "—"}</StatusPill>
                           </TableCell>
                         )}
                         {isVisible("type") && (

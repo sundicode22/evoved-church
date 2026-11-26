@@ -8,7 +8,6 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,6 +31,7 @@ import { TimePicker } from "@/components/time-picker";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { Can, RequireAbility } from "@/components/auth/can";
 import { ConfirmAction } from "@/components/confirm-action";
+import { StatusPill } from "@/components/table-panel";
 import {
   useCampaign,
   useSendCampaign,
@@ -40,7 +40,7 @@ import {
 import {
   AUDIENCE_ITEMS,
   CHANNEL_ITEMS,
-  STATUS_STYLES,
+  STATUS_TONE,
 } from "@/features/campaigns/constants";
 import type { CampaignChannel } from "@/features/campaigns/schemas";
 import { PageHeader } from "@/components/page-header"
@@ -135,12 +135,12 @@ function CampaignDetailPage() {
               <>
                 <span className="truncate">{data?.name ?? "Campaign"}</span>
                 {data && (
-                  <Badge
-                    variant="outline"
-                    className={`text-[10px] font-normal capitalize ${STATUS_STYLES[data.status]}`}
+                  <StatusPill
+                    tone={STATUS_TONE[data.status]}
+                    className="capitalize"
                   >
                     {data.status}
-                  </Badge>
+                  </StatusPill>
                 )}
               </>
             }
@@ -399,18 +399,18 @@ function CampaignDetailPage() {
                                 {s.channel}
                               </TableCell>
                               <TableCell>
-                                <Badge
-                                  variant="outline"
-                                  className={`text-[10px] capitalize ${
+                                <StatusPill
+                                  tone={
                                     s.status === "sent"
-                                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                      ? "success"
                                       : s.status === "failed"
-                                        ? "border-rose-200 bg-rose-50 text-rose-700"
-                                        : "border-zinc-200 bg-zinc-50 text-zinc-600"
-                                  }`}
+                                        ? "danger"
+                                        : "neutral"
+                                  }
+                                  className="capitalize"
                                 >
                                   {s.status}
-                                </Badge>
+                                </StatusPill>
                               </TableCell>
                               <TableCell className="font-mono text-[11px] text-zinc-500">
                                 {s.providerId || s.errorMessage || "—"}

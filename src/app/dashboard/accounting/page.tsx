@@ -8,7 +8,6 @@ import { toast } from "sonner"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
@@ -67,7 +66,7 @@ import { Progress, ProgressLabel, ProgressValue } from "@/components/ui/progress
 import { ConfirmAction } from "@/components/confirm-action"
 import { FileAttachment, type AttachmentFile } from "@/components/file-attachment"
 import { TableToolbar } from "@/components/table-toolbar"
-import { TablePanel } from "@/components/table-panel"
+import { StatusPill, TablePanel } from "@/components/table-panel"
 import { ServerPagination } from "@/components/server-pagination"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Can, RequireAbility } from "@/components/auth/can"
@@ -517,16 +516,12 @@ export default function AccountingPage() {
                         >
                           <div className="flex items-start justify-between">
                             <div>
-                              <Badge
-                                variant="outline"
-                                className={`text-[10px] font-medium tracking-wider uppercase ${
-                                  fund.type === "unrestricted"
-                                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                                    : "border-amber-200 bg-amber-50 text-amber-800"
-                                }`}
+                              <StatusPill
+                                tone={fund.type === "unrestricted" ? "success" : "warning"}
+                                className="capitalize"
                               >
                                 {String(fund.type).replace(/_/g, " ")}
-                              </Badge>
+                              </StatusPill>
                               <h3 className="mt-2 text-sm font-medium text-zinc-900">{fund.name}</h3>
                               <HoverCard>
                                 <HoverCardTrigger
@@ -763,12 +758,9 @@ export default function AccountingPage() {
                                   </span>
                                 </TableCell>
                                 <TableCell>
-                                  <Badge
-                                    variant="outline"
-                                    className="border-amber-200 bg-amber-50 text-[10px] text-amber-700 uppercase"
-                                  >
+                                  <StatusPill tone="warning" className="capitalize">
                                     {String(req.status).replace(/_/g, " ")}
-                                  </Badge>
+                                  </StatusPill>
                                 </TableCell>
                                 <TableCell className="text-right">
                                   <RowActionsMenu
@@ -884,16 +876,12 @@ export default function AccountingPage() {
                               </TableCell>
                               <TableCell>{je.memo}</TableCell>
                               <TableCell>
-                                <Badge
-                                  variant="outline"
-                                  className={
-                                    je.status === "posted"
-                                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                      : "border-zinc-200 bg-zinc-50 text-zinc-600"
-                                  }
+                                <StatusPill
+                                  tone={je.status === "posted" ? "success" : "neutral"}
+                                  className="capitalize"
                                 >
                                   {je.status}
-                                </Badge>
+                                </StatusPill>
                               </TableCell>
                               <TableCell className="text-xs text-zinc-600">
                                 {je.createdByName || je.createdByUserId || "—"}

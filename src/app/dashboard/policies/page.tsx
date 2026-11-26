@@ -7,7 +7,6 @@ import { z } from "zod"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
@@ -251,9 +250,7 @@ export default function PoliciesPage() {
                             </p>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="font-normal text-muted-foreground">
-                              {moduleLabel}
-                            </Badge>
+                            <StatusPill>{moduleLabel}</StatusPill>
                           </TableCell>
                           <TableCell>
                             <div className="flex max-w-xs flex-wrap gap-1">
@@ -261,13 +258,7 @@ export default function PoliciesPage() {
                                 <span className="text-muted-foreground">—</span>
                               ) : (
                                 p.involvedRoles.map((role) => (
-                                  <Badge
-                                    key={role}
-                                    variant="outline"
-                                    className="font-normal text-muted-foreground"
-                                  >
-                                    {role}
-                                  </Badge>
+                                  <StatusPill key={role}>{role}</StatusPill>
                                 ))
                               )}
                             </div>

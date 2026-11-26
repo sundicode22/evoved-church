@@ -43,8 +43,8 @@ import { toast } from "sonner"
 import { z } from "zod"
 
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { StatusPill } from "@/components/table-panel"
 import {
   ChartContainer,
   ChartTooltip,
@@ -95,7 +95,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, GripVertical, List, Loader2, MoreVertical, Plus, TrendingUp } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, GripVertical, List, MoreVertical, Plus, TrendingUp } from "lucide-react"
 
 // New in v9: declare the features this table uses — anything you don't
 // register is tree-shaken out of the bundle.
@@ -187,23 +187,16 @@ const columns = columnHelper.columns([
     header: "Section Type",
     cell: ({ row }) => (
       <div className="w-32">
-        <Badge variant="outline" className="px-1.5 text-muted-foreground">
-          {row.original.type}
-        </Badge>
+        <StatusPill>{row.original.type}</StatusPill>
       </div>
     ),
   }),
   columnHelper.accessor("status", {
     header: "Status",
     cell: ({ row }) => (
-      <Badge variant="outline" className="px-1.5 text-muted-foreground">
-        {row.original.status === "Done" ? (
-          <CheckCircle2 className="fill-green-500 dark:fill-green-400" />
-        ) : (
-          <Loader2 />
-        )}
+      <StatusPill tone={row.original.status === "Done" ? "success" : "warning"}>
         {row.original.status}
-      </Badge>
+      </StatusPill>
     ),
   }),
   columnHelper.accessor("target", {
@@ -439,10 +432,10 @@ export function DataTable({
         <TabsList className="hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1 @4xl/main:flex">
           <TabsTrigger value="outline">Outline</TabsTrigger>
           <TabsTrigger value="past-performance">
-            Past Performance <Badge variant="secondary">3</Badge>
+            Past Performance <StatusPill>3</StatusPill>
           </TabsTrigger>
           <TabsTrigger value="key-personnel">
-            Key Personnel <Badge variant="secondary">2</Badge>
+            Key Personnel <StatusPill>2</StatusPill>
           </TabsTrigger>
           <TabsTrigger value="focus-documents">Focus Documents</TabsTrigger>
         </TabsList>

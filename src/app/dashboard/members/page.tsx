@@ -1,12 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { Download, Plus, ShieldCheck } from "lucide-react"
+import { Download, Plus } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -380,13 +379,10 @@ export default function MembersPage() {
                         {isVisible("household") && (
                           <TableCell>
                             {person.householdRole ? (
-                              <Badge
-                                variant="outline"
-                                className="px-1.5 font-normal text-zinc-600"
-                              >
+                              <StatusPill>
                                 {HOUSEHOLD_ROLE_LABELS[person.householdRole as HouseholdRole] ||
                                   person.householdRole}
-                              </Badge>
+                              </StatusPill>
                             ) : (
                               <span className="text-zinc-400">—</span>
                             )}
@@ -397,12 +393,7 @@ export default function MembersPage() {
                             <div className="flex flex-wrap gap-1">
                               {person.ministryRoles?.length ? (
                                 person.ministryRoles.map((role: string) => (
-                                  <span
-                                    key={role}
-                                    className="rounded-md border border-zinc-200 bg-white px-1.5 py-0.5 text-[11px] text-zinc-600"
-                                  >
-                                    {role}
-                                  </span>
+                                  <StatusPill key={role}>{role}</StatusPill>
                                 ))
                               ) : (
                                 <span className="text-zinc-400">None</span>
@@ -413,10 +404,7 @@ export default function MembersPage() {
                         {isVisible("safety") && (
                           <TableCell>
                             {person.backgroundCheckStatus === "cleared" ? (
-                              <StatusPill tone="success">
-                                <ShieldCheck className="size-3 text-emerald-600" />
-                                Cleared
-                              </StatusPill>
+                              <StatusPill tone="success">Cleared</StatusPill>
                             ) : person.backgroundCheckStatus === "expired" ? (
                               <StatusPill tone="warning">Expired</StatusPill>
                             ) : (

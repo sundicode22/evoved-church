@@ -10,7 +10,6 @@ import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -42,7 +41,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Can, RequireAbility } from "@/components/auth/can"
-import { TablePanel } from "@/components/table-panel"
+import { StatusPill, TablePanel } from "@/components/table-panel"
 import { useCreateRoom, useRooms } from "@/features/facilities/hooks/use-facilities"
 import { createRoomSchema } from "@/features/facilities/schemas"
 
@@ -162,24 +161,15 @@ export default function RoomsPage() {
                         <TableCell>{room.capacity ?? "—"}</TableCell>
                         <TableCell>
                           {room.requiresApproval ? (
-                            <Badge variant="outline" className="text-[10px]">
-                              Required
-                            </Badge>
+                            <StatusPill tone="warning">Required</StatusPill>
                           ) : (
                             <span className="text-xs text-zinc-400">Open</span>
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={
-                              room.isActive
-                                ? "border-emerald-200 bg-emerald-50 text-[10px] text-emerald-700"
-                                : "text-[10px]"
-                            }
-                          >
+                          <StatusPill tone={room.isActive ? "success" : "neutral"}>
                             {room.isActive ? "Active" : "Inactive"}
-                          </Badge>
+                          </StatusPill>
                         </TableCell>
                       </TableRow>
                     ))}

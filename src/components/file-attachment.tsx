@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { StatusPill } from "@/components/table-panel"
 import {
   InputGroup,
   InputGroupAddon,
@@ -134,9 +134,9 @@ export function FileAttachment({
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium text-zinc-800">{f.name}</p>
                 <div className="mt-0.5 flex items-center gap-1.5">
-                  <Badge variant="outline" className="text-[10px]">
+                  <StatusPill>
                     {f.mimeType.split("/").pop()?.toUpperCase() || "FILE"}
-                  </Badge>
+                  </StatusPill>
                   <span className="text-[10px] text-zinc-400">{formatBytes(f.size)}</span>
                 </div>
               </div>

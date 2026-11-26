@@ -12,7 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
+import { StatusPill } from "@/components/table-panel"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
@@ -112,14 +112,23 @@ export function MemberDrawer({
               </SheetDescription>
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {member.householdRole && (
-                  <Badge className="border-emerald-200 bg-emerald-50 text-emerald-800">
+                  <StatusPill tone="success">
                     {HOUSEHOLD_ROLE_LABELS[member.householdRole as HouseholdRole] ||
                       member.householdRole}
-                  </Badge>
+                  </StatusPill>
                 )}
-                <Badge variant="outline" className="capitalize">
+                <StatusPill
+                  tone={
+                    member.backgroundCheckStatus === "cleared"
+                      ? "success"
+                      : member.backgroundCheckStatus === "expired"
+                        ? "warning"
+                        : "neutral"
+                  }
+                  className="capitalize"
+                >
                   {String(member.backgroundCheckStatus || "none")}
-                </Badge>
+                </StatusPill>
               </div>
             </SheetHeader>
 
@@ -281,14 +290,14 @@ export function MemberDrawer({
                                   {String(peer.personType || "").replace(/_/g, " ")}
                                 </p>
                               </div>
-                              <Badge className="border-emerald-200 bg-emerald-50 text-emerald-800">
+                              <StatusPill tone="success">
                                 {peer.roleLabel ||
                                   HOUSEHOLD_ROLE_LABELS[
                                     peer.householdRole as HouseholdRole
                                   ] ||
                                   peer.householdRole ||
                                   "—"}
-                              </Badge>
+                              </StatusPill>
                             </div>
                           )
                         )}

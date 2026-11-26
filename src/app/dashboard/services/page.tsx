@@ -14,8 +14,8 @@ import {
   TextareaFormField,
   TimeFormField,
 } from "@/components/form-fields"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { StatusPill } from "@/components/table-panel"
 import {
   Sheet,
   SheetBody,
@@ -394,9 +394,7 @@ export default function ServicesPage() {
                         >
                           <span className="text-sm font-medium">{s.name}</span>
                           <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-zinc-500">
-                            <Badge variant="outline" className="text-[10px]">
-                              {typeLabel}
-                            </Badge>
+                            <StatusPill>{typeLabel}</StatusPill>
                             {s.defaultDayOfWeek != null && DAY_LABELS[s.defaultDayOfWeek]}{" "}
                             {s.defaultStartTime}
                           </span>
@@ -477,9 +475,9 @@ export default function ServicesPage() {
                                 <p className="text-sm font-medium text-zinc-900">
                                   {i + 1}. {seg.title}
                                 </p>
-                                <Badge variant="outline" className="text-[10px] tabular-nums">
+                                <StatusPill className="tabular-nums">
                                   {seg.durationMinutes} min
-                                </Badge>
+                                </StatusPill>
                               </div>
                               <p className="mt-1 text-xs text-zinc-500">
                                 {seg.leader || "Unassigned"}
@@ -568,18 +566,18 @@ export default function ServicesPage() {
                             </p>
                           </button>
                           <div className="flex items-center gap-1.5">
-                            <Badge
-                              variant="outline"
-                              className={
+                            <StatusPill
+                              tone={
                                 v.status === "confirmed"
-                                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                  ? "success"
                                   : v.status === "declined"
-                                    ? "border-red-200 bg-red-50 text-red-700"
-                                    : "border-amber-200 bg-amber-50 text-amber-700"
+                                    ? "danger"
+                                    : "warning"
                               }
+                              className="capitalize"
                             >
                               {v.status}
-                            </Badge>
+                            </StatusPill>
                             <Can permission="services.write">
                               <Button
                                 type="button"

@@ -251,17 +251,12 @@ export function TableChrome({
 export function StatusPill({
   children,
   tone = "neutral",
+  className,
 }: {
   children: React.ReactNode
   tone?: "neutral" | "success" | "warning" | "danger" | "info"
+  className?: string
 }) {
-  const tones = {
-    neutral: "border-zinc-200 bg-white text-zinc-600",
-    success: "border-zinc-200 bg-white text-zinc-700",
-    warning: "border-zinc-200 bg-white text-zinc-700",
-    danger: "border-rose-200 bg-rose-50 text-rose-700",
-    info: "border-zinc-200 bg-white text-zinc-700",
-  }
   const dot =
     tone === "success"
       ? "bg-emerald-500"
@@ -270,16 +265,16 @@ export function StatusPill({
         : tone === "danger"
           ? "bg-rose-500"
           : tone === "info"
-            ? "bg-sky-500"
+            ? "bg-brand"
             : "bg-zinc-400"
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-normal",
-        tones[tone]
+        "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs font-normal text-zinc-600",
+        className
       )}
     >
-      <span className={cn("size-2 rounded-full", dot)} />
+      <span className={cn("size-2 shrink-0 rounded-full", dot)} aria-hidden />
       {children}
     </span>
   )

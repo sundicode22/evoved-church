@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { StatusPill } from "@/components/table-panel"
 import { ButtonGroup } from "@/components/ui/button-group"
 import {
   DropdownMenu,
@@ -65,9 +65,7 @@ export function TableToolbar({
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>
             {typeof count === "number" && (
-              <Badge variant="outline" className="text-[10px] tabular-nums">
-                {count}
-              </Badge>
+              <StatusPill className="tabular-nums">{count}</StatusPill>
             )}
           </div>
           {description && <p className="mt-0.5 text-xs text-zinc-400">{description}</p>}

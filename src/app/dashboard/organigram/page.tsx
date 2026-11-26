@@ -19,7 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Badge } from "@/components/ui/badge"
+import { StatusPill } from "@/components/table-panel"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -163,12 +163,7 @@ function NodeCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           {node.department && (
-            <Badge
-              variant="secondary"
-              className="bg-emerald-50 text-[10px] font-medium tracking-wider text-emerald-700 uppercase shadow-none"
-            >
-              {node.department}
-            </Badge>
+            <StatusPill tone="success">{node.department}</StatusPill>
           )}
           <h3 className="mt-2 text-sm font-medium leading-snug text-zinc-900">{node.title}</h3>
           {showName && (

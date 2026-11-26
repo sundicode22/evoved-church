@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { SelectFormField } from "@/components/form-fields"
@@ -361,9 +360,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
                 <div className="overflow-hidden rounded-xl bg-[#f8faf9] shadow-xs">
                   <div className="flex items-center justify-between px-3 py-2">
                     <p className="text-xs text-zinc-500">Preview · {rows.length} rows</p>
-                    <Badge variant="secondary" className="text-[10px] shadow-none">
-                      First 5 shown
-                    </Badge>
+                    <StatusPill>First 5 shown</StatusPill>
                   </div>
                   <div className="overflow-x-auto bg-white">
                     <Table>

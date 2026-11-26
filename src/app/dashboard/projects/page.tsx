@@ -80,12 +80,6 @@ const PRIORITY_TONE = {
   low: "neutral",
 } as const
 
-const PRIORITY_STYLES = {
-  high: "border-rose-200 bg-rose-50 text-rose-700",
-  normal: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  low: "border-zinc-200 bg-zinc-50 text-zinc-600",
-} as const
-
 export default function ProjectsPage() {
   const { data, isLoading } = useProjects()
   const updateStage = useUpdateProjectStage()
@@ -140,7 +134,7 @@ export default function ProjectsPage() {
             since: c.stageChangedAt,
             dueLabel: c.dueLabel,
             assignee: c.assigneeName,
-            badges: [{ text: c.priority, className: PRIORITY_STYLES[c.priority] }],
+            badges: [{ text: c.priority }],
           })),
       })),
     [data, query]

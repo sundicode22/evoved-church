@@ -14,7 +14,6 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { SelectFormField, TextFormField } from "@/components/form-fields"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -39,13 +38,14 @@ import {
   TableAddButton,
   TableChrome,
   TablePagination,
+  StatusPill,
   TablePanel,
   useColumnVisibility,
   type ColumnOption,
 } from "@/components/table-panel"
 import { useCampaigns, useCreateCampaign } from "@/features/campaigns/hooks/use-campaigns"
 import { campaignChannelSchema } from "@/features/campaigns/schemas"
-import { CHANNEL_ITEMS, STATUS_STYLES } from "@/features/campaigns/constants"
+import { CHANNEL_ITEMS, STATUS_TONE } from "@/features/campaigns/constants"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 
 const campaignFormSchema = z.object({
@@ -177,19 +177,14 @@ export default function CampaignsPage() {
                       )}
                       {isVisible("channel") && (
                         <TableCell>
-                          <Badge variant="outline" className="px-1.5 font-normal text-zinc-600">
-                            {c.channel}
-                          </Badge>
+                          <StatusPill>{c.channel}</StatusPill>
                         </TableCell>
                       )}
                       {isVisible("status") && (
                         <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={`px-1.5 font-normal ${STATUS_STYLES[c.status] || ""}`}
-                          >
+                          <StatusPill tone={STATUS_TONE[c.status] || "neutral"}>
                             {c.status}
-                          </Badge>
+                          </StatusPill>
                         </TableCell>
                       )}
                       {isVisible("recipients") && (

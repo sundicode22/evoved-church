@@ -190,10 +190,7 @@ export function RolesPermissionsTab() {
   return (
     <>
       <TablePanel className="w-full text-left">
-        <div className="flex items-center justify-between gap-3 px-1">
-          <p className="text-sm text-zinc-500">
-            Click a role to edit its permission matrix.
-          </p>
+        <div className="flex items-center justify-end gap-3 px-1">
           <Can permission="settings.roles">
             <Button variant="primary" onClick={() => setDialogOpen(true)}>
               <Plus className="size-4" />

@@ -22,7 +22,7 @@ import {
 } from "@/components/visitors/visitor-follow-up"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { StatusPill } from "@/components/table-panel"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -113,12 +113,7 @@ function SortableCard({
             <p className="truncate text-xs text-zinc-500">{lead.location || "Main Sanctuary"}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <Badge
-              variant="secondary"
-              className="bg-zinc-100/90 text-[10px] text-zinc-600 shadow-none"
-            >
-              {lead.elapsed || "1m"}
-            </Badge>
+            <StatusPill>{lead.elapsed || "1m"}</StatusPill>
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={

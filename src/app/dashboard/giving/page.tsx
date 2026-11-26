@@ -16,7 +16,6 @@ import {
   SelectFormField,
   TextFormField,
 } from "@/components/form-fields"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -307,12 +306,7 @@ export default function GivingPage() {
                       )}
                       {isVisible("fund") && (
                         <TableCell>
-                          <Badge
-                            variant="outline"
-                            className="px-2 font-normal text-muted-foreground"
-                          >
-                            {tx.fundName}
-                          </Badge>
+                          <StatusPill>{tx.fundName}</StatusPill>
                         </TableCell>
                       )}
                       {isVisible("method") && (

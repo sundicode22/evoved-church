@@ -19,8 +19,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { SelectFormField, TextFormField } from "@/components/form-fields"
-import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -47,8 +45,17 @@ import {
   type DocumentFolderDto,
 } from "@/features/documents/schemas"
 import { PageHeader } from "@/components/page-header"
-import { TableAddButton, TablePanel } from "@/components/table-panel"
-import { File as File, Folder as Folder, Plus, Search as Search, ShieldCheck, Upload as Upload } from "lucide-react"
+import { StatusPill, TableAddButton, TablePanel } from "@/components/table-panel"
+import { FolderIcon } from "@/components/documents/folder-icon"
+import {
+  ChevronRight,
+  File as FileIcon,
+  Plus,
+  Search as Search,
+  ShieldCheck,
+  Upload as Upload,
+} from "lucide-react"
+import { cn } from "cn"
 
 const ROLE_LABELS: Record<string, string> = {
   public: "Public",
@@ -59,23 +66,20 @@ const ROLE_LABELS: Record<string, string> = {
   elder: "Elders Only",
 }
 
-const ROLE_STYLES: Record<string, string> = {
-  public: "border-blue-200 bg-blue-50 text-blue-700",
-  member: "border-zinc-200 bg-zinc-50 text-zinc-700",
-  volunteer: "border-amber-200 bg-amber-50 text-amber-700",
-  ministry_staff: "border-purple-200 bg-purple-50 text-purple-700",
-  finance_committee: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  elder: "border-rose-200 bg-rose-50 text-rose-700",
+const ROLE_TONE: Record<string, "neutral" | "success" | "warning" | "danger" | "info"> = {
+  public: "info",
+  member: "neutral",
+  volunteer: "warning",
+  ministry_staff: "info",
+  finance_committee: "success",
+  elder: "danger",
 }
 
 function RoleBadge({ role }: { role: string }) {
   return (
-    <Badge
-      variant="outline"
-      className={`text-[10px] font-medium ${ROLE_STYLES[role] ?? ROLE_STYLES.member}`}
-    >
+    <StatusPill tone={ROLE_TONE[role] ?? "neutral"}>
       {ROLE_LABELS[role] ?? role}
-    </Badge>
+    </StatusPill>
   )
 }
 
@@ -124,13 +128,43 @@ interface SignedUpload {
   secureUrl: string
 }
 
+function FolderTile({
+  folder,
+  childCount,
+  onOpen,
+}: {
+  folder: DocumentFolderDto
+  childCount: number
+  onOpen: () => void
+}) {
+  const total = folder.itemCount + childCount
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group flex w-full flex-col items-center gap-2 rounded-2xl border border-transparent bg-transparent px-3 py-4 text-center transition-colors hover:border-zinc-200/80 hover:bg-white hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+    >
+      <FolderIcon className="size-[4.5rem] transition-transform group-hover:scale-[1.03]" />
+      <div className="min-w-0 w-full space-y-1">
+        <p className="truncate text-sm font-medium text-zinc-900">{folder.name}</p>
+        <p className="text-xs text-zinc-500">
+          {total} {total === 1 ? "item" : "items"}
+        </p>
+        <div className="flex justify-center pt-0.5">
+          <RoleBadge role={folder.minRoleRequired} />
+        </div>
+      </div>
+    </button>
+  )
+}
+
 export default function DocumentsPage() {
   const activeCampusId = useBranchStore((s) => s.activeCampusId)
   const [folders, setFolders] = React.useState<DocumentFolderDto[]>([])
   const [documents, setDocuments] = React.useState<ChurchDocumentDto[]>([])
   const [loading, setLoading] = React.useState(true)
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [selectedFolderId, setSelectedFolderId] = React.useState<string | null>(null)
+  const [currentFolderId, setCurrentFolderId] = React.useState<string | null>(null)
 
   const [folderDialog, setFolderDialog] = React.useState(false)
   const folderForm = useForm<FolderFormValues>({
@@ -152,7 +186,10 @@ export default function DocumentsPage() {
   }
 
   function openUploadDialog() {
-    uploadForm.reset(emptyUploadForm)
+    uploadForm.reset({
+      ...emptyUploadForm,
+      folderId: currentFolderId ?? UNFILED,
+    })
     setFileInputKey((k) => k + 1)
     setUploadDialog(true)
   }
@@ -180,21 +217,52 @@ export default function DocumentsPage() {
     }
   }, [activeCampusId])
 
+  const folderById = React.useMemo(() => {
+    const map = new Map(folders.map((f) => [f.id, f]))
+    return map
+  }, [folders])
+
+  const childFolderCount = React.useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const f of folders) {
+      if (!f.parentId) continue
+      counts.set(f.parentId, (counts.get(f.parentId) ?? 0) + 1)
+    }
+    return counts
+  }, [folders])
+
+  const breadcrumb = React.useMemo(() => {
+    const trail: DocumentFolderDto[] = []
+    let cursor = currentFolderId
+    while (cursor) {
+      const folder = folderById.get(cursor)
+      if (!folder) break
+      trail.unshift(folder)
+      cursor = folder.parentId
+    }
+    return trail
+  }, [currentFolderId, folderById])
+
   const query = searchQuery.trim().toLowerCase()
-  const visibleFolders = folders.filter((f) => f.name.toLowerCase().includes(query))
-  const visibleDocs = documents.filter(
-    (d) =>
-      (!selectedFolderId || d.folderId === selectedFolderId) &&
-      d.title.toLowerCase().includes(query)
-  )
-  const folderName = (id: string | null) => folders.find((f) => f.id === id)?.name ?? "Unfiled"
-  const selectedFolder = folders.find((f) => f.id === selectedFolderId)
+  const foldersHere = folders.filter((f) => {
+    const inScope = (f.parentId ?? null) === currentFolderId
+    if (!inScope) return false
+    if (!query) return true
+    return f.name.toLowerCase().includes(query)
+  })
+  const docsHere = documents.filter((d) => {
+    const inScope = (d.folderId ?? null) === currentFolderId
+    if (!inScope) return false
+    if (!query) return true
+    return d.title.toLowerCase().includes(query)
+  })
 
   async function handleCreateFolder(values: FolderFormValues) {
     try {
       const res = await apiClient.post<ApiResponse<DocumentFolderDto>>("/documents/folders", {
         name: values.name,
         minRoleRequired: values.minRoleRequired,
+        parentId: currentFolderId,
         campusId: null,
       })
       setFolders((prev) => [res.data.data, ...prev])
@@ -261,6 +329,8 @@ export default function DocumentsPage() {
     }
   }
 
+  const currentFolder = currentFolderId ? folderById.get(currentFolderId) : null
+
   return (
     <SidebarProvider
       style={
@@ -271,7 +341,7 @@ export default function DocumentsPage() {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset className="min-h-screen bg-white dark:bg-zinc-950">
+      <SidebarInset className="min-h-screen bg-white">
         <PageHeader
           title="Documents"
           description="Bylaws, minutes, and handbooks with role-based access."
@@ -281,7 +351,7 @@ export default function DocumentsPage() {
               <div className="relative hidden w-56 sm:block">
                 <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-zinc-400" />
                 <Input
-                  placeholder="Search documents…"
+                  placeholder="Search here…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
@@ -299,118 +369,136 @@ export default function DocumentsPage() {
           }
         />
 
-        <div className="space-y-8 p-8">
+        <div className="space-y-6 p-6 md:p-8">
+          <nav className="flex flex-wrap items-center gap-1 text-sm text-zinc-500">
+            <button
+              type="button"
+              onClick={() => setCurrentFolderId(null)}
+              className={cn(
+                "rounded-md px-1.5 py-0.5 transition-colors hover:bg-zinc-100 hover:text-zinc-900",
+                !currentFolderId && "font-medium text-zinc-900"
+              )}
+            >
+              All folders
+            </button>
+            {breadcrumb.map((folder) => (
+              <React.Fragment key={folder.id}>
+                <ChevronRight className="size-3.5 shrink-0 text-zinc-300" />
+                <button
+                  type="button"
+                  onClick={() => setCurrentFolderId(folder.id)}
+                  className={cn(
+                    "max-w-[12rem] truncate rounded-md px-1.5 py-0.5 transition-colors hover:bg-zinc-100 hover:text-zinc-900",
+                    folder.id === currentFolderId && "font-medium text-zinc-900"
+                  )}
+                >
+                  {folder.name}
+                </button>
+              </React.Fragment>
+            ))}
+          </nav>
+
           {loading ? (
             <p className="text-sm text-zinc-500">Loading documents…</p>
           ) : (
             <>
               <section className="space-y-3">
-                <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Folders</h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {visibleFolders.map((folder) => {
-                    const active = folder.id === selectedFolderId
-                    return (
-                      <Card
-                        key={folder.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => setSelectedFolderId(active ? null : folder.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault()
-                            setSelectedFolderId(active ? null : folder.id)
-                          }
-                        }}
-                        className={`cursor-pointer rounded-lg border p-4 shadow-sm transition-all hover:shadow-md ${
-                          active ? "border-emerald-400 ring-2 ring-emerald-100" : "border-zinc-200/60 hover:border-emerald-300"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                            <Folder strokeWidth={1.8} className="size-5" />
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-zinc-900">{folder.name}</p>
-                            <p className="mt-0.5 text-xs text-zinc-500">
-                              {folder.itemCount} {folder.itemCount === 1 ? "file" : "files"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="mt-3 flex items-center justify-between border-t border-zinc-100 pt-3 text-[11px] text-zinc-400">
-                          <span>Who can view</span>
-                          <RoleBadge role={folder.minRoleRequired} />
-                        </div>
-                      </Card>
-                    )
-                  })}
-                  {visibleFolders.length === 0 && (
-                    <p className="text-sm text-zinc-500">No folders match your search.</p>
-                  )}
-                </div>
-              </section>
-
-              <section className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                    {selectedFolder ? selectedFolder.name : "All files"}
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-medium text-zinc-900">
+                    {currentFolder ? currentFolder.name : "Folders"}
                   </h3>
-                  {selectedFolder && (
-                    <button
-                      onClick={() => setSelectedFolderId(null)}
-                      className="text-xs font-medium text-emerald-700 hover:underline"
-                    >
-                      Show all files
-                    </button>
-                  )}
+                  {currentFolder ? (
+                    <p className="text-xs text-zinc-500">
+                      {foldersHere.length} folders · {docsHere.length} files
+                    </p>
+                  ) : null}
                 </div>
 
-                <TablePanel>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="pl-4">Name</TableHead>
-                        <TableHead>Folder</TableHead>
-                        <TableHead>Size</TableHead>
-                        <TableHead>Added</TableHead>
-                        <TableHead>Access</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {visibleDocs.map((doc) => (
-                        <TableRow key={doc.id}>
-                          <TableCell className="pl-4">
-                            <a
-                              href={doc.cloudinaryUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="flex items-center gap-2.5 font-medium text-zinc-900 hover:text-emerald-700"
-                            >
-                              <File strokeWidth={1.8} className="size-4 text-emerald-600" />
-                              <span className="truncate">{doc.title}</span>
-                            </a>
-                            <p className="mt-0.5 pl-6.5 text-xs text-zinc-400">by {doc.uploadedBy}</p>
-                          </TableCell>
-                          <TableCell className="text-zinc-500">{folderName(doc.folderId)}</TableCell>
-                          <TableCell className="text-zinc-500">{formatSize(doc.fileSizeBytes)}</TableCell>
-                          <TableCell className="text-zinc-500">
-                            {format(new Date(doc.createdAt), "MMM d, yyyy")}
-                          </TableCell>
-                          <TableCell>
-                            <RoleBadge role={doc.minRoleRequired} />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {visibleDocs.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="py-10 text-center text-sm text-zinc-500">
-                            No files here yet.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </TablePanel>
+                {foldersHere.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+                    {foldersHere.map((folder) => (
+                      <FolderTile
+                        key={folder.id}
+                        folder={folder}
+                        childCount={childFolderCount.get(folder.id) ?? 0}
+                        onOpen={() => {
+                          setCurrentFolderId(folder.id)
+                          setSearchQuery("")
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-zinc-200 bg-[#fbfcfb] px-4 py-10 text-center">
+                    <FolderIcon className="mx-auto size-14 opacity-80" />
+                    <p className="mt-3 text-sm font-medium text-zinc-800">
+                      {currentFolder ? "No nested folders here" : "No folders yet"}
+                    </p>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Create a folder to organize bylaws, minutes, and handbooks.
+                    </p>
+                  </div>
+                )}
               </section>
+
+              {(currentFolderId || docsHere.length > 0) && (
+                <section className="space-y-3">
+                  <h3 className="text-sm font-medium text-zinc-900">
+                    {currentFolder ? "Files in this folder" : "Unfiled files"}
+                  </h3>
+                  <TablePanel>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="pl-4">Name</TableHead>
+                          <TableHead>Size</TableHead>
+                          <TableHead>Added</TableHead>
+                          <TableHead>Access</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {docsHere.map((doc) => (
+                          <TableRow key={doc.id}>
+                            <TableCell className="pl-4">
+                              <a
+                                href={doc.cloudinaryUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-2.5 font-medium text-zinc-900 hover:text-brand"
+                              >
+                                <FileIcon strokeWidth={1.8} className="size-4 text-brand" />
+                                <span className="truncate">{doc.title}</span>
+                              </a>
+                              <p className="mt-0.5 pl-6.5 text-xs text-zinc-400">
+                                by {doc.uploadedBy}
+                              </p>
+                            </TableCell>
+                            <TableCell className="text-zinc-500">
+                              {formatSize(doc.fileSizeBytes)}
+                            </TableCell>
+                            <TableCell className="text-zinc-500">
+                              {format(new Date(doc.createdAt), "MMM d, yyyy")}
+                            </TableCell>
+                            <TableCell>
+                              <RoleBadge role={doc.minRoleRequired} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {docsHere.length === 0 && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={4}
+                              className="py-10 text-center text-sm text-zinc-500"
+                            >
+                              No files in this folder yet.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TablePanel>
+                </section>
+              )}
             </>
           )}
         </div>
@@ -418,47 +506,51 @@ export default function DocumentsPage() {
         <Sheet open={folderDialog} onOpenChange={setFolderDialog}>
           <SheetContent side="right" inset size="sm" className="p-0">
             <Form {...folderForm}>
-            <form
-              onSubmit={folderForm.handleSubmit(handleCreateFolder)}
-              className="flex h-full flex-col"
-            >
-              <SheetHeader className="pr-12">
-                <SheetTitle>New folder</SheetTitle>
-                <SheetDescription>Choose who is allowed to open files inside it.</SheetDescription>
-              </SheetHeader>
-              <SheetBody>
-                <TextFormField
-                  control={folderForm.control}
-                  name="name"
-                  label="Name"
-                  placeholder="Youth Ministry Resources"
-                />
-                <SelectFormField
-                  control={folderForm.control}
-                  name="minRoleRequired"
-                  label="Who can view"
-                  options={roleOptions}
-                />
-              </SheetBody>
-              <SheetFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-9 rounded-lg px-4"
-                  onClick={() => setFolderDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="h-9 rounded-lg px-4 font-normal"
-                  disabled={folderForm.formState.isSubmitting}
-                >
-                  Create folder
-                </Button>
-              </SheetFooter>
-            </form>
+              <form
+                onSubmit={folderForm.handleSubmit(handleCreateFolder)}
+                className="flex h-full flex-col"
+              >
+                <SheetHeader className="pr-12">
+                  <SheetTitle>New folder</SheetTitle>
+                  <SheetDescription>
+                    {currentFolder
+                      ? `Created inside “${currentFolder.name}”.`
+                      : "Choose who is allowed to open files inside it."}
+                  </SheetDescription>
+                </SheetHeader>
+                <SheetBody>
+                  <TextFormField
+                    control={folderForm.control}
+                    name="name"
+                    label="Name"
+                    placeholder="Youth Ministry Resources"
+                  />
+                  <SelectFormField
+                    control={folderForm.control}
+                    name="minRoleRequired"
+                    label="Who can view"
+                    options={roleOptions}
+                  />
+                </SheetBody>
+                <SheetFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9 rounded-lg px-4"
+                    onClick={() => setFolderDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    className="h-9 rounded-lg px-4 font-normal"
+                    disabled={folderForm.formState.isSubmitting}
+                  >
+                    Create folder
+                  </Button>
+                </SheetFooter>
+              </form>
             </Form>
           </SheetContent>
         </Sheet>
@@ -466,75 +558,75 @@ export default function DocumentsPage() {
         <Sheet open={uploadDialog} onOpenChange={setUploadDialog}>
           <SheetContent side="right" inset size="sm" className="p-0">
             <Form {...uploadForm}>
-            <form
-              onSubmit={uploadForm.handleSubmit(handleUpload)}
-              className="flex h-full flex-col"
-            >
-              <SheetHeader className="pr-12">
-                <SheetTitle>Upload a file</SheetTitle>
-                <SheetDescription>
-                  Files are stored securely and shared only with the roles you pick.
-                </SheetDescription>
-              </SheetHeader>
-              <SheetBody>
-                <FormField
-                  control={uploadForm.control}
-                  name="file"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>File</FormLabel>
-                      <FormControl>
-                        <input
-                          key={fileInputKey}
-                          type="file"
-                          name={field.name}
-                          onBlur={field.onBlur}
-                          ref={field.ref}
-                          onChange={(e) => field.onChange(e.target.files?.[0])}
-                          className="block w-full cursor-pointer rounded-lg border border-dashed border-zinc-300 bg-[#f8faf9] p-3 text-xs text-zinc-600 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-emerald-700"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  <SelectFormField
+              <form
+                onSubmit={uploadForm.handleSubmit(handleUpload)}
+                className="flex h-full flex-col"
+              >
+                <SheetHeader className="pr-12">
+                  <SheetTitle>Upload a file</SheetTitle>
+                  <SheetDescription>
+                    Files are stored securely and shared only with the roles you pick.
+                  </SheetDescription>
+                </SheetHeader>
+                <SheetBody>
+                  <FormField
                     control={uploadForm.control}
-                    name="folderId"
-                    label="Folder"
-                    options={[
-                      { value: UNFILED, label: "Unfiled" },
-                      ...folders.map((f) => ({ value: f.id, label: f.name })),
-                    ]}
+                    name="file"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>File</FormLabel>
+                        <FormControl>
+                          <input
+                            key={fileInputKey}
+                            type="file"
+                            name={field.name}
+                            onBlur={field.onBlur}
+                            ref={field.ref}
+                            onChange={(e) => field.onChange(e.target.files?.[0])}
+                            className="block w-full cursor-pointer rounded-lg border border-dashed border-zinc-300 bg-[#f8faf9] p-3 text-xs text-zinc-600 file:mr-3 file:rounded-md file:border-0 file:bg-brand-soft file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-brand-ink"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  <SelectFormField
-                    control={uploadForm.control}
-                    name="minRoleRequired"
-                    label="Who can view"
-                    options={roleOptions}
-                  />
-                </div>
-              </SheetBody>
-              <SheetFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-9 rounded-lg px-4"
-                  onClick={() => setUploadDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={uploading}
-                  className="h-9 rounded-lg px-4 font-normal"
-                >
-                  {uploading ? "Uploading…" : "Upload"}
-                </Button>
-              </SheetFooter>
-            </form>
+                  <div className="grid grid-cols-2 gap-4">
+                    <SelectFormField
+                      control={uploadForm.control}
+                      name="folderId"
+                      label="Folder"
+                      options={[
+                        { value: UNFILED, label: "Unfiled" },
+                        ...folders.map((f) => ({ value: f.id, label: f.name })),
+                      ]}
+                    />
+                    <SelectFormField
+                      control={uploadForm.control}
+                      name="minRoleRequired"
+                      label="Who can view"
+                      options={roleOptions}
+                    />
+                  </div>
+                </SheetBody>
+                <SheetFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9 rounded-lg px-4"
+                    onClick={() => setUploadDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={uploading}
+                    className="h-9 rounded-lg px-4 font-normal"
+                  >
+                    {uploading ? "Uploading…" : "Upload"}
+                  </Button>
+                </SheetFooter>
+              </form>
             </Form>
           </SheetContent>
         </Sheet>

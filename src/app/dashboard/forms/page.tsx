@@ -1,7 +1,23 @@
 "use client"
 
 import * as React from "react"
-import { ClipboardList, Copy, ExternalLink, Plus, Trash2 } from "lucide-react"
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { ClipboardList, Copy, ExternalLink, GripVertical, Plus, Trash2 } from "lucide-react"
 import { useForm, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -49,6 +65,7 @@ import {
   useForms,
   usePublishForm,
   useRemoveFormField,
+  useReorderFormFields,
   useUnpublishForm,
   useVisitorIntakeForm,
 } from "@/features/forms/hooks/use-forms"
@@ -56,7 +73,9 @@ import {
   FORM_FIELD_TYPES,
   FORM_PURPOSES,
   type ChurchForm,
+  type ChurchFormField,
 } from "@/features/forms/schemas"
+import { cn } from "cn"
 
 const formBuilderSchema = z.object({
   title: z.string().min(2, "Title is required"),
@@ -108,6 +127,72 @@ function publicUrl(slug: string) {
   return `${window.location.origin}/f/${slug}`
 }
 
+function SortableFieldRow({
+  field,
+  locked,
+  removing,
+  onRemove,
+}: {
+  field: ChurchFormField
+  locked: boolean
+  removing: boolean
+  onRemove: () => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: field.id,
+    disabled: locked,
+  })
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+      className={cn(
+        "flex items-center gap-2 rounded-lg border border-zinc-200/80 bg-white px-2 py-2.5",
+        isDragging && "z-10 shadow-md ring-1 ring-brand/30"
+      )}
+    >
+      {!locked ? (
+        <button
+          type="button"
+          className="inline-flex size-8 shrink-0 cursor-grab items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-50 hover:text-zinc-600 active:cursor-grabbing"
+          aria-label={`Reorder ${field.label}`}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="size-4" strokeWidth={1.75} />
+        </button>
+      ) : (
+        <span className="size-8 shrink-0" aria-hidden />
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-zinc-900">
+          {field.label}
+          {field.required ? <span className="text-rose-500"> *</span> : null}
+        </p>
+        <p className="text-xs text-zinc-500">
+          {field.fieldType.replaceAll("_", " ")}
+          {field.options?.length ? ` · ${field.options.join(", ")}` : ""}
+        </p>
+      </div>
+      {!locked ? (
+        <Button
+          type="button"
+          size="icon-sm"
+          variant="ghost"
+          disabled={removing}
+          onClick={onRemove}
+        >
+          <Trash2 className="size-3.5 text-zinc-500" />
+        </Button>
+      ) : null}
+    </li>
+  )
+}
+
 function FormBuilderSheet({
   formId,
   open,
@@ -120,8 +205,19 @@ function FormBuilderSheet({
   const { data: form, isLoading } = useFormDetail(open ? formId : null)
   const addField = useAddFormField(formId)
   const removeField = useRemoveFormField(formId)
+  const reorderFields = useReorderFormFields(formId)
   const publish = usePublishForm()
   const unpublish = useUnpublishForm()
+  const [orderedFields, setOrderedFields] = React.useState<ChurchFormField[]>([])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor)
+  )
+
+  React.useEffect(() => {
+    setOrderedFields(form?.fields ?? [])
+  }, [form?.fields])
 
   const fieldForm = useForm<FieldBuilderValues>({
     resolver: zodResolver(fieldBuilderSchema) as Resolver<FieldBuilderValues>,
@@ -129,6 +225,19 @@ function FormBuilderSheet({
   })
   const fieldType = fieldForm.watch("fieldType")
   const locked = form?.status === "published"
+
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id || locked) return
+    const oldIndex = orderedFields.findIndex((f) => f.id === active.id)
+    const newIndex = orderedFields.findIndex((f) => f.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
+    const next = arrayMove(orderedFields, oldIndex, newIndex)
+    setOrderedFields(next)
+    reorderFields.mutate(next.map((f) => f.id), {
+      onError: () => setOrderedFields(form?.fields ?? []),
+    })
+  }
 
   function submitField(values: FieldBuilderValues) {
     const options =
@@ -225,42 +334,37 @@ function FormBuilderSheet({
                     {form.status}
                   </StatusPill>
                 </div>
-                {form.fields.length === 0 ? (
+                {orderedFields.length === 0 ? (
                   <p className="text-sm text-zinc-500">No fields yet.</p>
                 ) : (
-                  <ul className="space-y-2">
-                    {form.fields.map((f) => (
-                      <li
-                        key={f.id}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200/80 bg-white px-3 py-2.5"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-zinc-900">
-                            {f.label}
-                            {f.required ? (
-                              <span className="text-rose-500"> *</span>
-                            ) : null}
-                          </p>
-                          <p className="text-xs text-zinc-500">
-                            {f.fieldType.replaceAll("_", " ")}
-                            {f.options?.length ? ` · ${f.options.join(", ")}` : ""}
-                          </p>
-                        </div>
-                        {!locked ? (
-                          <Button
-                            type="button"
-                            size="icon-sm"
-                            variant="ghost"
-                            disabled={removeField.isPending}
-                            onClick={() => removeField.mutate(f.id)}
-                          >
-                            <Trash2 className="size-3.5 text-zinc-500" />
-                          </Button>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={onDragEnd}
+                  >
+                    <SortableContext
+                      items={orderedFields.map((f) => f.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <ul className="space-y-2">
+                        {orderedFields.map((f) => (
+                          <SortableFieldRow
+                            key={f.id}
+                            field={f}
+                            locked={Boolean(locked)}
+                            removing={removeField.isPending}
+                            onRemove={() => removeField.mutate(f.id)}
+                          />
+                        ))}
+                      </ul>
+                    </SortableContext>
+                  </DndContext>
                 )}
+                {!locked && orderedFields.length > 1 ? (
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Drag the handle to reorder fields.
+                  </p>
+                ) : null}
               </div>
 
               {!locked ? (

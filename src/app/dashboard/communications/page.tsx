@@ -35,6 +35,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Can, RequireAbility } from "@/components/auth/can"
+import { StatusPill } from "@/components/table-panel"
 import {
   useAddDripStep,
   useCreateDripSequence,
@@ -237,9 +238,9 @@ export default function CommunicationsPage() {
                       #{st.stepOrder}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium uppercase text-emerald-700">
+                      <StatusPill tone="success">
                         +{st.delayHours}h · {st.channel}
-                      </span>
+                      </StatusPill>
                       <h3 className="mt-1.5 text-sm font-medium text-zinc-900">
                         {st.subject || "(SMS message)"}
                       </h3>

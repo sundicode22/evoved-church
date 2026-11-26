@@ -10,7 +10,6 @@ import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -44,7 +43,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Can, RequireAbility } from "@/components/auth/can"
-import { TablePanel } from "@/components/table-panel"
+import { StatusPill, TablePanel } from "@/components/table-panel"
 import {
   useCreateResource,
   useResources,
@@ -176,16 +175,9 @@ export default function ResourcesPage() {
                         <TableCell className="capitalize">{r.category}</TableCell>
                         <TableCell>{r.quantity}</TableCell>
                         <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={
-                              r.isActive
-                                ? "border-emerald-200 bg-emerald-50 text-[10px] text-emerald-700"
-                                : "text-[10px]"
-                            }
-                          >
+                          <StatusPill tone={r.isActive ? "success" : "neutral"}>
                             {r.isActive ? "Active" : "Inactive"}
-                          </Badge>
+                          </StatusPill>
                         </TableCell>
                       </TableRow>
                     ))}

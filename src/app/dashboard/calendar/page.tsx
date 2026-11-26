@@ -15,7 +15,7 @@ import {
   TextareaFormField,
   TextFormField,
 } from "@/components/form-fields"
-import { Badge } from "@/components/ui/badge"
+import { StatusPill } from "@/components/table-panel"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Sheet,
@@ -254,19 +254,13 @@ export default function ChurchCalendarPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <Badge variant="outline" className="text-[10px] capitalize">
-                              {o.programType}
-                            </Badge>
-                            <Badge
-                              variant="outline"
-                              className={
-                                o.status === "scheduled"
-                                  ? "border-emerald-200 bg-emerald-50 text-[10px] text-emerald-700"
-                                  : "text-[10px]"
-                              }
+                            <StatusPill className="capitalize">{o.programType}</StatusPill>
+                            <StatusPill
+                              tone={o.status === "scheduled" ? "success" : "neutral"}
+                              className="capitalize"
                             >
                               {o.status}
-                            </Badge>
+                            </StatusPill>
                           </div>
                           <h3 className="mt-1.5 text-sm font-medium text-zinc-900">
                             {o.programTitle}

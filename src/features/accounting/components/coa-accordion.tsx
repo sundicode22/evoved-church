@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Badge } from "@/components/ui/badge"
+import { StatusPill } from "@/components/table-panel"
 import {
   Accordion,
   AccordionContent,
@@ -132,14 +132,12 @@ export function ChartOfAccountsAccordion({ accounts }: { accounts: CoaAccount[] 
                       <HoverCardContent className="w-64 space-y-1 p-3">
                         <p className="text-sm font-medium">{meta.label}</p>
                         <p className="text-xs text-zinc-500">{meta.hint}</p>
-                        <Badge variant="outline" className="mt-1 text-[10px]">
+                        <StatusPill className="mt-1">
                           Typical range {meta.range}
-                        </Badge>
+                        </StatusPill>
                       </HoverCardContent>
                     </HoverCard>
-                    <Badge variant="outline" className="text-[10px] tabular-nums">
-                      {rows.length}
-                    </Badge>
+                    <StatusPill className="tabular-nums">{rows.length}</StatusPill>
                   </div>
                   <span className="text-xs font-semibold tabular-nums text-zinc-600">
                     ${money(subtotal)}
@@ -183,9 +181,9 @@ export function ChartOfAccountsAccordion({ accounts }: { accounts: CoaAccount[] 
                         </TableCell>
                         <TableCell className="font-medium text-sm">{acct.accountName}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="capitalize text-[10px]">
+                          <StatusPill className="capitalize">
                             {category.replace(/_/g, " ")}
-                          </Badge>
+                          </StatusPill>
                         </TableCell>
                         <TableCell className="text-right font-semibold tabular-nums">
                           {acct.balance != null ? `$${money(Number(acct.balance))}` : "—"}

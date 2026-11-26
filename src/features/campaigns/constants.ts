@@ -13,9 +13,12 @@ export const AUDIENCE_ITEMS = [
   { label: "Custom list", value: "custom" },
 ]
 
-export const STATUS_STYLES: Record<CampaignStatus, string> = {
-  draft: "border-zinc-200 bg-zinc-50 text-zinc-600",
-  scheduled: "border-amber-200 bg-amber-50 text-amber-700",
-  sending: "border-sky-200 bg-sky-50 text-sky-700",
-  sent: "border-emerald-200 bg-emerald-50 text-emerald-700",
+export const STATUS_TONE: Record<
+  CampaignStatus,
+  "neutral" | "success" | "warning" | "info"
+> = {
+  draft: "neutral",
+  scheduled: "warning",
+  sending: "info",
+  sent: "success",
 }

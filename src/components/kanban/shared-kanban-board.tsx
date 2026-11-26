@@ -14,7 +14,7 @@ import {
 } from "@dnd-kit/core"
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Badge } from "@/components/ui/badge"
+import { StatusPill } from "@/components/table-panel"
 import { Button } from "@/components/ui/button"
 import { Calendar, MoreHorizontal } from "lucide-react"
 
@@ -78,15 +78,15 @@ function CardView({
     >
       <div className="flex items-start justify-between gap-2">
         {card.label ? (
-          <span className="truncate rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 shadow-xs">
+          <StatusPill tone="success" className="max-w-[9rem] truncate">
             {card.label}
-          </span>
+          </StatusPill>
         ) : (
           <span />
         )}
-        <Badge variant="secondary" className="shrink-0 bg-zinc-100 text-[10px] text-zinc-600 shadow-none">
+        <StatusPill className="shrink-0">
           {now === null ? "…" : formatElapsed(card.since, now)}
-        </Badge>
+        </StatusPill>
       </div>
 
       <div>
@@ -97,13 +97,9 @@ function CardView({
       <div className="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
         <div className="flex items-center gap-2">
           {card.badges?.map((b) => (
-            <Badge
-              key={b.text}
-              variant="secondary"
-              className={`text-[10px] font-semibold capitalize shadow-none ${b.className ?? ""}`}
-            >
+            <StatusPill key={b.text} className="capitalize">
               {b.text}
-            </Badge>
+            </StatusPill>
           ))}
           {card.dueLabel && (
             <span className="flex items-center gap-1">

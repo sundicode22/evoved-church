@@ -8,6 +8,7 @@ import {
   createFormSchema,
   formFieldSchema,
   formPurposeSchema,
+  reorderFormFieldsSchema,
   submitFormSchema,
   type ChurchForm,
   type ChurchFormField,
@@ -17,6 +18,7 @@ import {
   type FormPurpose,
   type PublicChurchProfile,
   type PublicFormPayload,
+  type ReorderFormFieldsInput,
   type SubmitFormInput,
 } from "./schemas"
 import { settingsService } from "@/features/settings/service"
@@ -328,6 +330,36 @@ export const formsService = {
     await db
       .delete(churchFormFields)
       .where(and(eq(churchFormFields.id, fieldId), eq(churchFormFields.formId, formId)))
+    await db
+      .update(churchForms)
+      .set({ updatedAt: new Date() })
+      .where(eq(churchForms.id, formId))
+    return loadForm(formId)
+  },
+
+  async reorderFields(formId: string, input: ReorderFormFieldsInput): Promise<ChurchForm> {
+    const form = await loadForm(formId)
+    if (form.status === "published") {
+      throw new ValidationError(
+        "This form is open for submissions. Unpublish it before changing fields."
+      )
+    }
+    const parsed = reorderFormFieldsSchema.parse(input)
+    const existingIds = new Set(form.fields.map((f) => f.id))
+    if (
+      parsed.orderedFieldIds.length !== existingIds.size ||
+      parsed.orderedFieldIds.some((id) => !existingIds.has(id))
+    ) {
+      throw new ValidationError("Field order must include every field on this form exactly once.")
+    }
+    await Promise.all(
+      parsed.orderedFieldIds.map((fieldId, index) =>
+        db
+          .update(churchFormFields)
+          .set({ orderIndex: index })
+          .where(and(eq(churchFormFields.id, fieldId), eq(churchFormFields.formId, formId)))
+      )
+    )
     await db
       .update(churchForms)
       .set({ updatedAt: new Date() })

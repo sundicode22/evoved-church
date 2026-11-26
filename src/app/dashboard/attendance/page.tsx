@@ -8,7 +8,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { buttonVariants } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { StatusPill } from "@/components/table-panel"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Empty,
@@ -123,9 +123,7 @@ export default function AttendancePage() {
                           {format(parseISO(s.sessionDate), "EEE, MMM d · h:mm a")}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-[10px] capitalize">
-                            {s.sessionType}
-                          </Badge>
+                          <StatusPill className="capitalize">{s.sessionType}</StatusPill>
                         </TableCell>
                         <TableCell className="text-xs">
                           {s.headcountAdults} adults

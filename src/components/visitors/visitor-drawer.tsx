@@ -10,7 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
+import { StatusPill } from "@/components/table-panel"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -92,10 +92,20 @@ export function VisitorDrawer() {
                   </SheetDescription>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="border-0 bg-emerald-50 text-emerald-700 shadow-xs">
+                  <StatusPill
+                    tone={
+                      lead.stage === "active_partner"
+                        ? "success"
+                        : lead.stage === "first_visit"
+                          ? "info"
+                          : lead.stage === "welcome_call" || lead.stage === "pastoral_visit"
+                            ? "warning"
+                            : "neutral"
+                    }
+                  >
                     {VISITOR_STAGE_LABELS[lead.stage as keyof typeof VISITOR_STAGE_LABELS] ||
                       lead.stage}
-                  </Badge>
+                  </StatusPill>
                   <Button size="sm" className="h-8 gap-1">
                     Create appointment
                   </Button>

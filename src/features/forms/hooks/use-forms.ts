@@ -112,6 +112,24 @@ export function useRemoveFormField(formId: string | null) {
   })
 }
 
+export function useReorderFormFields(formId: string | null) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (orderedFieldIds: string[]) => {
+      const res = await apiClient.post<ApiResponse<ChurchForm>>(
+        `/forms/${formId}/fields/reorder`,
+        { orderedFieldIds }
+      )
+      return res.data.data!
+    },
+    onError: (e: Error) => toast.error(e.message),
+    onSuccess: (data) => {
+      if (formId) qc.setQueryData(FORM_KEYS.detail(formId), data)
+      qc.invalidateQueries({ queryKey: FORM_KEYS.all })
+    },
+  })
+}
+
 export function usePublishForm() {
   const qc = useQueryClient()
   return useMutation({

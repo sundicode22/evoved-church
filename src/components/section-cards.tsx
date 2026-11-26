@@ -1,6 +1,5 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardAction,
@@ -9,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { StatusPill } from "@/components/table-panel"
 import { TrendingDown, TrendingUp } from "lucide-react"
 
 export function SectionCards() {
@@ -21,10 +21,7 @@ export function SectionCards() {
             $1,250.00
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <TrendingUp />
-              +12.5%
-            </Badge>
+            <StatusPill tone="success">+12.5%</StatusPill>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -44,10 +41,7 @@ export function SectionCards() {
             1,234
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <TrendingDown />
-              -20%
-            </Badge>
+            <StatusPill tone="danger">-20%</StatusPill>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -67,10 +61,7 @@ export function SectionCards() {
             45,678
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <TrendingUp />
-              +12.5%
-            </Badge>
+            <StatusPill tone="success">+12.5%</StatusPill>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -88,10 +79,7 @@ export function SectionCards() {
             4.5%
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <TrendingUp />
-              +4.5%
-            </Badge>
+            <StatusPill tone="success">+4.5%</StatusPill>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">

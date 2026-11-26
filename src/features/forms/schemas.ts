@@ -54,9 +54,14 @@ export const submitFormSchema = z.object({
   answers: z.record(z.string(), z.unknown()),
 })
 
+export const reorderFormFieldsSchema = z.object({
+  orderedFieldIds: z.array(z.string().uuid()).min(1),
+})
+
 export type CreateFormInput = z.infer<typeof createFormSchema>
 export type SubmitFormInput = z.infer<typeof submitFormSchema>
 export type FormFieldInput = z.infer<typeof formFieldSchema>
+export type ReorderFormFieldsInput = z.infer<typeof reorderFormFieldsSchema>
 
 /** Default fields when creating a visitor intake form in the builder. */
 export const VISITOR_INTAKE_FIELDS: FormFieldInput[] = [
