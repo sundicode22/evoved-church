@@ -14,7 +14,7 @@ export default function SettingsPage() {
       <AppSidebar variant="inset" />
       <SidebarInset className="min-h-screen bg-white">
         <PageHeader title="Settings" />
-        <div className="flex min-h-[calc(100svh-3rem)] border-t border-zinc-200/80">
+        <div className="flex min-h-[calc(100svh-3rem)]">
           <React.Suspense fallback={null}>
             <SettingsMenu />
           </React.Suspense>

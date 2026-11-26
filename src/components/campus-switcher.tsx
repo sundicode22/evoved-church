@@ -39,11 +39,10 @@ export function CampusSwitcher() {
               />
             }
           >
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-[10px] font-semibold tracking-wide text-zinc-700">
-              LOGO
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium text-zinc-900">LOGO</span>
+            <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+              <span className="truncate text-base font-semibold tracking-tight text-black">
+                log
+              </span>
               <span className="truncate text-xs text-zinc-500">
                 {activeCampus.name || "No location"}
               </span>

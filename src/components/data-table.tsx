@@ -491,7 +491,7 @@ export function DataTable({
             id={sortableId}
           >
             <Table selectable={false}>
-              <TableHeader className="sticky top-0 z-10 bg-muted">
+              <TableHeader className="sticky top-12 z-20 bg-white">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {
