@@ -180,7 +180,7 @@ function SortableFieldRow({
       {!locked ? (
         <button
           type="button"
-          className="inline-flex size-8 shrink-0 cursor-grab items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-50 hover:text-zinc-600 active:cursor-grabbing"
+          className="inline-flex size-8 shrink-0 cursor-grab items-center justify-center rounded-md text-zinc-400 hover:bg-muted hover:text-muted-foreground active:cursor-grabbing"
           aria-label={`Reorder ${field.label}`}
           {...attributes}
           {...listeners}

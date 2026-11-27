@@ -90,7 +90,7 @@ export function ChartOfAccountsAccordion({ accounts }: { accounts: CoaAccount[] 
 
   if (accounts.length === 0) {
     return (
-      <Empty className="border border-dashed border-zinc-200 py-12">
+      <Empty className="border border-dashed border-border py-12">
         <EmptyHeader>
           <EmptyTitle>No accounts yet</EmptyTitle>
           <EmptyDescription>
@@ -139,7 +139,7 @@ export function ChartOfAccountsAccordion({ accounts }: { accounts: CoaAccount[] 
                     </HoverCard>
                     <StatusPill className="tabular-nums">{rows.length}</StatusPill>
                   </div>
-                  <span className="text-xs font-semibold tabular-nums text-zinc-600">
+                  <span className="text-xs font-semibold tabular-nums text-muted-foreground">
                     ${money(subtotal)}
                   </span>
                 </div>

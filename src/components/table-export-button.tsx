@@ -52,7 +52,7 @@ export function TableExportButton({
             type="button"
             variant="secondary"
             disabled={disabled || !ready}
-            className="border-zinc-200 shadow-xs"
+            className="border-border shadow-xs"
           />
         }
       >

@@ -158,13 +158,13 @@ function Column({
   return (
     <div
       ref={setNodeRef}
-      className={`flex w-[300px] shrink-0 flex-col rounded-2xl bg-[#f4f6f5] p-1 shadow-sm transition-shadow ${
+      className={`flex w-[300px] shrink-0 flex-col rounded-2xl bg-muted p-1 shadow-sm transition-shadow ${
         isOver ? "bg-brand-soft shadow-md" : ""
       }`}
     >
       <div className="flex items-center justify-between px-3 py-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold tracking-wide text-zinc-700">{column.title}</span>
+          <span className="text-xs font-semibold tracking-wide text-muted-foreground">{column.title}</span>
           <span className="rounded-full bg-card px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs">
             {column.cards.length}
           </span>
@@ -244,7 +244,7 @@ export function SharedKanbanBoard({
     return (
       <div className="flex gap-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-64 w-[300px] shrink-0 animate-pulse rounded-lg bg-zinc-100" />
+          <div key={i} className="h-64 w-[300px] shrink-0 animate-pulse rounded-lg bg-muted" />
         ))}
       </div>
     )
@@ -272,7 +272,7 @@ export function SharedKanbanBoard({
           <button
             type="button"
             onClick={onManageColumns}
-            className="flex h-28 w-[200px] shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-card/60 text-sm text-muted-foreground transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-ink"
+            className="flex h-28 w-[200px] shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/60 text-sm text-muted-foreground transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-ink"
           >
             + Add column
           </button>

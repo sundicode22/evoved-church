@@ -299,7 +299,7 @@ export default function MembersPage() {
                   </>
                 }
               />
-              <div className="w-full overflow-x-auto rounded-lg border border-zinc-200/80 bg-background">
+              <div className="w-full overflow-x-auto rounded-lg border border-border/80 bg-background">
                 <Table className="min-w-[1080px]">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
@@ -372,15 +372,15 @@ export default function MembersPage() {
                           </TableCell>
                         )}
                         {isVisible("email") && (
-                          <TableCell className="text-zinc-600">{person.email || "—"}</TableCell>
+                          <TableCell className="text-muted-foreground">{person.email || "—"}</TableCell>
                         )}
                         {isVisible("phone") && (
-                          <TableCell className="text-zinc-600">
+                          <TableCell className="text-muted-foreground">
                             {person.phoneNumber || "—"}
                           </TableCell>
                         )}
                         {isVisible("address") && (
-                          <TableCell className="max-w-[220px] truncate text-zinc-600">
+                          <TableCell className="max-w-[220px] truncate text-muted-foreground">
                             {[person.address, person.city, person.state, person.zipCode]
                               .filter(Boolean)
                               .join(", ") || "—"}

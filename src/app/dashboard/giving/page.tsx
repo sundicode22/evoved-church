@@ -330,12 +330,12 @@ export default function GivingPage() {
                         </TableCell>
                       )}
                       {isVisible("method") && (
-                        <TableCell className="text-zinc-600">
+                        <TableCell className="text-muted-foreground">
                           {METHOD_LABELS[tx.method]}
                         </TableCell>
                       )}
                       {isVisible("channel") && (
-                        <TableCell className="capitalize text-zinc-600">
+                        <TableCell className="capitalize text-muted-foreground">
                           {tx.channel.replace("_", " ")}
                         </TableCell>
                       )}

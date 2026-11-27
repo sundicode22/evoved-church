@@ -440,20 +440,20 @@ export default function AccountingPage() {
                   render={<button type="button" className="outline-none" />}
                 >
                   Active funds:{" "}
-                  <strong className="text-zinc-800 tabular-nums">{funds.length}</strong>
+                  <strong className="text-foreground tabular-nums">{funds.length}</strong>
                 </HoverCardTrigger>
                 <HoverCardContent className="w-56 p-3 text-xs">
                   Count of active restricted and unrestricted funds for this location.
                 </HoverCardContent>
               </HoverCard>
-              <span className="text-zinc-300">·</span>
+              <span className="text-border">·</span>
               <span>
                 Available:{" "}
                 <strong className="font-medium text-emerald-700 tabular-nums">
                   ${money(totalAvailable)}
                 </strong>
               </span>
-              <span className="text-zinc-300">·</span>
+              <span className="text-border">·</span>
               <HoverCard>
                 <HoverCardTrigger
                   render={<button type="button" className="outline-none" />}
@@ -486,7 +486,7 @@ export default function AccountingPage() {
 
               <TabsContent value="funds" className="space-y-6">
                 {funds.length === 0 ? (
-                  <Empty className="border border-dashed border-zinc-200 py-14">
+                  <Empty className="border border-dashed border-border py-14">
                     <EmptyHeader>
                       <EmptyTitle>No funds</EmptyTitle>
                       <EmptyDescription>
@@ -626,10 +626,10 @@ export default function AccountingPage() {
                           {lines.map((line: any) => (
                             <TableRow key={line.id}>
                               <TableCell className="font-medium">{line.label}</TableCell>
-                              <TableCell className="text-xs text-zinc-600">
+                              <TableCell className="text-xs text-muted-foreground">
                                 {line.fundName || line.fundId}
                               </TableCell>
-                              <TableCell className="text-xs text-zinc-600">
+                              <TableCell className="text-xs text-muted-foreground">
                                 {line.department || "—"}
                               </TableCell>
                               <TableCell className="text-xs tabular-nums">
@@ -752,7 +752,7 @@ export default function AccountingPage() {
                                   ${Number(req.amount).toFixed(2)}
                                 </TableCell>
                                 <TableCell>
-                                  <span className="flex items-center gap-1.5 text-zinc-700">
+                                  <span className="flex items-center gap-1.5 text-muted-foreground">
                                     <Shield className="size-3.5 text-emerald-600" />
                                     Tier {req.currentTierLevel}
                                   </span>
@@ -883,10 +883,10 @@ export default function AccountingPage() {
                                   {je.status}
                                 </StatusPill>
                               </TableCell>
-                              <TableCell className="text-xs text-zinc-600">
+                              <TableCell className="text-xs text-muted-foreground">
                                 {je.createdByName || je.createdByUserId || "—"}
                               </TableCell>
-                              <TableCell className="text-xs text-zinc-600">
+                              <TableCell className="text-xs text-muted-foreground">
                                 {je.postedByName || je.postedByUserId || "—"}
                               </TableCell>
                               <TableCell>

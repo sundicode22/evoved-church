@@ -45,8 +45,10 @@ import {
 } from "@/features/calendar/hooks/use-calendar"
 import { ASSIGNEE_ROLES, PROGRAM_TYPES } from "@/features/calendar/schemas"
 import type { CalendarOccurrence } from "@/features/calendar/schemas"
+import { MonthGrid } from "@/features/calendar/components/month-grid"
 import { PageHeader } from "@/components/page-header"
 import { Calendar as CalendarIcon, Plus } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 const eventFormSchema = z
   .object({
@@ -95,6 +97,7 @@ const ASSIGNEE_ROLE_OPTIONS = ASSIGNEE_ROLES.map((r) => ({ value: r.value, label
 export default function ChurchCalendarPage() {
   const [month, setMonth] = React.useState<Date | null>(null)
   const [selectedDay, setSelectedDay] = React.useState<Date | null>(null)
+  const [view, setView] = React.useState<"month" | "agenda">("month")
 
   React.useEffect(() => {
     const now = new Date()
@@ -188,120 +191,69 @@ export default function ChurchCalendarPage() {
             description="Programs, services, and who is responsible."
             icon={<CalendarIcon className="size-5 text-brand" strokeWidth={1.75} />}
             actions={
-              <Can permission="calendar.write">
-                <Button
-                  onClick={openCreate}
-                >
-                  <Plus strokeWidth={2} className="size-3.5" />
-                  Add event
-                </Button>
-              </Can>
+              <div className="flex flex-wrap items-center gap-2">
+                <CalendarViewSwitch value={view} onChange={setView} />
+                <Can permission="calendar.write">
+                  <Button onClick={openCreate}>
+                    <Plus strokeWidth={2} className="size-3.5" />
+                    Add event
+                  </Button>
+                </Can>
+              </div>
             }
           />
 
-          <div className="grid gap-6 p-8 lg:grid-cols-[340px_1fr]">
-            <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
-              {month ? (
-                <Calendar
-                  mode="single"
+          <div className="space-y-4 p-4 md:p-6 lg:p-8">
+
+            {view === "month" && month ? (
+              <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
+                <MonthGrid
                   month={month}
                   onMonthChange={setMonth}
-                  selected={selectedDay ?? undefined}
-                  onSelect={(d) => d && setSelectedDay(d)}
-                  className="w-full"
-                  modifiers={{
-                    hasEvent: (date) => daysWithEvents.has(format(date, "yyyy-MM-dd")),
-                  }}
-                  modifiersClassNames={{
-                    hasEvent:
-                      "relative after:absolute after:bottom-1 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-emerald-500",
-                  }}
+                  selectedDay={selectedDay}
+                  onSelectDay={setSelectedDay}
+                  occurrences={occurrences ?? []}
+                  onEventClick={() => setView("agenda")}
                 />
-              ) : (
-                <div className="h-72 animate-pulse rounded-lg bg-zinc-100" />
-              )}
-            </div>
-
-            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
-              <div className="border-b border-zinc-100 px-5 py-4">
-                <h2 className="text-sm font-medium text-foreground">
-                  {selectedDay ? format(selectedDay, "EEEE, MMM d, yyyy") : "Loading…"}
-                </h2>
-                <p className="text-xs text-zinc-400">
-                  {dayEvents.length} event{dayEvents.length === 1 ? "" : "s"}
-                </p>
+                <DayAgenda
+                  selectedDay={selectedDay}
+                  dayEvents={dayEvents}
+                  isLoading={isLoading}
+                  onRemove={setConfirmDelete}
+                  compact
+                />
               </div>
-              <ScrollArea className="max-h-[70vh]">
-                {isLoading && (
-                  <p className="px-5 py-8 text-center text-xs text-zinc-400">Loading…</p>
-                )}
-                {!isLoading && dayEvents.length === 0 && (
-                  <Empty className="py-12">
-                    <EmptyHeader>
-                      <EmptyTitle>No programs this day</EmptyTitle>
-                      <EmptyDescription>
-                        Schedule outreach, classes, or link a worship service.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                )}
-                <ul className="space-y-3 p-5">
-                  {dayEvents.map((o) => (
-                    <li
-                      key={o.id}
-                      className="rounded-lg border border-zinc-200/80 bg-[#f4f6f5] p-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <StatusPill className="capitalize">{o.programType}</StatusPill>
-                            <StatusPill
-                              tone={o.status === "scheduled" ? "success" : "neutral"}
-                              className="capitalize"
-                            >
-                              {o.status}
-                            </StatusPill>
-                          </div>
-                          <h3 className="mt-1.5 text-sm font-medium text-foreground">
-                            {o.programTitle}
-                          </h3>
-                          <p className="mt-0.5 text-xs text-zinc-500">
-                            {o.allDay
-                              ? "All day"
-                              : `${format(parseISO(o.startsAt), "h:mm a")}${
-                                  o.endsAt
-                                    ? ` – ${format(parseISO(o.endsAt), "h:mm a")}`
-                                    : ""
-                                }`}
-                            {o.locationLabel ? ` · ${o.locationLabel}` : ""}
-                          </p>
-                          {o.assignees.length > 0 && (
-                            <p className="mt-2 text-xs text-zinc-600">
-                              {o.assignees
-                                .map((a) => `${a.displayName} (${a.roleLabel})`)
-                                .join(" · ")}
-                            </p>
-                          )}
-                          {o.notes && (
-                            <p className="mt-1 text-xs text-zinc-400">{o.notes}</p>
-                          )}
-                        </div>
-                        <Can permission="calendar.write">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs text-rose-600"
-                            onClick={() => setConfirmDelete(o)}
-                          >
-                            Remove
-                          </Button>
-                        </Can>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </ScrollArea>
-            </div>
+            ) : (
+              <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+                <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                  {month ? (
+                    <Calendar
+                      mode="single"
+                      month={month}
+                      onMonthChange={setMonth}
+                      selected={selectedDay ?? undefined}
+                      onSelect={(d) => d && setSelectedDay(d)}
+                      className="w-full"
+                      modifiers={{
+                        hasEvent: (date) => daysWithEvents.has(format(date, "yyyy-MM-dd")),
+                      }}
+                      modifiersClassNames={{
+                        hasEvent:
+                          "relative after:absolute after:bottom-1 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-accent-cta",
+                      }}
+                    />
+                  ) : (
+                    <div className="h-72 animate-pulse rounded-lg bg-muted" />
+                  )}
+                </div>
+                <DayAgenda
+                  selectedDay={selectedDay}
+                  dayEvents={dayEvents}
+                  isLoading={isLoading}
+                  onRemove={setConfirmDelete}
+                />
+              </div>
+            )}
           </div>
 
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -412,5 +364,135 @@ export default function ChurchCalendarPage() {
         </RequireAbility>
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+function CalendarViewSwitch({
+  value,
+  onChange,
+}: {
+  value: "month" | "agenda"
+  onChange: (v: "month" | "agenda") => void
+}) {
+  return (
+    <div className="inline-flex rounded-lg border border-border bg-muted/80 p-0.5">
+      {(
+        [
+          { id: "month", label: "Month" },
+          { id: "agenda", label: "Agenda" },
+        ] as const
+      ).map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          onClick={() => onChange(opt.id)}
+          className={cn(
+            "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+            value === opt.id
+              ? "bg-card text-foreground shadow-xs"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function DayAgenda({
+  selectedDay,
+  dayEvents,
+  isLoading,
+  onRemove,
+  compact,
+}: {
+  selectedDay: Date | null
+  dayEvents: CalendarOccurrence[]
+  isLoading: boolean
+  onRemove: (o: CalendarOccurrence) => void
+  compact?: boolean
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+      <div className="border-b border-border px-5 py-4">
+        <h2 className="text-sm font-medium text-foreground">
+          {selectedDay ? format(selectedDay, "EEEE, MMM d, yyyy") : "Loading…"}
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          {dayEvents.length} event{dayEvents.length === 1 ? "" : "s"}
+        </p>
+      </div>
+      <ScrollArea className={compact ? "max-h-[28rem]" : "max-h-[70vh]"}>
+        {isLoading && (
+          <p className="px-5 py-8 text-center text-xs text-muted-foreground">Loading…</p>
+        )}
+        {!isLoading && dayEvents.length === 0 && (
+          <Empty className="py-12">
+            <EmptyHeader>
+              <EmptyTitle>No programs this day</EmptyTitle>
+              <EmptyDescription>
+                Schedule outreach, classes, or link a worship service.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        )}
+        <ul className="space-y-3 p-5">
+          {dayEvents.map((o) => (
+            <li
+              key={o.id}
+              className="rounded-lg border border-border bg-muted/50 p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <StatusPill className="capitalize">{o.programType}</StatusPill>
+                    <StatusPill
+                      tone={o.status === "scheduled" ? "success" : "neutral"}
+                      className="capitalize"
+                    >
+                      {o.status}
+                    </StatusPill>
+                  </div>
+                  <h3 className="mt-1.5 text-sm font-medium text-foreground">
+                    {o.programTitle}
+                  </h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {o.allDay
+                      ? "All day"
+                      : `${format(parseISO(o.startsAt), "h:mm a")}${
+                          o.endsAt
+                            ? ` – ${format(parseISO(o.endsAt), "h:mm a")}`
+                            : ""
+                        }`}
+                    {o.locationLabel ? ` · ${o.locationLabel}` : ""}
+                  </p>
+                  {o.assignees.length > 0 && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {o.assignees
+                        .map((a) => `${a.displayName} (${a.roleLabel})`)
+                        .join(" · ")}
+                    </p>
+                  )}
+                  {o.notes && (
+                    <p className="mt-1 text-xs text-muted-foreground">{o.notes}</p>
+                  )}
+                </div>
+                <Can permission="calendar.write">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-rose-600 dark:text-rose-400"
+                    onClick={() => onRemove(o)}
+                  >
+                    Remove
+                  </Button>
+                </Can>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </ScrollArea>
+    </div>
   )
 }

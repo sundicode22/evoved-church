@@ -51,12 +51,12 @@ import {
 } from "lucide-react"
 
 const AVATAR_COLORS = [
-  "bg-blue-100 text-blue-700",
-  "bg-emerald-100 text-emerald-700",
-  "bg-purple-100 text-purple-700",
-  "bg-amber-100 text-amber-800",
-  "bg-rose-100 text-rose-700",
-  "bg-zinc-200 text-zinc-700",
+  "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+  "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
+  "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
+  "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
+  "bg-muted text-muted-foreground",
 ]
 
 function avatarColor(name: string) {
@@ -121,7 +121,7 @@ function SortableCard({
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    className="size-7 text-zinc-400 hover:text-zinc-700"
+                    className="size-7 text-zinc-400 hover:text-muted-foreground"
                     onClick={(e) => e.stopPropagation()}
                     onPointerDown={(e) => e.stopPropagation()}
                   />
@@ -237,13 +237,13 @@ function Column({
   return (
     <div
       ref={setNodeRef}
-      className={`flex w-[300px] shrink-0 flex-col rounded-2xl bg-[#f4f6f5] p-1 shadow-sm transition-shadow ${
+      className={`flex w-[300px] shrink-0 flex-col rounded-2xl bg-muted p-1 shadow-sm transition-shadow ${
         isOver ? "bg-brand-soft shadow-md" : ""
       }`}
     >
       <div className="flex items-center justify-between px-3 py-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold tracking-wide text-zinc-700">{title}</span>
+          <span className="text-xs font-semibold tracking-wide text-muted-foreground">{title}</span>
           <span className="rounded-full bg-card px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs">
             {count}
           </span>
@@ -361,7 +361,7 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
             <button
               type="button"
               onClick={() => setManageColumnsOpen(true)}
-              className="flex h-28 w-[200px] shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-card/60 text-sm text-muted-foreground transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-ink"
+              className="flex h-28 w-[200px] shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/60 text-sm text-muted-foreground transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-ink"
             >
               + Add column
             </button>
@@ -397,7 +397,7 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#fbfcfb]">
+    <div className="flex h-full flex-col bg-background">
       <div className="flex flex-wrap items-center justify-between gap-3 bg-background px-6 py-4 shadow-sm">
         <div>
           <h1 className="text-xl font-medium tracking-tight text-foreground">Visitor Pipeline</h1>
@@ -415,7 +415,7 @@ export function KanbanBoard({ embedded = false }: { embedded?: boolean }) {
               className="h-10 w-64 bg-background pl-10 shadow-xs"
             />
           </div>
-          <div className="flex h-10 items-center rounded-lg bg-zinc-100/80 p-0.5 shadow-xs">
+          <div className="flex h-10 items-center rounded-lg bg-muted/80 p-0.5 shadow-xs">
             <button
               type="button"
               onClick={() => setActiveView("board")}

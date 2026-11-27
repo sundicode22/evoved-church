@@ -354,7 +354,7 @@ export default function DocumentsPage() {
                   placeholder="Search here…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 rounded-lg border-zinc-200 bg-zinc-50 pl-8 text-xs shadow-xs"
+                  className="h-8 rounded-lg border-border bg-muted pl-8 text-xs shadow-xs"
                 />
               </div>
               <TableAddButton onClick={openFolderDialog}>
@@ -375,7 +375,7 @@ export default function DocumentsPage() {
               type="button"
               onClick={() => setCurrentFolderId(null)}
               className={cn(
-                "rounded-md px-1.5 py-0.5 transition-colors hover:bg-zinc-100 hover:text-foreground",
+                "rounded-md px-1.5 py-0.5 transition-colors hover:bg-muted hover:text-foreground",
                 !currentFolderId && "font-medium text-foreground"
               )}
             >
@@ -383,12 +383,12 @@ export default function DocumentsPage() {
             </button>
             {breadcrumb.map((folder) => (
               <React.Fragment key={folder.id}>
-                <ChevronRight className="size-3.5 shrink-0 text-zinc-300" />
+                <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
                 <button
                   type="button"
                   onClick={() => setCurrentFolderId(folder.id)}
                   className={cn(
-                    "max-w-[12rem] truncate rounded-md px-1.5 py-0.5 transition-colors hover:bg-zinc-100 hover:text-foreground",
+                    "max-w-[12rem] truncate rounded-md px-1.5 py-0.5 transition-colors hover:bg-muted hover:text-foreground",
                     folder.id === currentFolderId && "font-medium text-foreground"
                   )}
                 >
@@ -429,9 +429,9 @@ export default function DocumentsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-zinc-200 bg-[#fbfcfb] px-4 py-10 text-center">
+                  <div className="rounded-2xl border border-dashed border-border bg-background px-4 py-10 text-center">
                     <FolderIcon className="mx-auto size-14 opacity-80" />
-                    <p className="mt-3 text-sm font-medium text-zinc-800">
+                    <p className="mt-3 text-sm font-medium text-foreground">
                       {currentFolder ? "No nested folders here" : "No folders yet"}
                     </p>
                     <p className="mt-1 text-xs text-zinc-500">
@@ -583,7 +583,7 @@ export default function DocumentsPage() {
                             onBlur={field.onBlur}
                             ref={field.ref}
                             onChange={(e) => field.onChange(e.target.files?.[0])}
-                            className="block w-full cursor-pointer rounded-lg border border-dashed border-zinc-300 bg-[#f8faf9] p-3 text-xs text-zinc-600 file:mr-3 file:rounded-md file:border-0 file:bg-brand-soft file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-brand-ink"
+                            className="block w-full cursor-pointer rounded-lg border border-dashed border-border bg-muted p-3 text-xs text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-brand-soft file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-brand-ink"
                           />
                         </FormControl>
                         <FormMessage />

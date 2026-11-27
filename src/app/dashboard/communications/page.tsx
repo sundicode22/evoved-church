@@ -207,7 +207,7 @@ export default function CommunicationsPage() {
 
             <div className="space-y-4">
               {active && (
-                <div className="rounded-lg border border-zinc-200/80 bg-[#f4f6f5] px-4 py-3 shadow-xs">
+                <div className="rounded-lg border border-border/80 bg-muted px-4 py-3 shadow-xs">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <h2 className="text-sm font-medium text-foreground">{active.name}</h2>
@@ -251,7 +251,7 @@ export default function CommunicationsPage() {
               ))}
 
               {active && active.steps.length === 0 && (
-                <Empty className="rounded-lg border border-zinc-200/80 py-12">
+                <Empty className="rounded-lg border border-border/80 py-12">
                   <EmptyHeader>
                     <EmptyTitle>No steps yet</EmptyTitle>
                     <EmptyDescription>Add an email or SMS step to this sequence.</EmptyDescription>

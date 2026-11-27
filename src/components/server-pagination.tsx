@@ -39,7 +39,7 @@ export function ServerPagination({ meta, onPageChange, className }: ServerPagina
 
   return (
     <div className={className}>
-      <div className="flex flex-col items-center gap-2 border-t border-zinc-100 px-4 py-3 sm:flex-row sm:justify-between">
+      <div className="flex flex-col items-center gap-2 border-t border-border px-4 py-3 sm:flex-row sm:justify-between">
         <p className="text-[11px] text-zinc-400 tabular-nums">
           Page {meta.page} of {meta.totalPages} · {meta.total} rows
         </p>

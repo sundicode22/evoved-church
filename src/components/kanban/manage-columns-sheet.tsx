@@ -125,7 +125,7 @@ export function ManageColumnsSheet({
                 {sorted.map((col, i) => (
                   <li
                     key={col.id}
-                    className="flex items-center gap-2 rounded-lg border border-zinc-200/80 bg-[#f4f6f5] px-3 py-2.5"
+                    className="flex items-center gap-2 rounded-lg border border-border/80 bg-muted px-3 py-2.5"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-foreground">{col.label}</p>
@@ -182,9 +182,9 @@ export function ManageColumnsSheet({
             <Form {...addForm}>
               <form
                 onSubmit={addForm.handleSubmit(onAdd)}
-                className="space-y-3 rounded-xl border border-dashed border-zinc-300 p-4"
+                className="space-y-3 rounded-xl border border-dashed border-border p-4"
               >
-                <p className="text-sm font-normal text-zinc-700">
+                <p className="text-sm font-normal text-muted-foreground">
                   Add column
                 </p>
                 <FieldGroup>

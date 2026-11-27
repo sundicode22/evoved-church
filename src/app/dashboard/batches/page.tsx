@@ -216,7 +216,7 @@ export default function BatchesPage() {
                         </TableCell>
                       )}
                       {isVisible("contributors") && (
-                        <TableCell className="tabular-nums text-zinc-600">
+                        <TableCell className="tabular-nums text-muted-foreground">
                           {batch.uniqueContributors}
                         </TableCell>
                       )}

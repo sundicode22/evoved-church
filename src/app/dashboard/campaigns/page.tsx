@@ -206,7 +206,7 @@ export default function CampaignsPage() {
                         </TableCell>
                       )}
                       {isVisible("recipients") && (
-                        <TableCell className="tabular-nums text-zinc-600">
+                        <TableCell className="tabular-nums text-muted-foreground">
                           {c.stats?.total ?? "—"}
                         </TableCell>
                       )}

@@ -83,11 +83,11 @@ export function FileAttachment({
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex items-baseline justify-between gap-2">
-        <p className="text-xs font-semibold text-zinc-700">{label}</p>
+        <p className="text-xs font-semibold text-muted-foreground">{label}</p>
         <p className="text-[11px] text-zinc-400">{hint}</p>
       </div>
 
-      <InputGroup className="h-auto min-h-9 border-dashed bg-[#f8faf9]">
+      <InputGroup className="h-auto min-h-9 border-dashed bg-muted">
         <InputGroupAddon align="inline-start">
           <Paperclip className="size-3.5" />
         </InputGroupAddon>
@@ -132,7 +132,7 @@ export function FileAttachment({
               className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-2.5 py-2"
             >
               <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-zinc-800">{f.name}</p>
+                <p className="truncate text-xs font-medium text-foreground">{f.name}</p>
                 <div className="mt-0.5 flex items-center gap-1.5">
                   <StatusPill>
                     {f.mimeType.split("/").pop()?.toUpperCase() || "FILE"}

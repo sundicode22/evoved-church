@@ -186,7 +186,7 @@ function NodeCard({
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    className="size-7 text-zinc-400 hover:text-zinc-700"
+                    className="size-7 text-zinc-400 hover:text-muted-foreground"
                     onClick={(e) => e.stopPropagation()}
                     onPointerDown={(e) => e.stopPropagation()}
                   />
@@ -226,7 +226,7 @@ function NodeCard({
           <Users strokeWidth={1.8} className="size-3.5 text-zinc-400" />
           Span of care
         </span>
-        <span className="font-medium text-zinc-800">{node.spanOfCare.toLocaleString()}</span>
+        <span className="font-medium text-foreground">{node.spanOfCare.toLocaleString()}</span>
       </div>
     </div>
   )
@@ -264,18 +264,18 @@ function TreeBranch({
 
       {children.length > 0 && (
         <>
-          <div className="h-6 w-px bg-zinc-300" />
+          <div className="h-6 w-px bg-border" />
           <div className="flex items-start justify-center">
             {children.map((child, idx) => (
               <div key={child.id} className="relative flex flex-col items-center px-3 pt-6">
                 <span className="pointer-events-none absolute inset-x-0 top-0 h-6">
                   {children.length > 1 && idx > 0 && (
-                    <span className="absolute top-0 left-0 h-px w-1/2 bg-zinc-300" />
+                    <span className="absolute top-0 left-0 h-px w-1/2 bg-border" />
                   )}
                   {children.length > 1 && idx < children.length - 1 && (
-                    <span className="absolute top-0 right-0 h-px w-1/2 bg-zinc-300" />
+                    <span className="absolute top-0 right-0 h-px w-1/2 bg-border" />
                   )}
-                  <span className="absolute top-0 left-1/2 h-6 w-px bg-zinc-300" />
+                  <span className="absolute top-0 left-1/2 h-6 w-px bg-border" />
                 </span>
                 <TreeBranch
                   node={child}
@@ -492,10 +492,10 @@ export default function OrganigramPage() {
           >
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
               <span>
-                Viewing: <span className="text-zinc-800">{activeCampus.name}</span>
-                <span className="mx-2 text-zinc-300">·</span>
-                Roles: <span className="text-zinc-800">{nodes.length}</span>
-                <span className="mx-2 text-zinc-300">·</span>
+                Viewing: <span className="text-foreground">{activeCampus.name}</span>
+                <span className="mx-2 text-border">·</span>
+                Roles: <span className="text-foreground">{nodes.length}</span>
+                <span className="mx-2 text-border">·</span>
                 Span of care:{" "}
                 <span className="font-medium text-emerald-700">
                   {totalSpan.toLocaleString()} people
@@ -517,7 +517,7 @@ export default function OrganigramPage() {
               </div>
             ) : roots.length === 0 ? (
               <div className="flex max-w-md flex-col gap-3 rounded-xl bg-[#f6f8f6] p-6 shadow-xs">
-                <p className="text-sm text-zinc-600">No roles have been added yet.</p>
+                <p className="text-sm text-muted-foreground">No roles have been added yet.</p>
                 <Can permission="organigram.write">
                   <Button className="w-fit"
                     onClick={openCreate}

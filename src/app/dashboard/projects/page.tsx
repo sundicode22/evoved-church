@@ -258,7 +258,7 @@ export default function ProjectsPage() {
                           </TableCell>
                         )}
                         {isVisible("stage") && (
-                          <TableCell className="text-zinc-600">{card.stageLabel}</TableCell>
+                          <TableCell className="text-muted-foreground">{card.stageLabel}</TableCell>
                         )}
                         {isVisible("priority") && (
                           <TableCell>
@@ -273,7 +273,7 @@ export default function ProjectsPage() {
                               <span className="flex size-6 items-center justify-center rounded-full bg-sky-500 text-[10px] font-medium text-white">
                                 {(card.assigneeName || "?").slice(0, 2)}
                               </span>
-                              <span className="text-sm text-zinc-600">
+                              <span className="text-sm text-muted-foreground">
                                 {card.assigneeName || "Unassigned"}
                               </span>
                             </div>

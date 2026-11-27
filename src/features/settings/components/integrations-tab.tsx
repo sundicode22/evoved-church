@@ -121,7 +121,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
 
   return (
     <div className="w-full space-y-6 text-left">
-      <p className="max-w-2xl text-sm text-zinc-600">
+      <p className="max-w-2xl text-sm text-muted-foreground">
         Connect Stripe for giving, Resend for email, and Twilio for SMS.
       </p>
 
@@ -136,7 +136,7 @@ export function IntegrationsTab({ canEdit }: { canEdit: boolean }) {
               <img src={card.logoSrc} alt={card.logoAlt} className="size-6 object-contain" />
             </div>
             <h3 className="text-sm font-semibold text-foreground">{card.name}</h3>
-            <p className="mt-1 flex-1 text-sm leading-relaxed text-zinc-600">{card.description}</p>
+            <p className="mt-1 flex-1 text-sm leading-relaxed text-muted-foreground">{card.description}</p>
             <div className="mt-4">
               <Button
                 disabled={!canEdit}

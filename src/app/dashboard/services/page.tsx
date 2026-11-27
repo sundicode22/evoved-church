@@ -389,7 +389,7 @@ export default function ServicesPage() {
                           className={`flex w-full flex-col rounded-xl px-3 py-2.5 text-left transition-colors ${
                             active
                               ? "bg-brand-soft text-brand-ink"
-                              : "text-zinc-700 hover:bg-zinc-50"
+                              : "text-muted-foreground hover:bg-muted"
                           }`}
                         >
                           <span className="text-sm font-medium">{s.name}</span>
@@ -416,7 +416,7 @@ export default function ServicesPage() {
                 </Empty>
               ) : (
                 <>
-                  <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-5 py-4">
+                  <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
                     <div>
                       <h2 className="text-base font-medium text-foreground">{selected.name}</h2>
                       <p className="mt-0.5 text-xs text-zinc-500">
@@ -463,7 +463,7 @@ export default function ServicesPage() {
                       {sortedSegments.map((seg, i) => (
                         <div
                           key={seg.id}
-                          className="rounded-lg border border-zinc-200/80 bg-[#f4f6f5] px-4 py-3"
+                          className="rounded-lg border border-border/80 bg-muted px-4 py-3"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <button
@@ -553,7 +553,7 @@ export default function ServicesPage() {
                       {sortedVolunteers.map((v) => (
                         <div
                           key={v.id}
-                          className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200/80 px-4 py-3"
+                          className="flex items-center justify-between gap-3 rounded-lg border border-border/80 px-4 py-3"
                         >
                           <button
                             type="button"

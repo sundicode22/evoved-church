@@ -57,7 +57,7 @@ export function RowActionsMenu({
           <Button
             variant="ghost"
             size="icon-sm"
-            className="size-7 text-zinc-400 hover:text-zinc-700"
+            className="size-7 text-zinc-400 hover:text-muted-foreground"
             aria-label="Row actions"
           />
         }

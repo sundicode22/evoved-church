@@ -372,12 +372,12 @@ function VisitorsPageInner() {
             </div>
 
             {intakeForm ? (
-              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm text-zinc-600 shadow-xs">
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-xs">
                 <span className="font-medium text-foreground">{intakeForm.title}</span>
                 <StatusPill tone={intakeForm.status === "published" ? "success" : "neutral"}>
                   {intakeForm.status}
                 </StatusPill>
-                <code className="rounded-md bg-zinc-50 px-2 py-0.5 text-xs text-zinc-700">
+                <code className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                   /f/{intakeForm.slug}
                 </code>
                 <Button
@@ -501,12 +501,12 @@ function VisitorsPageInner() {
                           </TableCell>
                         )}
                         {isVisible("source") && (
-                          <TableCell className="text-zinc-600">
+                          <TableCell className="text-muted-foreground">
                             {String(row.source || "—")}
                           </TableCell>
                         )}
                         {isVisible("location") && (
-                          <TableCell className="text-zinc-600">
+                          <TableCell className="text-muted-foreground">
                             {String(row.location || "—")}
                           </TableCell>
                         )}
@@ -520,7 +520,7 @@ function VisitorsPageInner() {
                               >
                                 {(assigneeLabel(row) || "?").slice(0, 1)}
                               </span>
-                              <span className="text-sm text-zinc-600">
+                              <span className="text-sm text-muted-foreground">
                                 {assigneeLabel(row) || "Unassigned"}
                               </span>
                             </div>
@@ -565,7 +565,7 @@ function VisitorsPageInner() {
                   <SheetTitle className="font-medium">Add visitor</SheetTitle>
                   <SheetDescription>
                     Fields come from{" "}
-                    <strong className="font-medium text-zinc-800">
+                    <strong className="font-medium text-foreground">
                       {intakeForm?.title || "Visitor Connect"}
                     </strong>{" "}
                     in the form builder. Edit them under Forms.

@@ -169,7 +169,7 @@ export function VisitorDrawer() {
                           s.active
                             ? "bg-brand-soft font-semibold text-brand-ink"
                             : s.completed
-                              ? "bg-zinc-100 text-muted-foreground"
+                              ? "bg-muted text-muted-foreground"
                               : "bg-card text-muted-foreground"
                         }`}
                       >
@@ -220,7 +220,7 @@ export function VisitorDrawer() {
                   <ScrollArea className="min-h-0 flex-1 pr-2">
                     <TabsContent value="activity" className="mt-0 space-y-0 pb-6">
                       {(lead.latestActivity || []).length === 0 ? (
-                        <Empty className="bg-[#f8faf9] py-10 shadow-xs">
+                        <Empty className="bg-muted py-10 shadow-xs">
                           <EmptyHeader>
                             <EmptyMedia variant="icon">
                               <Mail />
@@ -262,7 +262,7 @@ export function VisitorDrawer() {
                     </TabsContent>
 
                     <TabsContent value="appointments" className="mt-0 pb-6">
-                      <Empty className="bg-[#f8faf9] py-10 shadow-xs">
+                      <Empty className="bg-muted py-10 shadow-xs">
                         <EmptyHeader>
                           <EmptyMedia variant="icon">
                             <Calendar />
@@ -276,7 +276,7 @@ export function VisitorDrawer() {
                     </TabsContent>
 
                     <TabsContent value="giving" className="mt-0 pb-6">
-                      <Empty className="bg-[#f8faf9] py-10 shadow-xs">
+                      <Empty className="bg-muted py-10 shadow-xs">
                         <EmptyHeader>
                           <EmptyTitle>No giving linked</EmptyTitle>
                           <EmptyDescription>
@@ -287,7 +287,7 @@ export function VisitorDrawer() {
                     </TabsContent>
 
                     <TabsContent value="notes" className="mt-0 pb-6">
-                      <Empty className="bg-[#f8faf9] py-10 shadow-xs">
+                      <Empty className="bg-muted py-10 shadow-xs">
                         <EmptyHeader>
                           <EmptyMedia variant="icon">
                             <StickyNote />
@@ -299,7 +299,7 @@ export function VisitorDrawer() {
                     </TabsContent>
 
                     <TabsContent value="tasks" className="mt-0 pb-6">
-                      <Empty className="bg-[#f8faf9] py-10 shadow-xs">
+                      <Empty className="bg-muted py-10 shadow-xs">
                         <EmptyHeader>
                           <EmptyMedia variant="icon">
                             <ListTodo />
@@ -313,7 +313,7 @@ export function VisitorDrawer() {
                 </Tabs>
               </SheetBody>
 
-              <aside className="flex flex-col gap-5 bg-[#f8faf9] px-5 py-5 shadow-sm md:shadow-none">
+              <aside className="flex flex-col gap-5 bg-muted px-5 py-5 shadow-sm md:shadow-none">
                 <div className="space-y-3">
                   <p className="text-[11px] font-semibold tracking-wider text-zinc-400 uppercase">
                     Contact

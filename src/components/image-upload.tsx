@@ -64,7 +64,7 @@ export function ImageUpload({
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex items-baseline justify-between gap-2">
-        <p className="text-xs font-semibold text-zinc-700">{label}</p>
+        <p className="text-xs font-semibold text-muted-foreground">{label}</p>
         <p className="text-[11px] text-zinc-400">{hint}</p>
       </div>
 
@@ -80,7 +80,7 @@ export function ImageUpload({
           if (!disabled) onFiles(e.dataTransfer.files)
         }}
         className={cn(
-          "relative overflow-hidden rounded-xl bg-[#f8faf9] shadow-xs transition-shadow",
+          "relative overflow-hidden rounded-xl bg-muted shadow-xs transition-shadow",
           dragOver && "shadow-md ring-2 ring-[var(--brand)]/30",
           disabled && "opacity-60"
         )}
@@ -128,7 +128,7 @@ export function ImageUpload({
             <span className="flex size-10 items-center justify-center rounded-full bg-white text-brand shadow-sm">
               <ImagePlus className="size-5" strokeWidth={1.75} />
             </span>
-            <span className="text-sm font-medium text-zinc-800">Upload image</span>
+            <span className="text-sm font-medium text-foreground">Upload image</span>
             <span className="text-xs text-zinc-500">Drop a file here or click to browse</span>
           </button>
         )}

@@ -53,7 +53,7 @@ function VerifyEmailForm() {
           variant="outline"
           disabled={pending || !email}
           onClick={resend}
-          className="h-10 w-full rounded-lg border-zinc-200 bg-white text-sm shadow-xs"
+          className="h-10 w-full rounded-lg border-border bg-background text-sm shadow-xs"
         >
           {pending ? "Sending…" : "Resend verification email"}
         </Button>

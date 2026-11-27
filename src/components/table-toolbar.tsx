@@ -63,7 +63,7 @@ export function TableToolbar({
   children,
 }: TableToolbarProps) {
   return (
-    <div className="flex flex-col gap-3 border-b border-zinc-200/70 p-5 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-b border-border/70 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-start gap-2.5">
         {icon}
         <div className="min-w-0">

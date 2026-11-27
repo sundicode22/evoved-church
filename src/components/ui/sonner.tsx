@@ -1,13 +1,19 @@
 "use client"
 
+import * as React from "react"
+import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { AlertTriangle, CheckCircle2, Info, Loader2, XCircle } from "lucide-react"
 
-/** App shell is light-only — do not follow OS/system dark via next-themes. */
 const Toaster = ({ ...props }: ToasterProps) => {
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => setMounted(true), [])
+  const theme = mounted && resolvedTheme === "dark" ? "dark" : "light"
+
   return (
     <Sonner
-      theme="light"
+      theme={theme}
       className="toaster group"
       icons={{
         success: <CheckCircle2 className="size-4" />,

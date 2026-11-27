@@ -152,12 +152,12 @@ export default function FundsPage() {
                           </TableCell>
                         )}
                         {isVisible("encumbered") && (
-                          <TableCell className="tabular-nums text-zinc-600">
+                          <TableCell className="tabular-nums text-muted-foreground">
                             {formatMoney(Number(fund.encumberedAmount || 0))}
                           </TableCell>
                         )}
                         {isVisible("available") && (
-                          <TableCell className="tabular-nums text-zinc-600">
+                          <TableCell className="tabular-nums text-muted-foreground">
                             {formatMoney(
                               Number(
                                 fund.netAvailable ??

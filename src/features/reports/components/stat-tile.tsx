@@ -35,14 +35,14 @@ export function StatTile({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-medium text-zinc-800">{title}</p>
+        <p className="text-sm font-medium text-foreground">{title}</p>
         {icon ? (
           <span className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand-ink">
             {icon}
           </span>
         ) : null}
       </div>
-      <div className="mt-2 min-h-9 text-3xl font-semibold tracking-tight text-zinc-950">
+      <div className="mt-2 min-h-9 text-3xl font-semibold tracking-tight text-foreground">
         {loading ? <Skeleton className="h-7 w-24" /> : value}
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -51,8 +51,8 @@ export function StatTile({
             className={cn(
               "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium",
               up && "bg-brand-soft text-brand-ink",
-              down && "bg-rose-50 text-rose-700",
-              !up && !down && "bg-zinc-100 text-zinc-600"
+              down && "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
+              !up && !down && "bg-muted text-muted-foreground"
             )}
           >
             {up ? (
@@ -66,7 +66,7 @@ export function StatTile({
             {deltaPct}%
           </span>
         ) : null}
-        {hint ? <span className="text-sm text-zinc-700">{hint}</span> : null}
+        {hint ? <span className="text-sm text-muted-foreground">{hint}</span> : null}
       </div>
     </div>
   )

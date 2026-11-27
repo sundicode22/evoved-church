@@ -125,7 +125,7 @@ export default function AnnouncementsPage() {
 
           <div className="p-6 md:p-8">
             {!isLoading && (data?.length ?? 0) === 0 ? (
-              <Empty className="rounded-lg border border-zinc-200/80 py-16">
+              <Empty className="rounded-lg border border-border/80 py-16">
                 <EmptyHeader>
                   <EmptyTitle>No announcements</EmptyTitle>
                   <EmptyDescription>

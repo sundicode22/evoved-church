@@ -55,7 +55,7 @@ export function GoogleButton({ callbackURL = "/onboarding" }: GoogleButtonProps)
       variant="outline"
       disabled={pending}
       onClick={handleClick}
-      className="h-10 w-full gap-2 rounded-lg border-zinc-200 bg-white text-sm text-slate-800 shadow-xs hover:bg-zinc-50"
+      className="h-10 w-full gap-2 rounded-lg border-border bg-background text-sm text-foreground shadow-xs hover:bg-muted"
     >
       <GoogleColorIcon className="size-4 shrink-0" />
       {pending ? "Connecting…" : "Continue with Google"}

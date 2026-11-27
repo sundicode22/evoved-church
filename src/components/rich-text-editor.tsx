@@ -60,7 +60,7 @@ export function RichTextEditor({
             Image.configure({
               HTMLAttributes: {
                 class:
-                  "my-4 max-h-[420px] w-full rounded-xl border border-zinc-200/80 object-cover shadow-xs",
+                  "my-4 max-h-[420px] w-full rounded-xl border border-border/80 object-cover shadow-xs",
               },
             }),
           ]
@@ -73,8 +73,8 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          "ProseMirror prose prose-sm max-w-none px-4 py-3 text-sm text-zinc-800 outline-none focus:outline-none",
-          "[&_blockquote]:border-l-2 [&_blockquote]:border-brand/40 [&_blockquote]:pl-3 [&_blockquote]:text-zinc-600",
+          "ProseMirror prose prose-sm max-w-none px-4 py-3 text-sm text-foreground outline-none focus:outline-none",
+          "[&_blockquote]:border-l-2 [&_blockquote]:border-brand/40 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground",
           "[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5",
           "[&_img]:rounded-xl",
           "[&_p.is-editor-empty:first-child::before]:pointer-events-none [&_p.is-editor-empty:first-child::before]:float-left [&_p.is-editor-empty:first-child::before]:h-0 [&_p.is-editor-empty:first-child::before]:text-zinc-400 [&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]"
@@ -189,7 +189,7 @@ export function RichTextEditor({
         className
       )}
     >
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-zinc-100 bg-[#f8faf9] px-2 py-1.5">
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-muted px-2 py-1.5">
         {tools.map((t, i) => (
           <React.Fragment key={t.label}>
             {(i === 3 || i === 6) && (
@@ -202,7 +202,7 @@ export function RichTextEditor({
               disabled={disabled}
               title={t.label}
               className={cn(
-                "size-7 text-zinc-600",
+                "size-7 text-muted-foreground",
                 t.active && "bg-brand-soft text-brand-ink"
               )}
               onMouseDown={(e) => {

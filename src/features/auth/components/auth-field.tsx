@@ -51,7 +51,7 @@ export function AuthFormField<T extends FieldValues>({
       render={({ field, fieldState }) => (
         <FormItem className={className}>
           <div className="flex items-center justify-between gap-2">
-            <FormLabel className="text-slate-700">{label}</FormLabel>
+            <FormLabel className="text-foreground/80">{label}</FormLabel>
             {hint}
           </div>
           <FormControl>
@@ -71,7 +71,7 @@ export function AuthFormField<T extends FieldValues>({
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShow((s) => !s)}
-                  className="absolute top-1/2 right-2 flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-zinc-400 hover:text-zinc-700"
+                  className="absolute top-1/2 right-2 flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-zinc-400 hover:text-muted-foreground"
                   aria-label={show ? "Hide password" : "Show password"}
                 >
                   {show ? (

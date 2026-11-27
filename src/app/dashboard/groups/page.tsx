@@ -142,7 +142,7 @@ export default function GroupsPage() {
 
           <div className="p-6 md:p-8">
             {isEmpty ? (
-              <Empty className="rounded-lg border border-zinc-200/80 py-16">
+              <Empty className="rounded-lg border border-border/80 py-16">
                 <EmptyHeader>
                   <EmptyTitle>No groups yet</EmptyTitle>
                   <EmptyDescription>
@@ -239,12 +239,12 @@ export default function GroupsPage() {
                           </TableCell>
                         )}
                         {isVisible("leader") && (
-                          <TableCell className="text-zinc-600">
+                          <TableCell className="text-muted-foreground">
                             {group.leaderName || "—"}
                           </TableCell>
                         )}
                         {isVisible("members") && (
-                          <TableCell className="tabular-nums text-zinc-600">
+                          <TableCell className="tabular-nums text-muted-foreground">
                             {group.memberCount}
                           </TableCell>
                         )}

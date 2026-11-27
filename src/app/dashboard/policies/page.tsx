@@ -417,7 +417,7 @@ export default function PoliciesPage() {
               </DialogHeader>
               <ScrollArea className="max-h-[55vh] pr-3">
                 <div
-                  className="prose prose-sm max-w-none text-zinc-800"
+                  className="prose prose-sm max-w-none text-foreground"
                   dangerouslySetInnerHTML={{ __html: preview?.bodyHtml || "" }}
                 />
               </ScrollArea>

@@ -11,7 +11,7 @@ export function AuthCard({
   return (
     <div
       className={cn(
-        "w-full rounded-2xl border border-zinc-200/60 bg-white p-6 shadow-xs",
+        "w-full rounded-2xl border border-border/60 bg-card p-6 shadow-xs",
         className
       )}
     >
@@ -29,9 +29,9 @@ export function AuthCardHeader({
 }) {
   return (
     <div className="mb-5 space-y-1 text-center">
-      <h1 className="text-2xl font-medium tracking-tight text-slate-900">{title}</h1>
+      <h1 className="text-2xl font-medium tracking-tight text-foreground">{title}</h1>
       {description ? (
-        <p className="text-sm text-zinc-500">{description}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       ) : null}
     </div>
   )

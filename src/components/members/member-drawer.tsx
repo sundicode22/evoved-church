@@ -100,7 +100,7 @@ export function MemberDrawer({
           </div>
         ) : (
           <div className="flex h-full min-h-0 flex-col">
-            <SheetHeader className="border-b border-zinc-100 pr-12">
+            <SheetHeader className="border-b border-border pr-12">
               <SheetTitle className="text-lg">
                 {member.firstName} {member.lastName}
               </SheetTitle>
@@ -150,7 +150,7 @@ export function MemberDrawer({
                             <User className="mt-0.5 size-3.5 text-zinc-400" />
                             <div>
                               <p className="text-[11px] text-zinc-400">Preferred name</p>
-                              <p className="text-zinc-800">{member.preferredName}</p>
+                              <p className="text-foreground">{member.preferredName}</p>
                             </div>
                           </li>
                           <Separator />
@@ -160,7 +160,7 @@ export function MemberDrawer({
                         <Mail className="mt-0.5 size-3.5 text-zinc-400" />
                         <div>
                           <p className="text-[11px] text-zinc-400">Email</p>
-                          <p className="text-zinc-800">{member.email || "—"}</p>
+                          <p className="text-foreground">{member.email || "—"}</p>
                         </div>
                       </li>
                       <Separator />
@@ -168,7 +168,7 @@ export function MemberDrawer({
                         <Smartphone className="mt-0.5 size-3.5 text-zinc-400" />
                         <div>
                           <p className="text-[11px] text-zinc-400">Phone</p>
-                          <p className="text-zinc-800">{member.phoneNumber || "—"}</p>
+                          <p className="text-foreground">{member.phoneNumber || "—"}</p>
                         </div>
                       </li>
                       <Separator />
@@ -176,7 +176,7 @@ export function MemberDrawer({
                         <MapPin className="mt-0.5 size-3.5 text-zinc-400" />
                         <div>
                           <p className="text-[11px] text-zinc-400">Address</p>
-                          <p className="text-zinc-800">
+                          <p className="text-foreground">
                             {[
                               member.address,
                               member.city,
@@ -204,13 +204,13 @@ export function MemberDrawer({
                       <li className="grid grid-cols-2 gap-3">
                         <div>
                           <p className="text-[11px] text-zinc-400">Gender</p>
-                          <p className="text-zinc-800">
+                          <p className="text-foreground">
                             {GENDER_LABELS[member.gender] || member.gender || "—"}
                           </p>
                         </div>
                         <div>
                           <p className="text-[11px] text-zinc-400">Marital status</p>
-                          <p className="text-zinc-800">
+                          <p className="text-foreground">
                             {MARITAL_STATUS_LABELS[member.maritalStatus] ||
                               member.maritalStatus ||
                               "—"}
@@ -222,7 +222,7 @@ export function MemberDrawer({
                         <Briefcase className="mt-0.5 size-3.5 text-zinc-400" />
                         <div>
                           <p className="text-[11px] text-zinc-400">Occupation</p>
-                          <p className="text-zinc-800">{member.occupation || "—"}</p>
+                          <p className="text-foreground">{member.occupation || "—"}</p>
                         </div>
                       </li>
                       <Separator />
@@ -230,13 +230,13 @@ export function MemberDrawer({
                         <Home className="mt-0.5 size-3.5 text-zinc-400" />
                         <div>
                           <p className="text-[11px] text-zinc-400">Household</p>
-                          <p className="text-zinc-800">{member.householdName || "—"}</p>
+                          <p className="text-foreground">{member.householdName || "—"}</p>
                         </div>
                       </li>
                       <Separator />
                       <li>
                         <p className="text-[11px] text-zinc-400">Ministries</p>
-                        <p className="text-zinc-800">
+                        <p className="text-foreground">
                           {(member.ministryRoles || []).join(", ") || "—"}
                         </p>
                       </li>
@@ -245,7 +245,7 @@ export function MemberDrawer({
                           <Separator />
                           <li>
                             <p className="text-[11px] text-zinc-400">Notes</p>
-                            <p className="whitespace-pre-wrap text-zinc-800">{member.notes}</p>
+                            <p className="whitespace-pre-wrap text-foreground">{member.notes}</p>
                           </li>
                         </>
                       ) : null}
@@ -259,7 +259,7 @@ export function MemberDrawer({
                     </p>
 
                     {(member.householdPeers || []).length === 0 ? (
-                      <Empty className="border border-dashed border-zinc-200 py-8">
+                      <Empty className="border border-dashed border-border py-8">
                         <EmptyHeader>
                           <EmptyTitle>No household peers yet</EmptyTitle>
                           <EmptyDescription>
@@ -305,7 +305,7 @@ export function MemberDrawer({
                     )}
 
                     <Can permission="members.write">
-                      <div className="space-y-2 rounded-xl border border-zinc-200/70 bg-[#f8faf9] p-4">
+                      <div className="space-y-2 rounded-xl border border-border/70 bg-muted p-4">
                         <Label>Your role in household</Label>
                         <Select
                           value={role}
@@ -339,7 +339,7 @@ export function MemberDrawer({
                       <AccordionItem value="stage">
                         <AccordionTrigger>Lifecycle stage</AccordionTrigger>
                         <AccordionContent>
-                          <p className="text-sm text-zinc-600">
+                          <p className="text-sm text-muted-foreground">
                             Current type:{" "}
                             <strong className="capitalize text-foreground">
                               {String(member.personType || "").replace(/_/g, " ")}
@@ -351,7 +351,7 @@ export function MemberDrawer({
                     </Accordion>
                   </TabsContent>
 
-                  <TabsContent value="safety" className="mt-0 pb-4 text-sm text-zinc-600">
+                  <TabsContent value="safety" className="mt-0 pb-4 text-sm text-muted-foreground">
                     Background check:{" "}
                     <strong className="capitalize">
                       {member.backgroundCheckStatus || "none"}

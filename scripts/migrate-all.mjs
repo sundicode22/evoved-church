@@ -30,17 +30,14 @@ if (!raw) {
 
 const u = new URL(raw)
 u.searchParams.delete("channel_binding")
+u.searchParams.delete("options")
 u.searchParams.set("sslmode", "require")
+u.searchParams.set("uselibpqcompat", "true")
 
-const { address } = await lookup(u.hostname, { family: 4 })
-console.log(`host: ${u.hostname} -> ${address}`)
+console.log(`host: ${u.hostname}`)
 
 const client = new pg.Client({
-  host: address,
-  port: Number(u.port || 5432),
-  user: decodeURIComponent(u.username),
-  password: decodeURIComponent(u.password),
-  database: u.pathname.replace(/^\//, "") || "neondb",
+  connectionString: u.toString(),
   ssl: { rejectUnauthorized: false },
   connectionTimeoutMillis: 60_000,
 })

@@ -168,7 +168,7 @@ export default function AppointmentsPage() {
             </div>
 
             {!isLoading && (schedules?.length ?? 0) === 0 ? (
-              <Empty className="rounded-lg border border-zinc-200/80 py-16">
+              <Empty className="rounded-lg border border-border/80 py-16">
                 <EmptyHeader>
                   <EmptyTitle>No schedules yet</EmptyTitle>
                   <EmptyDescription>
@@ -234,7 +234,7 @@ export default function AppointmentsPage() {
                         </TableCell>
                         <TableCell>{s.ownerDisplayName || "—"}</TableCell>
                         <TableCell>{s.durationMinutes} min</TableCell>
-                        <TableCell className="text-xs text-zinc-600">
+                        <TableCell className="text-xs text-muted-foreground">
                           {format(parseISO(s.windowStart), "MMM d")} –{" "}
                           {format(parseISO(s.windowEnd), "MMM d")}
                         </TableCell>

@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
       />
       {sentEmail ? (
         <p className="text-center text-xs text-zinc-500">
-          Check <span className="font-medium text-zinc-700">{sentEmail}</span> for the reset
+          Check <span className="font-medium text-muted-foreground">{sentEmail}</span> for the reset
           link.{" "}
           <Link href="/login" className="font-medium text-brand hover:underline">
             Back to sign in

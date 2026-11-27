@@ -108,7 +108,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
       {isLoading ? (
         <Skeleton className="h-40 w-full rounded-xl" />
       ) : locations.length === 0 ? (
-        <Empty className="border border-dashed border-zinc-200 py-14">
+        <Empty className="border border-dashed border-border py-14">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <MapPin className="size-4" />
@@ -173,7 +173,7 @@ export function LocationsTab({ canEdit }: { canEdit: boolean }) {
                       </StatusPill>
                     ) : null}
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-zinc-600">{l.slug}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{l.slug}</TableCell>
                   <TableCell>{l.city || "—"}</TableCell>
                   <TableCell className="capitalize">{l.type || "—"}</TableCell>
                 </TableRow>

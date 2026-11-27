@@ -99,7 +99,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 gap-1.5 text-xs text-zinc-600"
+              className="h-8 gap-1.5 text-xs text-muted-foreground"
               onClick={() => setChurchOpen(true)}
             >
               <Pencil className="size-3.5" />
@@ -113,7 +113,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
           <div className="flex gap-8">
             <dt className="w-32 shrink-0 text-zinc-500">Logo</dt>
             <dd className="space-y-2">
-              <div className="flex size-14 items-center justify-center overflow-hidden rounded-lg border bg-[#fbfcfb]">
+              <div className="flex size-14 items-center justify-center overflow-hidden rounded-lg border bg-background">
                 {nomenclature.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={nomenclature.logoUrl} alt="" className="size-full object-cover" />
@@ -144,7 +144,7 @@ export function ChurchDetailsTab({ canEdit }: { canEdit: boolean }) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 gap-1.5 text-xs text-zinc-600"
+              className="h-8 gap-1.5 text-xs text-muted-foreground"
               onClick={() => setContactOpen(true)}
             >
               <Pencil className="size-3.5" />

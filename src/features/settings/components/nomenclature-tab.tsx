@@ -117,7 +117,7 @@ export function NomenclatureTab({ canEdit }: { canEdit: boolean }) {
         </div>
       </Form>
 
-      <div className="flex items-center justify-between border-t border-zinc-100 pt-4">
+      <div className="flex items-center justify-between border-t border-border pt-4">
         <Button
           type="button"
           variant="outline"

@@ -161,7 +161,7 @@ function CampaignDetailPage() {
                     variant="outline"
                     onClick={save}
                     disabled={!draft || locked || update.isPending}
-                    className="h-8 rounded-lg border-zinc-200 text-xs font-normal shadow-xs"
+                    className="h-8 rounded-lg border-border text-xs font-normal shadow-xs"
                   >
                     Save changes
                   </Button>
@@ -390,7 +390,7 @@ function CampaignDetailPage() {
                                   {s.recipientEmail || s.recipientPhone}
                                 </p>
                               </TableCell>
-                              <TableCell className="text-xs uppercase text-zinc-600">
+                              <TableCell className="text-xs uppercase text-muted-foreground">
                                 {s.channel}
                               </TableCell>
                               <TableCell>

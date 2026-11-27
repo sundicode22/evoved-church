@@ -162,7 +162,7 @@ export default function BlogDashboardPage() {
 
           <div className="p-6 md:p-8">
             {!isLoading && (data?.length ?? 0) === 0 ? (
-              <Empty className="rounded-xl bg-[#f8faf9] py-16 shadow-xs">
+              <Empty className="rounded-xl bg-muted py-16 shadow-xs">
                 <EmptyHeader>
                   <EmptyTitle>No blog posts</EmptyTitle>
                   <EmptyDescription>
@@ -201,7 +201,7 @@ export default function BlogDashboardPage() {
                       <TableRow key={post.id}>
                         <TableCell className="pl-4">
                           <div className="flex items-center gap-3">
-                            <div className="size-12 shrink-0 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100">
+                            <div className="size-12 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
                               {post.coverImageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
@@ -223,7 +223,7 @@ export default function BlogDashboardPage() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-zinc-600">{post.authorName}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{post.authorName}</TableCell>
                         <TableCell>
                           <StatusPill
                             tone={

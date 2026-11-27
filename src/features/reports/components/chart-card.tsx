@@ -24,9 +24,9 @@ export function ChartCard({
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-lg font-semibold text-zinc-950">{title}</h3>
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
           {description ? (
-            <p className="mt-1 text-sm text-zinc-700">{description}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
           ) : null}
         </div>
         {action}

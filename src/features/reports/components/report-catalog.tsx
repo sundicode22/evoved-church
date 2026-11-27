@@ -190,14 +190,14 @@ export function AuditLogPanel() {
                   {new Date(row.createdAt).toLocaleString()}
                 </TableCell>
                 <TableCell>
-                  <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-800">
+                  <code className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-foreground">
                     {row.action}
                   </code>
                 </TableCell>
-                <TableCell className="text-sm text-zinc-700">
+                <TableCell className="text-sm text-muted-foreground">
                   {row.actorName || row.actorUserId || "—"}
                 </TableCell>
-                <TableCell className="text-sm text-zinc-600">
+                <TableCell className="text-sm text-muted-foreground">
                   {row.entityType}
                   {row.entityId ? (
                     <span className="mt-0.5 block font-mono text-[10px] text-zinc-400">
@@ -205,7 +205,7 @@ export function AuditLogPanel() {
                     </span>
                   ) : null}
                 </TableCell>
-                <TableCell className="max-w-md text-sm text-zinc-800">{row.summary}</TableCell>
+                <TableCell className="max-w-md text-sm text-foreground">{row.summary}</TableCell>
               </TableRow>
             ))}
           </TableBody>

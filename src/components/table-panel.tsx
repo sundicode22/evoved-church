@@ -269,7 +269,7 @@ export function StatusPill({
           ? "bg-rose-500"
           : tone === "info"
             ? "bg-brand"
-            : "bg-zinc-400"
+            : "bg-muted-foreground"
   return (
     <span
       className={cn(

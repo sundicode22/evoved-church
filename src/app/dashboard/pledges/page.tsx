@@ -237,14 +237,14 @@ export default function PledgesPage() {
                       <TableCell className="pl-4 font-medium text-foreground">
                         {pledge.memberDisplayName}
                       </TableCell>
-                      <TableCell className="text-zinc-600">{pledge.fundName}</TableCell>
-                      <TableCell className="capitalize text-zinc-600">
+                      <TableCell className="text-muted-foreground">{pledge.fundName}</TableCell>
+                      <TableCell className="capitalize text-muted-foreground">
                         {pledge.frequency.replace("_", " ")}
                       </TableCell>
                       <TableCell className="tabular-nums text-foreground">
                         {formatMoney(pledge.amountTotal)}
                       </TableCell>
-                      <TableCell className="tabular-nums text-zinc-600">
+                      <TableCell className="tabular-nums text-muted-foreground">
                         {formatMoney(pledge.amountGiven)}
                       </TableCell>
                       <TableCell>

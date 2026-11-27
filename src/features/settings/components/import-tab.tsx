@@ -329,7 +329,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
                   </div>
                   <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
                     Expected columns:{" "}
-                    <span className="font-medium text-zinc-600">{active.headers.join(", ")}</span>
+                    <span className="font-medium text-muted-foreground">{active.headers.join(", ")}</span>
                   </p>
                 </Field>
 
@@ -357,7 +357,7 @@ export function ImportTab({ canEdit }: { canEdit: boolean }) {
               </FieldGroup>
 
               {rows.length > 0 && (
-                <div className="overflow-hidden rounded-xl bg-[#f8faf9] shadow-xs">
+                <div className="overflow-hidden rounded-xl bg-muted shadow-xs">
                   <div className="flex items-center justify-between px-3 py-2">
                     <p className="text-xs text-zinc-500">Preview · {rows.length} rows</p>
                     <StatusPill>First 5 shown</StatusPill>
