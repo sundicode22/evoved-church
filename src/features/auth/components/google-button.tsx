@@ -4,6 +4,7 @@ import * as React from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { signIn } from "@/features/auth/auth-client"
+import { clearOnboardingCompletedCookie } from "@/features/onboarding/cookie"
 
 function GoogleColorIcon({ className }: { className?: string }) {
   return (
@@ -38,6 +39,8 @@ export function GoogleButton({ callbackURL = "/onboarding" }: GoogleButtonProps)
   async function handleClick() {
     setPending(true)
     try {
+      // Drop a leftover cookie so a new Google account is not treated as already set up.
+      clearOnboardingCompletedCookie()
       const res = await signIn.social({ provider: "google", callbackURL })
       if (res?.error) {
         toast.error(res.error.message ?? "Google sign-in failed.")

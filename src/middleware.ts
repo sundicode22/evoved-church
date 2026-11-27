@@ -41,5 +41,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/onboarding", "/onboarding/:path*"],
+  // `/dashboard/:path*` does not match `/dashboard` itself.
+  matcher: ["/dashboard", "/dashboard/:path*", "/onboarding", "/onboarding/:path*"],
 }

@@ -49,12 +49,14 @@ function LoginForm() {
       let next = redirectTo
       try {
         const { apiClient } = await import("@/lib/axios")
-        const { setOnboardingCompletedCookie } = await import("@/features/onboarding/cookie")
+        const { clearOnboardingCompletedCookie, setOnboardingCompletedCookie } =
+          await import("@/features/onboarding/cookie")
         const status = await apiClient.get<{
           success: boolean
           data: { completed: boolean }
         }>("/settings/onboarding")
         if (!status.data.data?.completed) {
+          clearOnboardingCompletedCookie()
           next = "/onboarding"
         } else {
           setOnboardingCompletedCookie()
@@ -77,7 +79,7 @@ function LoginForm() {
         description="Sign in to continue to your church dashboard."
       />
       <div className="space-y-5">
-        <GoogleButton callbackURL={redirectTo} />
+        <GoogleButton callbackURL="/onboarding" />
         <OrDivider />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

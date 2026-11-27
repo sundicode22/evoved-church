@@ -10,7 +10,11 @@ import {
 } from "./rbac-schemas"
 import { formatErrorResponse } from "@/lib/errors"
 import { getUserIdFromHeaders } from "@/features/auth/require-permission"
-import { resolveTenantId, DEFAULT_TENANT_ID } from "@/features/billing/tenant-context"
+import {
+  hasActiveOrganization,
+  resolveTenantId,
+  DEFAULT_TENANT_ID,
+} from "@/features/billing/tenant-context"
 
 async function tenantFromRequest(
   request: Request,
@@ -207,6 +211,11 @@ export const settingsController = new Elysia({ prefix: "/settings" })
 
   .get("/onboarding", async ({ request, query, set }) => {
     try {
+      // A Google (or email) account with no church yet has not finished setup,
+      // even if the shared demo tenant row is already marked complete.
+      if (!(await hasActiveOrganization(request.headers))) {
+        return { success: true, data: { completed: false, completedAt: null } }
+      }
       const tenantId = await tenantFromRequest(request, query.tenantId as string | undefined)
       const data = await settingsService.getOnboardingStatus(tenantId)
       return { success: true, data }

@@ -27,8 +27,8 @@ const DEFAULT_NOM = {
   onboardingCompletedAt: null as Date | null,
 }
 
-/** Demo/in-memory onboarding completion when DB is unavailable. */
-let demoOnboardingCompletedAt: string | null = null
+/** Per-tenant fallback when the database write is unavailable. */
+const demoOnboardingCompletedAt = new Map<string, string>()
 
 export const settingsService = {
   async getNomenclature(tenantId: string) {
@@ -119,13 +119,12 @@ export const settingsService = {
           completedAt: rows[0].onboardingCompletedAt.toISOString(),
         }
       }
+      return { completed: false, completedAt: null }
     } catch {
-      /* demo */
+      const completedAt = demoOnboardingCompletedAt.get(tenantId)
+      if (completedAt) return { completed: true, completedAt }
+      return { completed: false, completedAt: null }
     }
-    if (demoOnboardingCompletedAt) {
-      return { completed: true, completedAt: demoOnboardingCompletedAt }
-    }
-    return { completed: false, completedAt: null }
   },
 
   async completeOnboarding(tenantId: string) {
@@ -148,10 +147,11 @@ export const settingsService = {
           onboardingCompletedAt: completedAt,
         })
       }
+      return { completed: true, completedAt: completedAt.toISOString() }
     } catch {
-      demoOnboardingCompletedAt = completedAt.toISOString()
+      const iso = completedAt.toISOString()
+      demoOnboardingCompletedAt.set(tenantId, iso)
+      return { completed: true, completedAt: iso }
     }
-    demoOnboardingCompletedAt = completedAt.toISOString()
-    return { completed: true, completedAt: completedAt.toISOString() }
   },
 }

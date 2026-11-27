@@ -7,6 +7,17 @@ export { DEFAULT_TENANT_ID, campusIdFromHeaders } from "@/features/billing/tenan
  * Resolve the active church tenant id.
  * Prefer Better Auth activeOrganizationId; fall back to "default" for local/demo.
  */
+export async function hasActiveOrganization(requestHeaders?: Headers): Promise<boolean> {
+  if (!requestHeaders) return false
+  try {
+    const session = await auth.api.getSession({ headers: requestHeaders })
+    const orgId = session?.session?.activeOrganizationId
+    return typeof orgId === "string" && orgId.trim().length > 0
+  } catch {
+    return false
+  }
+}
+
 export async function resolveTenantId(requestHeaders?: Headers): Promise<string> {
   if (!requestHeaders) return DEFAULT_TENANT_ID
   try {
