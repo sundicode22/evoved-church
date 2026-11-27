@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Home, Plus } from "lucide-react"
+import { Home, Plus, UserPlus } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -11,7 +11,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
-import { TextFormField } from "@/components/form-fields"
+import { SelectFormField, TextFormField } from "@/components/form-fields"
 import { FieldGroup } from "@/components/ui/field"
 import {
   Sheet,
@@ -42,12 +42,15 @@ import {
   type ColumnOption,
 } from "@/components/table-panel"
 import {
+  useAttachHousehold,
   useCreateHousehold,
+  useCreateMember,
   useHouseholds,
 } from "@/features/members/hooks/use-members"
 import {
   createHouseholdSchema,
   HOUSEHOLD_ROLE_LABELS,
+  householdRoleSchema,
   type HouseholdRole,
 } from "@/features/members/schemas"
 import { useBranchStore } from "@/store/use-branch-store"
@@ -66,6 +69,15 @@ const COLUMNS: ColumnOption[] = [
 const familyFormSchema = createHouseholdSchema.omit({ campusId: true })
 type FamilyFormValues = z.infer<typeof familyFormSchema>
 
+const memberFormSchema = z.object({
+  firstName: z.string().trim().min(2, "First name is required"),
+  lastName: z.string().trim().min(2, "Last name is required"),
+  email: z.string().email("Valid email required").optional().or(z.literal("")),
+  phoneNumber: z.string().optional(),
+  householdRole: householdRoleSchema,
+})
+type MemberFormValues = z.infer<typeof memberFormSchema>
+
 const FAMILY_DEFAULTS: FamilyFormValues = {
   name: "",
   address: "",
@@ -73,6 +85,18 @@ const FAMILY_DEFAULTS: FamilyFormValues = {
   state: "",
   zipCode: "",
 }
+
+const MEMBER_DEFAULTS: MemberFormValues = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phoneNumber: "",
+  householdRole: "head",
+}
+
+const ROLE_OPTIONS = (Object.keys(HOUSEHOLD_ROLE_LABELS) as HouseholdRole[]).map(
+  (value) => ({ value, label: HOUSEHOLD_ROLE_LABELS[value] })
+)
 
 function roleLabel(role?: string | null) {
   if (!role) return "—"
@@ -113,24 +137,46 @@ type HouseholdRow = {
   zipCode?: string | null
 }
 
+type SheetStep = "family" | "choose" | "member"
+
 export default function FamiliesPage() {
   const { data, isLoading } = useHouseholds()
   const create = useCreateHousehold()
+  const createMember = useCreateMember()
+  const attachHousehold = useAttachHousehold()
   const activeCampusId = useBranchStore((s) => s.activeCampusId)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(10)
   const [sheetOpen, setSheetOpen] = React.useState(false)
+  const [step, setStep] = React.useState<SheetStep>("family")
+  const [createdFamily, setCreatedFamily] = React.useState<{ id: string; name: string } | null>(
+    null
+  )
+  const [addedCount, setAddedCount] = React.useState(0)
   const { visible, isVisible, toggle } = useColumnVisibility(COLUMNS)
 
-  const form = useForm<FamilyFormValues>({
+  const familyForm = useForm<FamilyFormValues>({
     resolver: zodResolver(familyFormSchema),
     defaultValues: FAMILY_DEFAULTS,
   })
+  const memberForm = useForm<MemberFormValues>({
+    resolver: zodResolver(memberFormSchema),
+    defaultValues: MEMBER_DEFAULTS,
+  })
+
+  function resetSheet() {
+    setStep("family")
+    setCreatedFamily(null)
+    setAddedCount(0)
+    familyForm.reset(FAMILY_DEFAULTS)
+    memberForm.reset(MEMBER_DEFAULTS)
+  }
 
   React.useEffect(() => {
-    if (sheetOpen) form.reset(FAMILY_DEFAULTS)
-  }, [sheetOpen, form])
+    if (sheetOpen) resetSheet()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on open
+  }, [sheetOpen])
 
   const rows = (data ?? []) as HouseholdRow[]
   const filtered = rows.filter((hh) => {
@@ -156,13 +202,46 @@ export default function FamiliesPage() {
   })
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
 
-  async function onSubmit(values: FamilyFormValues) {
-    await create.mutateAsync({
+  async function onCreateFamily(values: FamilyFormValues) {
+    const hh = await create.mutateAsync({
       ...values,
       campusId: activeCampusId || undefined,
     })
-    setSheetOpen(false)
+    setCreatedFamily({ id: hh.id, name: hh.name })
+    setAddedCount(0)
+    memberForm.reset({
+      ...MEMBER_DEFAULTS,
+      lastName: values.name.replace(/\s+family$/i, "").trim() || MEMBER_DEFAULTS.lastName,
+    })
+    setStep("choose")
   }
+
+  async function onAddMember(values: MemberFormValues) {
+    if (!createdFamily) return
+    const member = await createMember.mutateAsync({
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email || undefined,
+      phoneNumber: values.phoneNumber || undefined,
+      personType: "covenant_member",
+      campusId: activeCampusId || undefined,
+      ministryRoles: [],
+      backgroundCheckStatus: "none",
+    })
+    await attachHousehold.mutateAsync({
+      memberId: member.id,
+      householdId: createdFamily.id,
+      householdRole: values.householdRole,
+    })
+    setAddedCount((n) => n + 1)
+    memberForm.reset({
+      ...MEMBER_DEFAULTS,
+      lastName: values.lastName,
+      householdRole: "other",
+    })
+  }
+
+  const savingMember = createMember.isPending || attachHousehold.isPending
 
   return (
     <SidebarProvider
@@ -235,8 +314,7 @@ export default function FamiliesPage() {
                         colSpan={8}
                         className="py-12 text-center text-sm text-muted-foreground"
                       >
-                        No households yet. Create a family, then link members from the Members
-                        drawer.
+                        No households yet. Create a family, then add members or skip.
                       </TableCell>
                     </TableRow>
                   )}
@@ -351,69 +429,194 @@ export default function FamiliesPage() {
             </TablePanel>
           </div>
 
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <Sheet
+            open={sheetOpen}
+            onOpenChange={(open) => {
+              setSheetOpen(open)
+              if (!open) resetSheet()
+            }}
+          >
             <SheetContent side="right" inset size="sm" className="p-0">
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="flex h-full flex-col"
-                >
+              {step === "family" && (
+                <Form {...familyForm}>
+                  <form
+                    onSubmit={familyForm.handleSubmit(onCreateFamily)}
+                    className="flex h-full flex-col"
+                  >
+                    <SheetHeader className="pr-12">
+                      <SheetTitle className="font-medium">Add family</SheetTitle>
+                      <SheetDescription>
+                        Create a household. You can add members next, or skip.
+                      </SheetDescription>
+                    </SheetHeader>
+                    <SheetBody>
+                      <FieldGroup>
+                        <TextFormField
+                          control={familyForm.control}
+                          name="name"
+                          label="Household name"
+                          placeholder="The Cooper family"
+                        />
+                        <TextFormField
+                          control={familyForm.control}
+                          name="address"
+                          label="Address"
+                          placeholder="123 Main St"
+                        />
+                        <div className="grid gap-4 sm:grid-cols-3">
+                          <TextFormField
+                            control={familyForm.control}
+                            name="city"
+                            label="City"
+                            placeholder="City"
+                          />
+                          <TextFormField
+                            control={familyForm.control}
+                            name="state"
+                            label="State"
+                            placeholder="ST"
+                          />
+                          <TextFormField
+                            control={familyForm.control}
+                            name="zipCode"
+                            label="ZIP"
+                            placeholder="00000"
+                          />
+                        </div>
+                      </FieldGroup>
+                    </SheetBody>
+                    <SheetFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setSheetOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={create.isPending}>
+                        {create.isPending ? "Saving…" : "Create family"}
+                      </Button>
+                    </SheetFooter>
+                  </form>
+                </Form>
+              )}
+
+              {step === "choose" && createdFamily && (
+                <div className="flex h-full flex-col">
                   <SheetHeader className="pr-12">
-                    <SheetTitle className="font-medium">Add family</SheetTitle>
+                    <SheetTitle className="font-medium">Add members?</SheetTitle>
                     <SheetDescription>
-                      Create a household, then attach members from the Members page.
+                      {createdFamily.name} is ready. Add people to this household now, or skip
+                      and do it later.
                     </SheetDescription>
                   </SheetHeader>
-                  <SheetBody>
-                    <FieldGroup>
-                      <TextFormField
-                        control={form.control}
-                        name="name"
-                        label="Household name"
-                        placeholder="The Cooper family"
-                      />
-                      <TextFormField
-                        control={form.control}
-                        name="address"
-                        label="Address"
-                        placeholder="123 Main St"
-                      />
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        <TextFormField
-                          control={form.control}
-                          name="city"
-                          label="City"
-                          placeholder="City"
-                        />
-                        <TextFormField
-                          control={form.control}
-                          name="state"
-                          label="State"
-                          placeholder="ST"
-                        />
-                        <TextFormField
-                          control={form.control}
-                          name="zipCode"
-                          label="ZIP"
-                          placeholder="00000"
-                        />
-                      </div>
-                    </FieldGroup>
+                  <SheetBody className="space-y-3">
+                    <Button
+                      type="button"
+                      className="h-auto w-full justify-start gap-3 px-4 py-3 text-left"
+                      onClick={() => setStep("member")}
+                    >
+                      <UserPlus className="size-4 shrink-0" strokeWidth={1.75} />
+                      <span>
+                        <span className="block text-sm font-medium">Add members</span>
+                        <span className="block text-xs font-normal opacity-80">
+                          Create people and assign household roles
+                        </span>
+                      </span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-auto w-full justify-start gap-3 px-4 py-3 text-left"
+                      onClick={() => setSheetOpen(false)}
+                    >
+                      <span>
+                        <span className="block text-sm font-medium">Not now</span>
+                        <span className="block text-xs font-normal text-muted-foreground">
+                          Finish without members — link them later from Members
+                        </span>
+                      </span>
+                    </Button>
                   </SheetBody>
                   <SheetFooter>
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => setSheetOpen(false)}
                     >
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={create.isPending}>
-                      {create.isPending ? "Saving…" : "Create family"}
+                      Done
                     </Button>
                   </SheetFooter>
-                </form>
-              </Form>
+                </div>
+              )}
+
+              {step === "member" && createdFamily && (
+                <Form {...memberForm}>
+                  <form
+                    onSubmit={memberForm.handleSubmit(onAddMember)}
+                    className="flex h-full flex-col"
+                  >
+                    <SheetHeader className="pr-12">
+                      <SheetTitle className="font-medium">Add member</SheetTitle>
+                      <SheetDescription>
+                        Adding to {createdFamily.name}
+                        {addedCount > 0
+                          ? ` · ${addedCount} added`
+                          : ""}
+                        .
+                      </SheetDescription>
+                    </SheetHeader>
+                    <SheetBody>
+                      <FieldGroup>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <TextFormField
+                            control={memberForm.control}
+                            name="firstName"
+                            label="First name"
+                            placeholder="Jane"
+                          />
+                          <TextFormField
+                            control={memberForm.control}
+                            name="lastName"
+                            label="Last name"
+                            placeholder="Cooper"
+                          />
+                        </div>
+                        <SelectFormField
+                          control={memberForm.control}
+                          name="householdRole"
+                          label="Household role"
+                          options={ROLE_OPTIONS}
+                        />
+                        <TextFormField
+                          control={memberForm.control}
+                          name="email"
+                          label="Email"
+                          placeholder="jane@email.com"
+                        />
+                        <TextFormField
+                          control={memberForm.control}
+                          name="phoneNumber"
+                          label="Phone"
+                          placeholder="Optional"
+                        />
+                      </FieldGroup>
+                    </SheetBody>
+                    <SheetFooter className="flex-col gap-2 sm:flex-row">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setSheetOpen(false)}
+                      >
+                        Done
+                      </Button>
+                      <Button type="submit" disabled={savingMember}>
+                        {savingMember ? "Saving…" : "Add & continue"}
+                      </Button>
+                    </SheetFooter>
+                  </form>
+                </Form>
+              )}
             </SheetContent>
           </Sheet>
         </RequireAbility>

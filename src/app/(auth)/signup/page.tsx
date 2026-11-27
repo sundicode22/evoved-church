@@ -46,7 +46,7 @@ export default function SignupPage() {
     <AuthCard>
       <AuthCardHeader
         title="Create your account"
-        description="Set up your church in a few minutes."
+        description="Then set up your church, first location, and workspace."
       />
       <div className="space-y-5">
         <GoogleButton callbackURL="/onboarding" />
