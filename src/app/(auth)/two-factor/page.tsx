@@ -32,7 +32,7 @@ export default function TwoFactorPage() {
         return
       }
       toast.success("Verified")
-      router.push("/dashboard")
+      router.push("/workspaces")
       router.refresh()
     } catch {
       toast.error("Something went wrong. Please try again.")

@@ -17,6 +17,13 @@ import { AuthFormField } from "@/features/auth/components/auth-field"
 import { GoogleButton } from "@/features/auth/components/google-button"
 import { OrDivider } from "@/features/auth/components/or-divider"
 
+function workspacePath(redirectTo: string) {
+  if (redirectTo.startsWith("/dashboard") && redirectTo !== "/dashboard") {
+    return `/workspaces?redirect=${encodeURIComponent(redirectTo)}`
+  }
+  return "/workspaces"
+}
+
 function LoginForm() {
   const router = useRouter()
   const search = useSearchParams()
@@ -45,27 +52,7 @@ function LoginForm() {
         return
       }
       toast.success("Signed in")
-      // Gate incomplete churches to onboarding; sync cookie so middleware matches API
-      let next = redirectTo
-      try {
-        const { apiClient } = await import("@/lib/axios")
-        const { clearOnboardingCompletedCookie, setOnboardingCompletedCookie } =
-          await import("@/features/onboarding/cookie")
-        const status = await apiClient.get<{
-          success: boolean
-          data: { completed: boolean }
-        }>("/settings/onboarding")
-        if (!status.data.data?.completed) {
-          clearOnboardingCompletedCookie()
-          next = "/onboarding"
-        } else {
-          setOnboardingCompletedCookie()
-          if (redirectTo.startsWith("/onboarding")) next = "/dashboard"
-        }
-      } catch {
-        /* keep redirectTo */
-      }
-      router.push(next)
+      router.push(workspacePath(redirectTo))
       router.refresh()
     } catch {
       toast.error("Something went wrong. Please try again.")
@@ -79,7 +66,7 @@ function LoginForm() {
         description="Sign in to continue to your church dashboard."
       />
       <div className="space-y-5">
-        <GoogleButton callbackURL="/onboarding" />
+        <GoogleButton callbackURL={workspacePath(redirectTo)} />
         <OrDivider />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

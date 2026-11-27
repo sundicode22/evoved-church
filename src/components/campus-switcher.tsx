@@ -105,6 +105,15 @@ export function CampusSwitcher() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem
+                className="gap-2 rounded-lg p-2"
+                onClick={() => router.push("/workspaces?choose=1")}
+              >
+                <div className="flex size-6 items-center justify-center rounded-md border border-border bg-card">
+                  <Building2 className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
+                </div>
+                <span className="text-xs font-medium">Switch church</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 className="gap-2 rounded-lg p-2 text-brand"
                 onClick={() => router.push("/dashboard/settings?tab=locations")}
               >

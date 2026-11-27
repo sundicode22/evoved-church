@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { ONBOARDING_COOKIE } from "@/features/onboarding/cookie"
 
-const PROTECTED_PREFIXES = ["/dashboard", "/onboarding"]
+const PROTECTED_PREFIXES = ["/dashboard", "/onboarding", "/workspaces"]
 
 function hasSessionCookie(request: NextRequest): boolean {
   return request.cookies
@@ -30,10 +30,11 @@ export function middleware(request: NextRequest) {
   }
 
   if (hasSession && pathname.startsWith("/dashboard") && !onboardingDone) {
-    return NextResponse.redirect(new URL("/onboarding", request.url))
+    return NextResponse.redirect(new URL("/workspaces", request.url))
   }
 
-  if (hasSession && pathname.startsWith("/onboarding") && onboardingDone) {
+  const creatingChurch = request.nextUrl.searchParams.get("new") === "1"
+  if (hasSession && pathname.startsWith("/onboarding") && onboardingDone && !creatingChurch) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
@@ -42,5 +43,11 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   // `/dashboard/:path*` does not match `/dashboard` itself.
-  matcher: ["/dashboard", "/dashboard/:path*", "/onboarding", "/onboarding/:path*"],
+  matcher: [
+    "/dashboard",
+    "/dashboard/:path*",
+    "/onboarding",
+    "/onboarding/:path*",
+    "/workspaces",
+  ],
 }

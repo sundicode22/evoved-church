@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -37,7 +37,22 @@ const STEP_COPY: { title: string; description: string }[] = [
 ]
 
 export default function OnboardingPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+          Checking your workspace…
+        </main>
+      }
+    >
+      <OnboardingWizard />
+    </React.Suspense>
+  )
+}
+
+function OnboardingWizard() {
   const router = useRouter()
+  const creatingAnother = useSearchParams().get("new") === "1"
   const [step, setStep] = React.useState(0)
   const status = useOnboardingStatus()
   const complete = useCompleteOnboarding()
@@ -52,10 +67,11 @@ export default function OnboardingPage() {
   const pending = complete.isPending
 
   React.useEffect(() => {
+    if (creatingAnother) return
     if (!status.isSuccess || !status.data?.completed) return
     setOnboardingCompletedCookie()
     router.replace("/dashboard")
-  }, [status.isSuccess, status.data?.completed, router])
+  }, [creatingAnother, status.isSuccess, status.data?.completed, router])
 
   async function onContinue() {
     const fields = ONBOARDING_STEP_FIELDS[step]
@@ -72,7 +88,7 @@ export default function OnboardingPage() {
 
   const copy = STEP_COPY[step]
 
-  if (status.isLoading || status.data?.completed) {
+  if (!creatingAnother && (status.isLoading || status.data?.completed)) {
     return (
       <main className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10 font-sans">
         <BrandMark />

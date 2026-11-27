@@ -33,7 +33,7 @@ interface GoogleButtonProps {
   callbackURL?: string
 }
 
-export function GoogleButton({ callbackURL = "/onboarding" }: GoogleButtonProps) {
+export function GoogleButton({ callbackURL = "/workspaces" }: GoogleButtonProps) {
   const [pending, setPending] = React.useState(false)
 
   async function handleClick() {
