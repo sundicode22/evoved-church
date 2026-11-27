@@ -303,8 +303,8 @@ export function LandingPage() {
         className={cn(
           "sticky top-0 z-50 transition-colors duration-300",
           scrolled
-            ? "border-b border-border/70 bg-background/75 backdrop-blur-md"
-            : "border-b border-transparent bg-transparent"
+            ? "bg-background/75 backdrop-blur-md"
+            : "bg-transparent"
         )}
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
@@ -468,7 +468,7 @@ export function LandingPage() {
         </section>
 
         {/* Sliding product screenshots */}
-        <section id="tour" className="relative scroll-mt-24 border-t border-border bg-background py-20">
+        <section id="tour" className="relative scroll-mt-24 bg-background py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <LandingScreenshots />
           </div>
