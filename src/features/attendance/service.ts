@@ -6,60 +6,8 @@ import { emailService } from "@/features/communications/resend"
 
 const DEMO_CAMPUS = "campus-demo-main"
 const now = () => new Date().toISOString()
-const sundayAt = (hour: number) => {
-  const dt = new Date()
-  const day = dt.getDay()
-  const diff = day === 0 ? 0 : 7 - day
-  dt.setDate(dt.getDate() + diff)
-  dt.setHours(hour, 0, 0, 0)
-  return dt.toISOString()
-}
 
-const demoSessions: AttendanceSession[] = [
-  {
-    id: "sess-sunday-am",
-    campusId: DEMO_CAMPUS,
-    sessionName: "Sunday 10:00 AM Main Service",
-    sessionDate: sundayAt(10),
-    sessionType: "service",
-    qrToken: "qr-sunday-am",
-    checkinUrl: qrService.getCheckinUrl("sess-sunday-am"),
-    headcountAdults: 312,
-    headcountChildren: 48,
-    createdAt: now(),
-  },
-  {
-    id: "sess-sunday-kids",
-    campusId: DEMO_CAMPUS,
-    sessionName: "Kids Check-in — Sunday AM",
-    sessionDate: sundayAt(9),
-    sessionType: "kids",
-    qrToken: "qr-kids-am",
-    checkinUrl: qrService.getCheckinUrl("sess-sunday-kids"),
-    headcountAdults: 0,
-    headcountChildren: 48,
-    createdAt: now(),
-  },
-  {
-    id: "sess-midweek",
-    campusId: DEMO_CAMPUS,
-    sessionName: "Wednesday Prayer",
-    sessionDate: (() => {
-      const dt = new Date()
-      const day = dt.getDay()
-      const diff = (3 - day + 7) % 7
-      dt.setDate(dt.getDate() + diff)
-      dt.setHours(19, 0, 0, 0)
-      return dt.toISOString()
-    })(),
-    sessionType: "service",
-    qrToken: "qr-wed-prayer",
-    checkinUrl: qrService.getCheckinUrl("sess-midweek"),
-    headcountAdults: 64,
-    headcountChildren: 8,
-    createdAt: now(),
-  },
-]
+const demoSessions: AttendanceSession[] = []
 
 export const attendanceService = {
   async listSessions(campusId?: string | null): Promise<AttendanceSession[]> {
@@ -200,8 +148,6 @@ export const attendanceService = {
             source: "Sunday Service Check-in",
             stage: "first_visit",
             tags: ["FIRST-TIMER", "SUNDAY CHECK-IN"],
-            activeSequence: "Welcome Drip Sequence",
-            nextDripAction: "Welcome email sent via Resend",
           })
           .returning()
 
@@ -219,8 +165,8 @@ export const attendanceService = {
             .sendWelcomeDrip({
               to: input.email,
               visitorName: input.fullName,
-              churchName: "Grace City Church",
-              pastorName: "Pastor David Johnson",
+              churchName: "your church",
+              pastorName: "The pastoral team",
               nextSundayTime: "10:00 AM",
             })
             .catch((err) => console.error("[Attendance Welcome Drip Error]:", err))
@@ -265,7 +211,7 @@ export const attendanceService = {
       guardianName: input.guardianName,
       securityPickupCode: pickupCode,
       badgePrintPayload: {
-        churchName: "Grace City Kids Ministry",
+        churchName: "Kids ministry",
         childName: input.childName,
         childAge: input.childAge,
         guardianName: input.guardianName,

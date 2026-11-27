@@ -47,9 +47,9 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useSession } from "@/features/auth/auth-client"
 import { useNomenclatureStore } from "@/features/settings/use-nomenclature"
 import { useNomenclatureQuery } from "@/features/settings/hooks/use-nomenclature-api"
-import { useBranchStore } from "@/store/use-branch-store"
 import { useAbility } from "@/features/auth/ability-context"
 import { NAV_PERMISSION } from "@/features/auth/permissions-catalog"
 
@@ -171,12 +171,11 @@ export function AppSidebar({
     }))
     .filter((group) => group.items.length > 0)
 
-  const churchName = useNomenclatureStore((s) => s.nomenclature.churchName)
-  const activeCampus = useBranchStore((s) => s.activeCampus)
+  const { data: session } = useSession()
   const currentUser = {
-    name: churchName || "Church admin",
-    email: activeCampus.name || "No location selected",
-    avatar: "",
+    name: session?.user?.name?.trim() || "Account",
+    email: session?.user?.email || "",
+    avatar: session?.user?.image || "",
   }
 
   return (

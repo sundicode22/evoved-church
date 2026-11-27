@@ -17,80 +17,8 @@ import type { z } from "zod"
 const now = () => new Date().toISOString()
 const DEMO_CAMPUS = "campus-demo-1"
 
-const groups: MinistryGroup[] = [
-  {
-    id: "grp-1",
-    campusId: DEMO_CAMPUS,
-    name: "Downtown Young Professionals",
-    type: "public",
-    imageUrl: null,
-    description: "Life group for young adults downtown.",
-    leaderMemberId: "mem-3",
-    leaderName: "Kathryn Murphy",
-    isActive: true,
-    memberCount: 14,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "grp-2",
-    campusId: DEMO_CAMPUS,
-    name: "North Campus Marriage & Family",
-    type: "private",
-    imageUrl: null,
-    description: "Couples and families midweek.",
-    leaderMemberId: "mem-2",
-    leaderName: "Marcus Vance",
-    isActive: true,
-    memberCount: 18,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "grp-3",
-    campusId: DEMO_CAMPUS,
-    name: "Worship Production Team",
-    type: "team",
-    imageUrl: null,
-    description: "Serving team for weekend production.",
-    leaderMemberId: "mem-1",
-    leaderName: "David Johnson",
-    isActive: true,
-    memberCount: 9,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-]
-
-const memberships: GroupMembership[] = [
-  {
-    id: "gm-1",
-    groupId: "grp-1",
-    groupName: "Downtown Young Professionals",
-    memberId: "mem-3",
-    memberDisplayName: "Kathryn Murphy",
-    role: "leader",
-    joinedAt: now(),
-  },
-  {
-    id: "gm-2",
-    groupId: "grp-1",
-    groupName: "Downtown Young Professionals",
-    memberId: "mem-5",
-    memberDisplayName: "Brian Robbin",
-    role: "member",
-    joinedAt: now(),
-  },
-  {
-    id: "gm-3",
-    groupId: "grp-3",
-    groupName: "Worship Production Team",
-    memberId: "mem-1",
-    memberDisplayName: "David Johnson",
-    role: "leader",
-    joinedAt: now(),
-  },
-]
+const groups: MinistryGroup[] = []
+const memberships: GroupMembership[] = []
 
 function findGroup(id: string) {
   const g = groups.find((x) => x.id === id)

@@ -77,9 +77,7 @@ const DEMO_ROLES = [
 ]
 
 let memoryRoles = [...DEMO_ROLES]
-let memoryUserRoles: { userId: string; roleId: string }[] = [
-  { userId: "demo-admin", roleId: "role-admin" },
-]
+let memoryUserRoles: { userId: string; roleId: string }[] = []
 
 export const rbacService = {
   listPermissionCatalog() {

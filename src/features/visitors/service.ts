@@ -49,92 +49,20 @@ async function emptyBoard() {
   }))
 }
 
-let DEMO_LEADS = [
-  {
-    id: "lead-1",
-    leadNumber: "#192740",
-    title: "First-Time Family — Cooper",
-    location: "Main Sanctuary",
-    stage: "first_visit" as VisitorStage,
-    contactName: "Jane Cooper",
-    contactEmail: "jane.cooper@email.com",
-    contactPhone: "+15550101001",
-    value: 0,
-    createdAt: new Date(Date.now() - 60000),
-  },
-  {
-    id: "lead-2",
-    leadNumber: "#192741",
-    title: "Guest — Annette Willie",
-    location: "North Campus",
-    stage: "first_visit" as VisitorStage,
-    contactName: "Annette Willie",
-    contactEmail: "annette.willie@email.com",
-    contactPhone: "+15550101002",
-    value: 0,
-    createdAt: new Date(Date.now() - 30 * 60000),
-  },
-  {
-    id: "lead-3",
-    leadNumber: "#192745",
-    title: "Welcome Call — Darlene",
-    location: "Main Sanctuary",
-    stage: "welcome_call" as VisitorStage,
-    contactName: "Darlene Robertson",
-    contactEmail: "darlene.robertson@email.com",
-    contactPhone: "+15550101003",
-    value: 0,
-    createdAt: new Date(Date.now() - 5 * 60000),
-  },
-  {
-    id: "lead-4",
-    leadNumber: "#192748",
-    title: "Coffee with Pastor — Brian",
-    location: "Café Lobby",
-    stage: "pastoral_visit" as VisitorStage,
-    contactName: "Brian Robbin",
-    contactEmail: "brian.robbin@email.com",
-    contactPhone: "+15550101004",
-    value: 0,
-    createdAt: new Date(Date.now() - 47 * 60000),
-  },
-  {
-    id: "lead-5",
-    leadNumber: "#192750",
-    title: "Foundations Class — Eleanor",
-    location: "Room 204",
-    stage: "foundations_class" as VisitorStage,
-    contactName: "Eleanor Pena",
-    contactEmail: "eleanor.pena@email.com",
-    contactPhone: "+15550101005",
-    value: 0,
-    createdAt: new Date(Date.now() - 60000),
-  },
-  {
-    id: "lead-6",
-    leadNumber: "#192751",
-    title: "Life Group Interest — Marcus",
-    location: "Discipleship",
-    stage: "group_integration" as VisitorStage,
-    contactName: "Marcus Vance",
-    contactEmail: "marcus.vance@email.com",
-    contactPhone: "+15550101006",
-    value: 0,
-    createdAt: new Date(Date.now() - 120 * 60000),
-  },
-  {
-    id: "lead-7",
-    leadNumber: "#192752",
-    title: "Covenant Partner — Sarah",
-    location: "Main Campus",
-    stage: "active_partner" as VisitorStage,
-    contactName: "Sarah Miller",
-    contactEmail: "sarah.miller@email.com",
-    contactPhone: "+15550101007",
-    value: 0,
-    createdAt: new Date(Date.now() - 24 * 60 * 60000),
-  },
-]
+/** Leads kept only when a database insert is unavailable. Starts empty. */
+let DEMO_LEADS: {
+  id: string
+  leadNumber: string
+  title: string
+  location: string
+  stage: VisitorStage
+  contactName: string
+  contactEmail: string
+  contactPhone: string
+  value: number
+  createdAt: Date
+  source?: string
+}[] = []
 
 function paginateDemoLeads(params: {
   page: number
@@ -201,7 +129,10 @@ export const visitorService = {
       >
       const fallbackStage = stages[0]?.id || "first_visit"
 
-      const source = allLeads.length === 0 && !search ? DEMO_LEADS : allLeads
+      const source = [
+        ...allLeads,
+        ...DEMO_LEADS.filter((lead) => !allLeads.some((row) => row.id === lead.id)),
+      ]
 
       for (const lead of source) {
         const stageId =
@@ -400,7 +331,8 @@ export const visitorService = {
       console.error("[visitorService.getLeadById]", e)
     }
 
-    const demo = DEMO_LEADS.find((l) => l.id === id) || DEMO_LEADS[3]
+    const demo = DEMO_LEADS.find((l) => l.id === id)
+    if (!demo) throw new NotFoundError("Visitor", id)
     const cols = await kanbanService.list("visitors")
     const stageOrder = cols.map((c) => c.key)
     const labels = Object.fromEntries(cols.map((c) => [c.key, c.label]))
@@ -432,24 +364,7 @@ export const visitorService = {
         phone: demo.contactPhone,
         source: "QR Check-in",
       },
-      activeSequence: {
-        title: "Welcome Drip Sequence",
-        nextDrip: "Shepherd coffee invite",
-        scheduledFor: "Tomorrow 10:00 AM",
-      },
-      latestActivity:
-        localActs.length > 0
-          ? localActs
-          : [
-              {
-                id: "act-1",
-                type: "email",
-                title: "Welcome email queued",
-                description: "Senior Pastor welcome drip scheduled (+2h).",
-                performedByUserId: null,
-                createdAt: new Date(),
-              },
-            ],
+      latestActivity: localActs,
     }
   },
 
@@ -502,8 +417,6 @@ export const visitorService = {
             value: String(input.value ?? 0),
             tags: input.tags || [],
             stage: "first_visit",
-            activeSequence: "Welcome Drip Sequence",
-            nextDripAction: "Welcome email in 2 hours",
           })
           .returning()
 
@@ -520,8 +433,8 @@ export const visitorService = {
               .sendWelcomeDrip({
                 to: input.contactEmail,
                 visitorName: input.contactName,
-                churchName: "Grace City Church",
-                pastorName: "Pastor David Johnson",
+                churchName: "your church",
+                pastorName: "The pastoral team",
                 nextSundayTime: "10:00 AM",
               })
               .catch((err) => console.error("[Resend Drip Warning]:", err))

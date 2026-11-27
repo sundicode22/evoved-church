@@ -187,7 +187,7 @@ export function VisitorFollowUpDialogs({
                     control={form.control}
                     name="assigneeName"
                     label="Staff name"
-                    placeholder="e.g. Jane Cooper"
+                    placeholder="Full name"
                     autoFocus
                   />
                   <SelectFormField

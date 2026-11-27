@@ -9,54 +9,8 @@ import {
 
 const DEMO_CAMPUS = "campus-demo-main"
 const now = () => new Date().toISOString()
-const daysFromNow = (d: number) => {
-  const dt = new Date()
-  dt.setDate(dt.getDate() + d)
-  dt.setHours(17, 0, 0, 0)
-  return dt.toISOString()
-}
 
-const store: FollowUp[] = [
-  {
-    id: "fu-1",
-    campusId: DEMO_CAMPUS,
-    title: "Welcome call — first visit",
-    relatedMemberName: "",
-    relatedLeadName: "Brian Robbin",
-    assignedToName: "Ruth Williams",
-    dueAt: daysFromNow(1),
-    status: "open",
-    notes: "Visited Easter Sunday; interested in kids ministry",
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "fu-2",
-    campusId: DEMO_CAMPUS,
-    title: "Hospital check-in",
-    relatedMemberName: "Eleanor Pena",
-    relatedLeadName: "",
-    assignedToName: "Pastor David Johnson",
-    dueAt: daysFromNow(0),
-    status: "in_progress",
-    notes: "Room 412 — St. Jude Memorial",
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "fu-3",
-    campusId: DEMO_CAMPUS,
-    title: "Foundations class invite",
-    relatedMemberName: "",
-    relatedLeadName: "Maria Santos",
-    assignedToName: "Daniel Okafor",
-    dueAt: daysFromNow(3),
-    status: "open",
-    notes: "",
-    createdAt: now(),
-    updatedAt: now(),
-  },
-]
+const store: FollowUp[] = []
 
 function find(id: string) {
   const row = store.find((x) => x.id === id)

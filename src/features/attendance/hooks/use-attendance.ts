@@ -85,7 +85,7 @@ export function useSundayCheckin() {
     },
     onSuccess: (data, variables) => {
       if (variables.isFirstTimer) {
-        toast.success(`Welcome to Grace City Church, ${variables.fullName}! Added to Welcome Pipeline.`)
+        toast.success(`Welcome, ${variables.fullName}. Added to the visitor pipeline.`)
         queryClient.invalidateQueries({ queryKey: VISITOR_KEYS.all })
       } else {
         toast.success(`Welcome back, ${variables.fullName}! Checked in successfully.`)

@@ -11,89 +11,9 @@ import {
 } from "./schemas"
 
 const now = () => new Date().toISOString()
-const daysFromNow = (d: number, hour = 10) => {
-  const dt = new Date()
-  dt.setDate(dt.getDate() + d)
-  dt.setHours(hour, 0, 0, 0)
-  return dt.toISOString()
-}
 
-const programs: ChurchProgram[] = [
-  {
-    id: "prog-1",
-    title: "Community Food Pantry",
-    type: "outreach",
-    description: "Monthly food distribution for neighbors in need.",
-    locationLabel: "Fellowship Hall",
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "prog-2",
-    title: "Foundations Class",
-    type: "training",
-    description: "New believer / membership class.",
-    locationLabel: "Room B",
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "prog-3",
-    title: "Sunday Morning Worship",
-    type: "worship",
-    description: "Linked to the primary weekend service.",
-    locationLabel: "Main Sanctuary",
-    serviceId: "svc-sunday-am",
-    createdAt: now(),
-    updatedAt: now(),
-  },
-]
-
-const occurrences: CalendarOccurrence[] = [
-  {
-    id: "occ-1",
-    programId: "prog-1",
-    programTitle: "Community Food Pantry",
-    programType: "outreach",
-    locationLabel: "Fellowship Hall",
-    startsAt: daysFromNow(3, 9),
-    endsAt: daysFromNow(3, 12),
-    allDay: false,
-    status: "scheduled",
-    notes: "Bring gloves and sorting tables",
-    assignees: [
-      { id: "as-1", displayName: "Ruth Williams", roleLabel: "lead" },
-      { id: "as-2", displayName: "Daniel Okafor", roleLabel: "volunteer" },
-    ],
-  },
-  {
-    id: "occ-2",
-    programId: "prog-2",
-    programTitle: "Foundations Class",
-    programType: "training",
-    locationLabel: "Room B",
-    startsAt: daysFromNow(5, 18),
-    endsAt: daysFromNow(5, 20),
-    allDay: false,
-    status: "scheduled",
-    notes: "",
-    assignees: [{ id: "as-3", displayName: "Pastor Ahmad", roleLabel: "speaker" }],
-  },
-  {
-    id: "occ-3",
-    programId: "prog-3",
-    programTitle: "Sunday Morning Worship",
-    programType: "worship",
-    locationLabel: "Main Sanctuary",
-    startsAt: daysFromNow(7 - new Date().getDay(), 10),
-    endsAt: daysFromNow(7 - new Date().getDay(), 12),
-    allDay: false,
-    status: "scheduled",
-    notes: "",
-    serviceId: "svc-sunday-am",
-    assignees: [{ id: "as-4", displayName: "Worship Team", roleLabel: "lead" }],
-  },
-]
+const programs: ChurchProgram[] = []
+const occurrences: CalendarOccurrence[] = []
 
 function findProgram(id: string) {
   const p = programs.find((x) => x.id === id)

@@ -588,7 +588,7 @@ export default function OrganigramPage() {
                       control={form.control}
                       name="name"
                       label="Person name"
-                      placeholder="e.g. Jane Cooper"
+                      placeholder="Full name"
                     />
                     <SelectFormField
                       control={form.control}

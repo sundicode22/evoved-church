@@ -11,90 +11,9 @@ import {
 
 const DEMO_CAMPUS = "campus-demo-main"
 const now = () => new Date().toISOString()
-const daysFromNow = (d: number, hour = 10) => {
-  const dt = new Date()
-  dt.setDate(dt.getDate() + d)
-  dt.setHours(hour, 0, 0, 0)
-  return dt.toISOString()
-}
 
-const schedules: AppointmentSchedule[] = [
-  {
-    id: "sched-1",
-    campusId: DEMO_CAMPUS,
-    name: "Pastoral Discovery Coffee",
-    ownerDisplayName: "Pastor Ahmad Fawaid",
-    durationMinutes: 30,
-    windowStart: daysFromNow(1, 9),
-    windowEnd: daysFromNow(14, 17),
-    status: "open_for_bookings",
-    bookingUrlSlug: "pastoral-coffee",
-    bookingCount: 2,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "sched-2",
-    campusId: DEMO_CAMPUS,
-    name: "Baptism Counseling",
-    ownerDisplayName: "Pastor Marcus Vance",
-    durationMinutes: 60,
-    windowStart: daysFromNow(2, 10),
-    windowEnd: daysFromNow(21, 16),
-    status: "open_for_bookings",
-    bookingUrlSlug: "baptism-counseling",
-    bookingCount: 1,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "sched-3",
-    campusId: DEMO_CAMPUS,
-    name: "Hospital Visits (staff only)",
-    ownerDisplayName: "Pastor David Johnson",
-    durationMinutes: 45,
-    windowStart: daysFromNow(-7, 9),
-    windowEnd: daysFromNow(-1, 17),
-    status: "closed",
-    bookingUrlSlug: "hospital-care",
-    bookingCount: 0,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-]
-
-const bookings: AppointmentBooking[] = [
-  {
-    id: "book-1",
-    scheduleId: "sched-1",
-    scheduleName: "Pastoral Discovery Coffee",
-    guestName: "Brian Robbin",
-    guestEmail: "brian@example.org",
-    startsAt: daysFromNow(2, 10),
-    status: "upcoming",
-    createdAt: now(),
-  },
-  {
-    id: "book-2",
-    scheduleId: "sched-1",
-    scheduleName: "Pastoral Discovery Coffee",
-    guestName: "Jane Cooper",
-    guestEmail: "jane@example.org",
-    startsAt: daysFromNow(5, 14),
-    status: "upcoming",
-    createdAt: now(),
-  },
-  {
-    id: "book-3",
-    scheduleId: "sched-2",
-    scheduleName: "Baptism Counseling",
-    guestName: "Eleanor Pena",
-    guestEmail: "eleanor@example.org",
-    startsAt: daysFromNow(-2, 11),
-    status: "completed",
-    createdAt: now(),
-  },
-]
+const schedules: AppointmentSchedule[] = []
+const bookings: AppointmentBooking[] = []
 
 function findSchedule(id: string) {
   const s = schedules.find((x) => x.id === id)

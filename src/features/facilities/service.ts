@@ -15,68 +15,8 @@ import {
 const DEMO_CAMPUS = "campus-demo-main"
 const now = () => new Date().toISOString()
 
-const rooms: Room[] = [
-  {
-    id: "room-1",
-    campusId: DEMO_CAMPUS,
-    name: "Main Sanctuary",
-    capacity: 450,
-    locationNote: "Primary worship floor",
-    requiresApproval: true,
-    isActive: true,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "room-2",
-    campusId: DEMO_CAMPUS,
-    name: "Fellowship Hall",
-    capacity: 120,
-    locationNote: "Building B, ground floor",
-    requiresApproval: false,
-    isActive: true,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "room-3",
-    campusId: DEMO_CAMPUS,
-    name: "Room B — Classrooms",
-    capacity: 30,
-    locationNote: "Education wing",
-    requiresApproval: false,
-    isActive: true,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-]
-
-const resources: Resource[] = [
-  {
-    id: "res-1",
-    campusId: DEMO_CAMPUS,
-    name: "Portable PA System",
-    category: "equipment",
-    description: "Speaker + mixer for outdoor events",
-    quantity: 2,
-    requiresApproval: true,
-    isActive: true,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "res-2",
-    campusId: DEMO_CAMPUS,
-    name: "Folding Tables",
-    category: "supply",
-    description: "6-foot banquet tables",
-    quantity: 24,
-    requiresApproval: false,
-    isActive: true,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-]
+const rooms: Room[] = []
+const resources: Resource[] = []
 
 function findRoom(id: string) {
   const r = rooms.find((x) => x.id === id)

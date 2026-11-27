@@ -59,7 +59,7 @@ export default function SignupPage() {
                 name="name"
                 label="Full name"
                 autoComplete="name"
-                placeholder="Pastor Jane Doe"
+                placeholder="Your name"
               />
               <AuthFormField
                 control={form.control}

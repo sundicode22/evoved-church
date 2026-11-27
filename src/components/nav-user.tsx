@@ -1,11 +1,14 @@
 "use client"
 
+import * as React from "react"
+import { useRouter } from "next/navigation"
 import { Bell, ChevronsUpDown, CreditCard, LogOut, UserCircle } from "lucide-react"
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
+import { ConfirmAction } from "@/components/confirm-action"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +24,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { signOut } from "@/features/auth/auth-client"
 
 export function NavUser({
   user,
@@ -32,6 +36,20 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
+  const [logoutOpen, setLogoutOpen] = React.useState(false)
+  const initials = user.name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase()
+
+  async function confirmLogout() {
+    await signOut()
+    router.push("/login")
+    router.refresh()
+  }
 
   return (
     <SidebarMenu>
@@ -48,12 +66,7 @@ export function NavUser({
             <Avatar className="size-8 rounded-lg">
               <AvatarImage src={user.avatar} alt={user.name} />
               <AvatarFallback className="rounded-lg bg-brand-soft text-brand-ink">
-                {user.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .slice(0, 2)
-                  .toUpperCase()}
+                {initials || "?"}
               </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
@@ -73,7 +86,7 @@ export function NavUser({
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <Avatar className="size-8 rounded-lg">
                     <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                    <AvatarFallback className="rounded-lg">{initials || "?"}</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">{user.name}</span>
@@ -98,12 +111,21 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onClick={() => setLogoutOpen(true)}>
               <LogOut className="size-4" strokeWidth={1.75} />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <ConfirmAction
+          open={logoutOpen}
+          onOpenChange={setLogoutOpen}
+          title="Log out?"
+          description="You will need to sign in again to open the church workspace."
+          confirmLabel="Log out"
+          variant="destructive"
+          onConfirm={confirmLogout}
+        />
       </SidebarMenuItem>
     </SidebarMenu>
   )

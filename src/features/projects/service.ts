@@ -8,16 +8,7 @@ import {
 import { createProjectCardSchema } from "./schemas"
 import { kanbanService } from "@/features/kanban/service"
 
-const mins = (m: number) => new Date(Date.now() - m * 60_000).toISOString()
-
-const cards: ProjectCard[] = [
-  { id: "prj-1", title: "Plan Easter outreach flyers", projectName: "Easter Outreach", priority: "high", assigneeName: "SM", dueLabel: "Fri", stage: "backlog", stageChangedAt: mins(300) },
-  { id: "prj-2", title: "Book worship team rehearsal space", projectName: "Sunday Services", priority: "normal", assigneeName: "DO", dueLabel: "Next week", stage: "backlog", stageChangedAt: mins(1500) },
-  { id: "prj-3", title: "Repaint children's wing", projectName: "Facilities", priority: "low", assigneeName: "RW", dueLabel: "Mar 28", stage: "in_progress", stageChangedAt: mins(120) },
-  { id: "prj-4", title: "Launch new small-group sign-ups", projectName: "Groups", priority: "high", assigneeName: "GT", dueLabel: "This week", stage: "in_progress", stageChangedAt: mins(45) },
-  { id: "prj-5", title: "Review volunteer background checks", projectName: "Safety & Compliance", priority: "high", assigneeName: "SL", dueLabel: "Tomorrow", stage: "review", stageChangedAt: mins(600) },
-  { id: "prj-6", title: "Publish Q1 giving report", projectName: "Finance", priority: "normal", assigneeName: "DO", dueLabel: "Completed", stage: "done", stageChangedAt: mins(4000) },
-]
+const cards: ProjectCard[] = []
 
 export const projectService = {
   async getBoard(): Promise<ProjectBoard> {

@@ -41,36 +41,7 @@ const demoBudgetLines: {
   allocatedAmount: number
   notes?: string
   accountId?: string
-}[] = [
-  {
-    id: "bl-1",
-    fundId: "fund-1",
-    fundName: "General Operating Fund",
-    fiscalYear: new Date().getFullYear(),
-    department: "Worship",
-    label: "Production & AV",
-    allocatedAmount: 28000,
-  },
-  {
-    id: "bl-2",
-    fundId: "fund-1",
-    fundName: "General Operating Fund",
-    fiscalYear: new Date().getFullYear(),
-    department: "Facilities",
-    label: "Utilities & Maintenance",
-    allocatedAmount: 42000,
-  },
-  {
-    id: "bl-3",
-    fundId: "fund-3",
-    fundName: "World Missions & Regional Church Planting",
-    fiscalYear: new Date().getFullYear(),
-    department: "Missions",
-    label: "Partner support",
-    allocatedAmount: 35000,
-  },
-]
-const demoJournalPosted = new Set<string>()
+}[] = []
 const demoReqDecisions = new Map<string, { status: string; decision: string }>()
 
 export const accountingService = {
@@ -169,32 +140,6 @@ export const accountingService = {
 
       const total = countResult[0]?.count || 0
       const totalPages = Math.ceil(total / pageSize) || 1
-
-      // Fallback demo row if empty in local dev
-      if (records.length === 0 && !params.search) {
-        const decision = demoReqDecisions.get("req-1")
-        return {
-          data: [
-            {
-              id: "req-1",
-              requisitionNumber: "REQ-2024-001",
-              amount: 1450.0,
-              vendorName: "Sweetwater Sound",
-              department: "Creative Arts & Worship",
-              description: "Replacement Wireless In-Ear Monitors for Praise Team",
-              status: decision?.status || "pending_tier_2",
-              currentTierLevel: 2,
-              currentApprover: "Campus Pastor (Ahmad Fawaid)",
-              fundName: "General Operating Fund",
-              fundId: "fund-1",
-              accountId: "acct-5030",
-              receiptUrl: "https://res.cloudinary.com/evolve-church/receipts/req001.pdf",
-              createdAt: new Date().toISOString(),
-            },
-          ],
-          pagination: { page: 1, pageSize: 10, total: 1, totalPages: 1, hasNext: false, hasPrev: false },
-        }
-      }
 
       return {
         data: records,
@@ -619,34 +564,6 @@ export const accountingService = {
         .orderBy(desc(journalEntries.createdAt))
         .limit(50)
 
-      if (entries.length === 0) {
-        return [
-          {
-            id: "je-demo-1",
-            entryNumber: "JE-2024-001",
-            entryDate: new Date().toISOString(),
-            memo: "Sunday offering batch — General Fund (draft)",
-            status: demoJournalPosted.has("je-demo-1") ? "posted" : "draft",
-            createdByUserId: "user-finance-1",
-            createdByName: "Finance Admin",
-            postedByUserId: demoJournalPosted.has("je-demo-1") ? "user-pastor-1" : null,
-            postedByName: demoJournalPosted.has("je-demo-1") ? "Campus Pastor Ahmad" : null,
-            postedAt: demoJournalPosted.has("je-demo-1") ? new Date().toISOString() : null,
-          },
-          {
-            id: "je-demo-2",
-            entryNumber: "JE-2024-002",
-            entryDate: new Date(Date.now() - 86400000).toISOString(),
-            memo: "Worship gear expense disbursement",
-            status: "posted",
-            createdByUserId: "user-finance-1",
-            createdByName: "Finance Admin",
-            postedByUserId: "user-pastor-1",
-            postedByName: "Campus Pastor Ahmad",
-            postedAt: new Date(Date.now() - 80000000).toISOString(),
-          },
-        ]
-      }
       return entries
     } catch (err) {
       console.error("[accountingService.getJournalEntries]", err)
@@ -702,21 +619,6 @@ export const accountingService = {
    * and bumps each fund balance in one transaction (write to books).
    */
   async postJournalEntry(id: string, input: PostJournalEntryInput) {
-    if (id.startsWith("je-demo-")) {
-      if (demoJournalPosted.has(id)) throw new ValidationError("Journal entry is already posted.")
-      demoJournalPosted.add(id)
-      // Demo: increase General Operating Fund when posting demo journals
-      const fund = demoFundsExtra.find((f) => f.id === "fund-1")
-      if (fund) fund.balance = Number(fund.balance || 0) + 500
-      return {
-        id,
-        status: "posted",
-        postedByUserId: input.postedByUserId,
-        postedByName: "Campus Pastor Ahmad",
-        postedAt: new Date().toISOString(),
-      }
-    }
-
     const existing = await db.select().from(journalEntries).where(eq(journalEntries.id, id)).limit(1)
     if (existing.length === 0) throw new NotFoundError("Journal Entry", id)
     if (existing[0].status === "posted") {

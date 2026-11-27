@@ -1,3 +1,6 @@
+import { isNull } from "drizzle-orm"
+import { db } from "@/lib/db"
+import { members, visitorLeads } from "@/lib/db/schema"
 import { NotFoundError, ValidationError } from "@/lib/errors"
 import { emailService } from "@/features/communications/resend"
 import { smsService } from "@/features/communications/sms"
@@ -15,85 +18,49 @@ type UpdateInput = z.output<typeof updateCampaignSchema>
 
 type StoredCampaign = Omit<Campaign, "stats">
 
-/** Demo recipients used when no member directory is wired to the audience filter. */
-const DEMO_RECIPIENTS = [
-  { name: "Grace Thompson", email: "grace@example.org", phone: "+15550100001" },
-  { name: "Daniel Okafor", email: "daniel@example.org", phone: "+15550100002" },
-  { name: "Maria Santos", email: "maria@example.org", phone: "+15550100003" },
-  { name: "Samuel Lee", email: "samuel@example.org", phone: "+15550100004" },
-  { name: "Ruth Williams", email: "ruth@example.org", phone: "+15550100005" },
-]
+const store: StoredCampaign[] = []
+const sendLogs: CampaignSendLog[] = []
 
-const daysAgo = (d: number) => new Date(Date.now() - d * 86_400_000).toISOString()
+type AudienceRecipient = { name: string; email: string; phone: string }
 
-const store: StoredCampaign[] = [
-  {
-    id: "cmp-demo-1",
-    name: "Easter Sunday Invitation",
-    channel: "both",
-    status: "sent",
-    subject: "You're invited: Easter Sunday Celebration",
-    emailBody: "Join us this Easter Sunday for worship, family, and celebration. Services at 9am and 11am.",
-    smsBody: "Join us this Easter Sunday at 9am or 11am! Bring a friend.",
-    audienceFilter: { segment: "all_members" },
-    scheduleAt: null,
-    sentAt: daysAgo(12),
-    createdAt: daysAgo(15),
-    updatedAt: daysAgo(12),
-  },
-  {
-    id: "cmp-demo-2",
-    name: "Volunteer Appreciation Night",
-    channel: "email",
-    status: "scheduled",
-    subject: "Thank you, volunteers!",
-    emailBody: "We'd love to celebrate you. Dinner is on us this Friday evening.",
-    smsBody: "",
-    audienceFilter: { segment: "group_leaders" },
-    scheduleAt: new Date(Date.now() + 5 * 86_400_000).toISOString(),
-    sentAt: null,
-    createdAt: daysAgo(3),
-    updatedAt: daysAgo(1),
-  },
-  {
-    id: "cmp-demo-3",
-    name: "New Visitor Follow-up",
-    channel: "sms",
-    status: "draft",
-    subject: "",
-    emailBody: "",
-    smsBody: "Thanks for visiting us! We'd love to see you again this Sunday.",
-    audienceFilter: { segment: "visitors" },
-    scheduleAt: null,
-    sentAt: null,
-    createdAt: daysAgo(1),
-    updatedAt: daysAgo(1),
-  },
-]
+async function loadRecipients(segment?: string): Promise<AudienceRecipient[]> {
+  try {
+    if (segment === "visitors") {
+      const rows = await db
+        .select({
+          name: visitorLeads.contactName,
+          email: visitorLeads.contactEmail,
+          phone: visitorLeads.contactPhone,
+        })
+        .from(visitorLeads)
+        .limit(1000)
+      return rows
+        .map((r) => ({ name: r.name, email: r.email || "", phone: r.phone || "" }))
+        .filter((r) => r.email || r.phone)
+    }
 
-const sendLogs: CampaignSendLog[] = [
-  ...DEMO_RECIPIENTS.map((r, i): CampaignSendLog => ({
-    id: `send-demo-1-e${i}`,
-    campaignId: "cmp-demo-1",
-    recipientName: r.name,
-    recipientEmail: r.email,
-    channel: "email",
-    status: "sent",
-    providerId: `re_demo_${i}`,
-    sentAt: daysAgo(12),
-  })),
-  ...DEMO_RECIPIENTS.map((r, i): CampaignSendLog => ({
-    id: `send-demo-1-s${i}`,
-    campaignId: "cmp-demo-1",
-    recipientName: r.name,
-    recipientPhone: r.phone,
-    channel: "sms",
-    status: i === 4 ? "failed" : "sent",
-    providerId: i === 4 ? undefined : `sms-demo-seed-${i}`,
-    errorMessage: i === 4 ? "Carrier rejected number" : undefined,
-    sentAt: daysAgo(12),
-  })),
-]
+    const rows = await db
+      .select({
+        firstName: members.firstName,
+        lastName: members.lastName,
+        email: members.email,
+        phone: members.phoneNumber,
+      })
+      .from(members)
+      .where(isNull(members.deletedAt))
+      .limit(1000)
+    return rows
+      .map((r) => ({
+        name: `${r.firstName} ${r.lastName}`.trim(),
+        email: r.email || "",
+        phone: r.phone || "",
+      }))
+      .filter((r) => r.email || r.phone)
+  } catch (err) {
+    console.error("[campaignService.loadRecipients]", err)
+    return []
+  }
+}
 
 function withStats(c: StoredCampaign): Campaign {
   const logs = sendLogs.filter((l) => l.campaignId === c.id)
@@ -187,12 +154,24 @@ export const campaignService = {
     if (c.channel !== "sms" && !c.emailBody) throw new ValidationError("Email body is required")
     if (c.channel !== "email" && !c.smsBody) throw new ValidationError("SMS body is required")
 
+    const segment = (c.audienceFilter as { segment?: string } | null)?.segment
+    const recipients = (await loadRecipients(segment)).filter((r) => {
+      if (c.channel === "email") return Boolean(r.email)
+      if (c.channel === "sms") return Boolean(r.phone)
+      return Boolean(r.email || r.phone)
+    })
+    if (recipients.length === 0) {
+      throw new ValidationError("No people with an email or phone match this audience.")
+    }
+
     c.status = "sending"
     const channels: ("email" | "sms")[] =
       c.channel === "both" ? ["email", "sms"] : [c.channel as "email" | "sms"]
 
-    for (const r of DEMO_RECIPIENTS) {
+    for (const r of recipients) {
       for (const channel of channels) {
+        if (channel === "email" && !r.email) continue
+        if (channel === "sms" && !r.phone) continue
         const log: CampaignSendLog = {
           id: `send-${crypto.randomUUID()}`,
           campaignId: id,

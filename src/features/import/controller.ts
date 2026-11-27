@@ -13,7 +13,7 @@ export const importController = new Elysia({ prefix: "/import" })
     success: true,
     data: {
       headers: MEMBER_CSV_HEADERS,
-      csv: MEMBER_CSV_HEADERS.join(",") + "\nJane,Doe,jane@example.org,+15551212,Doe Household,mother\n",
+      csv: MEMBER_CSV_HEADERS.join(",") + "\n",
     },
   }))
 
@@ -22,8 +22,7 @@ export const importController = new Elysia({ prefix: "/import" })
     data: {
       headers: GIVING_CSV_HEADERS,
       csv:
-        GIVING_CSV_HEADERS.join(",") +
-        "\njane@example.org,Jane Doe,50.00,GEN-100,2024-01-07,card,txn-1\n",
+        GIVING_CSV_HEADERS.join(",") + "\n",
     },
   }))
 

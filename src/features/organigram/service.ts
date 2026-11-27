@@ -4,58 +4,8 @@ import { eq } from "drizzle-orm"
 import { NotFoundError, ValidationError } from "@/lib/errors"
 import type { CreateOrgNodeInput, OrgNode, UpdateOrgNodeInput } from "./schemas"
 
-function seedNodes(): OrgNode[] {
-  return [
-    {
-      id: "node-1",
-      title: "Senior Pastor",
-      department: "Executive Leadership",
-      name: "Pastor David Johnson",
-      parentId: null,
-      spanOfCare: 4,
-      orderIndex: 0,
-    },
-    {
-      id: "node-2",
-      title: "Executive Pastor (Operations)",
-      department: "Executive Leadership",
-      name: "Rev. Marcus Vance",
-      parentId: "node-1",
-      spanOfCare: 3,
-      orderIndex: 0,
-    },
-    {
-      id: "node-3",
-      title: "Campus Pastor (Main)",
-      department: "Pastoral Care",
-      name: "Ahmad Fawaid",
-      parentId: "node-2",
-      spanOfCare: 2,
-      orderIndex: 0,
-    },
-    {
-      id: "node-4",
-      title: "Worship & Creative Arts Director",
-      department: "Creative Arts",
-      name: "Sarah Miller",
-      parentId: "node-3",
-      spanOfCare: 45,
-      orderIndex: 0,
-    },
-    {
-      id: "node-5",
-      title: "Life Group Coordinator",
-      department: "Discipleship",
-      name: "Kathryn Murphy",
-      parentId: "node-3",
-      spanOfCare: 180,
-      orderIndex: 1,
-    },
-  ]
-}
-
 /** Mutable in-memory tree — survives create/update/delete when DB is unavailable. */
-let memoryNodes: OrgNode[] = seedNodes()
+let memoryNodes: OrgNode[] = []
 
 function recomputeSpans(nodes: OrgNode[]): OrgNode[] {
   const children = new Map<string | null, string[]>()

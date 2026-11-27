@@ -8,53 +8,7 @@ import {
 } from "./schemas"
 import type { z } from "zod"
 
-const daysAgo = (d: number) => new Date(Date.now() - d * 86_400_000).toISOString()
-
-const store: ChurchPolicy[] = [
-  {
-    id: "pol-demo-1",
-    title: "Expense Requisition & Multi-Tier Approval",
-    module: "accounting",
-    summary:
-      "How staff request spending, encumber funds, and advance through pastoral approval tiers.",
-    bodyHtml: `<h2>Purpose</h2><p>Protect church funds with transparent requisitions and recorded approvals.</p><h2>Rules</h2><ul><li>Every expense needs a fund, COA account, vendor, and purpose.</li><li>Amounts over available (unencumbered) balance are blocked.</li><li>Approve / reject decisions store the actor and tier.</li><li>Journal posting is never silent — creator and poster are always recorded.</li></ul>`,
-    involvedRoles: ["Finance Director", "Treasurer", "Campus Pastor"],
-    status: "published",
-    version: 2,
-    updatedByName: "Finance Director",
-    createdAt: daysAgo(40),
-    updatedAt: daysAgo(3),
-    publishedAt: daysAgo(3),
-  },
-  {
-    id: "pol-demo-2",
-    title: "Child Safety & Background Checks",
-    module: "safety",
-    summary: "Who must be screened before serving with minors.",
-    bodyHtml: `<h2>Scope</h2><p>Applies to volunteers and staff working with children or youth.</p><ul><li>Background check status is tracked on the member record.</li><li>Expired checks block assignment to children's ministry.</li></ul>`,
-    involvedRoles: ["Children's Ministry", "Volunteer", "Executive Pastor"],
-    status: "published",
-    version: 1,
-    updatedByName: "Executive Pastor",
-    createdAt: daysAgo(90),
-    updatedAt: daysAgo(20),
-    publishedAt: daysAgo(20),
-  },
-  {
-    id: "pol-demo-3",
-    title: "Visitor Follow-up Cadence",
-    module: "visitors",
-    summary: "Expected outreach timeline from first visit to group integration.",
-    bodyHtml: `<p>Welcome call within 48 hours. Pastoral visit within two weeks when appropriate. Foundations class invitation after second visit.</p>`,
-    involvedRoles: ["Connections Lead", "Pastor"],
-    status: "draft",
-    version: 1,
-    updatedByName: "Connections Lead",
-    createdAt: daysAgo(5),
-    updatedAt: daysAgo(1),
-    publishedAt: null,
-  },
-]
+const store: ChurchPolicy[] = []
 
 function find(id: string) {
   const p = store.find((x) => x.id === id)

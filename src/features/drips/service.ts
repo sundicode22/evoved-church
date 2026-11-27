@@ -13,67 +13,8 @@ import {
 const DEMO_CAMPUS = "campus-demo-main"
 const now = () => new Date().toISOString()
 
-const steps: DripStep[] = [
-  {
-    id: "step-1",
-    sequenceId: "drip-1",
-    stepOrder: 1,
-    delayHours: 2,
-    channel: "email",
-    subject: "Welcome — we're glad you visited!",
-    body: "Warm welcome from the pastoral team with a short video message.",
-  },
-  {
-    id: "step-2",
-    sequenceId: "drip-1",
-    stepOrder: 2,
-    delayHours: 24,
-    channel: "sms",
-    subject: "",
-    body: "Hi! This is your shepherd. Coffee this week?",
-  },
-  {
-    id: "step-3",
-    sequenceId: "drip-1",
-    stepOrder: 3,
-    delayHours: 96,
-    channel: "email",
-    subject: "This Sunday + kids ministry preview",
-    body: "Sneak peek of the upcoming sermon, parking guide, and kids check-in tips.",
-  },
-  {
-    id: "step-4",
-    sequenceId: "drip-1",
-    stepOrder: 4,
-    delayHours: 240,
-    channel: "email",
-    subject: "Invitation to Foundations class",
-    body: "Join Step 1 of membership: Discovering our vision and core theology.",
-  },
-]
-
-const sequences: Omit<DripSequence, "steps">[] = [
-  {
-    id: "drip-1",
-    campusId: DEMO_CAMPUS,
-    name: "New Guest Follow-Up",
-    triggerEvent: "first_visit",
-    isActive: true,
-    enrollmentCount: 18,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-  {
-    id: "drip-2",
-    campusId: DEMO_CAMPUS,
-    name: "New Member Onboarding",
-    triggerEvent: "new_member",
-    isActive: true,
-    enrollmentCount: 5,
-    createdAt: now(),
-    updatedAt: now(),
-  },
-]
+const steps: DripStep[] = []
+const sequences: Omit<DripSequence, "steps">[] = []
 
 function withSteps(seq: Omit<DripSequence, "steps">): DripSequence {
   return {
