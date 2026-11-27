@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, Send } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,9 @@ const INTERESTS: { value: Interest; label: string }[] = [
   { value: "pricing", label: "Pricing question" },
   { value: "migration", label: "Migration help" },
 ]
+
+const selectClassName =
+  "h-[39px] w-full rounded-lg border border-input bg-white px-3.5 text-sm text-foreground shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 dark:bg-input/30"
 
 export function LandingDemoForm({ className }: { className?: string }) {
   const [interest, setInterest] = React.useState<Interest>("demo")
@@ -60,21 +63,15 @@ export function LandingDemoForm({ className }: { className?: string }) {
 
   if (sent) {
     return (
-      <div
-        className={cn(
-          "rounded-2xl border border-emerald-200/80 bg-emerald-50/80 p-6 text-sm text-emerald-950",
-          className
-        )}
-      >
-        <p className="font-medium">Thanks — your note is with the Evolve team.</p>
-        <p className="mt-1 text-emerald-800/80">
+      <div className={cn("space-y-4 text-center", className)}>
+        <p className="text-sm font-medium text-foreground">Thanks — your note is with the Evolve team.</p>
+        <p className="text-sm text-muted-foreground">
           We email owners directly via Resend. Expect a reply at the address you shared.
         </p>
         <Button
           type="button"
           variant="outline"
-          size="sm"
-          className="mt-4 bg-white"
+          className="h-10 w-full rounded-lg text-sm"
           onClick={() => setSent(false)}
         >
           Send another
@@ -85,68 +82,78 @@ export function LandingDemoForm({ className }: { className?: string }) {
 
   return (
     <form onSubmit={onSubmit} className={cn("space-y-4", className)}>
-      <div className="flex flex-wrap gap-2">
-        {INTERESTS.map((item) => (
-          <button
-            key={item.value}
-            type="button"
-            onClick={() => setInterest(item.value)}
-            className={cn(
-              "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
-              interest === item.value
-                ? "border-[#6495ed] bg-[#eef3fc] text-[#2b4c8c]"
-                : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-            )}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="space-y-1.5">
+        <Label htmlFor="demo-interest" className="text-foreground/80">
+          What do you need?
+        </Label>
+        <select
+          id="demo-interest"
+          value={interest}
+          onChange={(e) => setInterest(e.target.value as Interest)}
+          className={selectClassName}
+        >
+          {INTERESTS.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="demo-name">Your name</Label>
-          <Input id="demo-name" name="name" required placeholder="Jordan Miles" autoComplete="name" />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="demo-email">Work email</Label>
-          <Input
-            id="demo-email"
-            name="email"
-            type="email"
-            required
-            placeholder="you@church.org"
-            autoComplete="email"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="demo-church">Church name</Label>
-          <Input id="demo-church" name="churchName" required placeholder="Grace North" />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="demo-phone">Phone (optional)</Label>
-          <Input id="demo-phone" name="phone" type="tel" placeholder="+1…" autoComplete="tel" />
-        </div>
-        <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="demo-locations">Locations (optional)</Label>
-          <Input id="demo-locations" name="locationsCount" placeholder="e.g. 3 campuses" />
-        </div>
-        <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="demo-message">What should we know?</Label>
-          <Textarea
-            id="demo-message"
-            name="message"
-            rows={3}
-            placeholder="Current tools, timeline, or what you want to see on the demo…"
-          />
-        </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="demo-name" className="text-foreground/80">
+          Your name
+        </Label>
+        <Input id="demo-name" name="name" required placeholder="Jordan Miles" autoComplete="name" />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="demo-email" className="text-foreground/80">
+          Work email
+        </Label>
+        <Input
+          id="demo-email"
+          name="email"
+          type="email"
+          required
+          placeholder="you@church.org"
+          autoComplete="email"
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="demo-church" className="text-foreground/80">
+          Church name
+        </Label>
+        <Input id="demo-church" name="churchName" required placeholder="Grace North" />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="demo-phone" className="text-foreground/80">
+          Phone (optional)
+        </Label>
+        <Input id="demo-phone" name="phone" type="tel" placeholder="+1…" autoComplete="tel" />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="demo-locations" className="text-foreground/80">
+          Locations (optional)
+        </Label>
+        <Input id="demo-locations" name="locationsCount" placeholder="e.g. 3 campuses" />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="demo-message" className="text-foreground/80">
+          What should we know?
+        </Label>
+        <Textarea
+          id="demo-message"
+          name="message"
+          rows={3}
+          placeholder="Current tools, timeline, or what you want to see on the demo…"
+        />
       </div>
 
-      <Button type="submit" disabled={pending} className="w-full sm:w-auto">
-        {pending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+      <Button type="submit" disabled={pending} className="h-10 w-full rounded-lg text-sm">
+        {pending ? <Loader2 className="size-4 animate-spin" /> : null}
         {interest === "demo" ? "Request demo" : "Send interest"}
       </Button>
-      <p className="text-xs text-zinc-500">
+      <p className="text-center text-xs text-muted-foreground">
         Messages go to Evolve owners over Resend. We never sell your contact details.
       </p>
     </form>

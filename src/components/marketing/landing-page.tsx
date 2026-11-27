@@ -48,6 +48,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { EvolveLogo } from "@/components/evolve-logo"
 import { LandingScreenshots } from "@/components/marketing/landing-screenshots"
 import { ModeToggle } from "@/components/mode-toggle"
 import { cn } from "@/lib/utils"
@@ -55,13 +56,11 @@ import { cn } from "@/lib/utils"
 function EvolveMark({ className, light }: { className?: string; light?: boolean }) {
   return (
     <Link href="/" className={cn("inline-flex items-center gap-2.5", className)}>
-      <span className="flex size-9 items-center justify-center rounded-xl bg-[#6495ed] text-sm font-semibold text-white shadow-sm">
-        E
-      </span>
+      <EvolveLogo />
       <span
         className={cn(
           "text-lg font-semibold tracking-tight",
-          light ? "text-white" : "text-zinc-950 dark:text-zinc-50"
+          light ? "text-white" : "text-foreground"
         )}
       >
         Evolve
@@ -91,8 +90,8 @@ const PRODUCT_MEGA = [
   },
   {
     href: "#modules",
-    title: "Giving & funds",
-    description: "Batches, pledges, and audited fund accounting.",
+    title: "Accounting & funds",
+    description: "Journal entries, COA, fund transfers, and audited posting.",
     icon: Coins,
   },
   {
@@ -131,7 +130,7 @@ const SOLUTIONS_MEGA = [
   {
     href: "#modules",
     title: "Finance & stewards",
-    description: "Never silent auto-post—always who created and who posted.",
+    description: "Journal entries and fund books—never silent auto-post.",
     icon: ShieldCheck,
   },
 ]
@@ -153,8 +152,8 @@ const MODULES = [
     icon: CalendarDays,
   },
   {
-    title: "Giving & funds",
-    body: "Batches, pledges, and fund accounting with a clear who-posted trail.",
+    title: "Accounting & funds",
+    body: "Chart of accounts, journal entries, fund transfers, batches & pledges—always who created and who posted.",
     icon: Coins,
   },
   {
@@ -181,6 +180,7 @@ const PLANS = [
       "Forms + QR check-in",
       "Calendar (month + agenda)",
       "Services & programs",
+      "Giving intake (simple)",
       "Basic reports",
       "Email support",
     ],
@@ -191,15 +191,18 @@ const PLANS = [
     name: "Growth",
     price: "$49",
     detail: "3 locations · 15 seats",
-    blurb: "For multi-site teams that need campaigns and depth.",
+    blurb: "Multi-site ops plus real books for stewards.",
     features: [
       "Everything in Starter",
-      "Campaigns — email (Resend)",
-      "Campaigns — SMS (Twilio)",
+      "Chart of accounts (location-scoped)",
+      "Journal entries (draft → post)",
+      "Fund balances & transfers",
+      "Giving batches & pledges",
+      "Who-created / who-posted audit trail",
+      "Campaigns — email (Resend) + SMS (Twilio)",
       "Projects kanban",
       "Groups & appointments",
       "Advanced reports & CSV export",
-      "Follow-ups & drips",
       "Priority support",
     ],
     cta: "Choose Growth",
@@ -209,12 +212,16 @@ const PLANS = [
     name: "Campus",
     price: "$129",
     detail: "50 locations · 50 seats",
-    blurb: "Full ops stack for larger multi-location churches.",
+    blurb: "Full fund accounting for multi-location churches.",
     features: [
       "Everything in Growth",
-      "Fund accounting (audited ledger)",
-      "Giving batches & pledges",
-      "CSV migration (dry-run + apply)",
+      "Full fund accounting (audited ledger)",
+      "Multi-line journal entries & period close",
+      "Expense requisitions & encumbrances",
+      "Budget lines by fund",
+      "COA by account class (assets → equity)",
+      "Giving → ledger posting controls",
+      "CSV migration for members & giving",
       "Custom roles & RBAC matrix",
       "Policies & documents",
       "Dedicated onboarding",
@@ -258,14 +265,14 @@ function MegaLink({
   return (
     <NavigationMenuLink
       href={href}
-      className="flex gap-3 rounded-xl p-3 transition-colors hover:bg-[#f3f6fb]"
+      className="flex gap-3 rounded-xl p-3 transition-colors hover:bg-muted"
     >
-      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#eef3fc] text-[#4f7fd4]">
+      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
         <Icon className="size-4" strokeWidth={1.75} />
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-medium text-zinc-950">{title}</span>
-        <span className="mt-0.5 block text-xs leading-snug text-zinc-500">{description}</span>
+        <span className="block text-sm font-medium text-foreground">{title}</span>
+        <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{description}</span>
       </span>
     </NavigationMenuLink>
   )
@@ -283,17 +290,17 @@ export function LandingPage() {
   }, [])
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#fbfcfb] text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground antialiased">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[720px] bg-[radial-gradient(ellipse_at_20%_0%,rgba(100,149,237,0.22),transparent_50%),radial-gradient(ellipse_at_90%_10%,rgba(22,163,74,0.12),transparent_45%),linear-gradient(180deg,#fbfcfb_0%,#f4f7f5_55%,#fbfcfb_100%)] dark:bg-[radial-gradient(ellipse_at_20%_0%,rgba(100,149,237,0.18),transparent_50%),linear-gradient(180deg,#09090b_0%,#18181b_100%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[720px] bg-[radial-gradient(ellipse_at_20%_0%,rgba(100,149,237,0.22),transparent_50%),radial-gradient(ellipse_at_90%_10%,rgba(22,163,74,0.12),transparent_45%)] dark:bg-[radial-gradient(ellipse_at_20%_0%,rgba(100,149,237,0.18),transparent_50%),radial-gradient(ellipse_at_90%_10%,rgba(22,163,74,0.08),transparent_45%)]"
       />
 
       <header
         className={cn(
           "sticky top-0 z-50 transition-colors duration-300",
           scrolled
-            ? "border-b border-zinc-200/40 bg-white/55 backdrop-blur-md dark:border-zinc-800/60 dark:bg-zinc-950/55"
+            ? "border-b border-border/70 bg-background/75 backdrop-blur-md"
             : "border-b border-transparent bg-transparent"
         )}
       >
@@ -303,15 +310,15 @@ export function LandingPage() {
           <NavigationMenu className="hidden lg:flex" align="center">
             <NavigationMenuList className="gap-1">
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="bg-transparent text-sm data-open:bg-white/70 data-popup-open:bg-white/70">
+                <NavigationMenuTrigger className="bg-transparent text-sm data-open:bg-muted data-popup-open:bg-muted">
                   Product
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="p-3 md:w-[640px]">
                   <div className="mb-2 px-3 pt-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       Application sections
                     </p>
-                    <p className="mt-1 text-sm text-zinc-600">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Everything your team opens after Sunday setup.
                     </p>
                   </div>
@@ -326,7 +333,7 @@ export function LandingPage() {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="bg-transparent text-sm data-open:bg-white/70 data-popup-open:bg-white/70">
+                <NavigationMenuTrigger className="bg-transparent text-sm data-open:bg-muted data-popup-open:bg-muted">
                   Solutions
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="p-3 md:w-[520px]">
@@ -343,7 +350,7 @@ export function LandingPage() {
               <NavigationMenuItem>
                 <NavigationMenuLink
                   href="#pricing"
-                  className="rounded-lg bg-transparent px-3 py-2 text-sm font-medium hover:bg-white/60"
+                  className="rounded-lg bg-transparent px-3 py-2 text-sm font-medium hover:bg-muted"
                 >
                   Pricing
                 </NavigationMenuLink>
@@ -351,7 +358,7 @@ export function LandingPage() {
               <NavigationMenuItem>
                 <NavigationMenuLink
                   href="/demo"
-                  className="rounded-lg bg-transparent px-3 py-2 text-sm font-medium hover:bg-white/60"
+                  className="rounded-lg bg-transparent px-3 py-2 text-sm font-medium hover:bg-muted"
                 >
                   Book demo
                 </NavigationMenuLink>
@@ -378,7 +385,7 @@ export function LandingPage() {
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger
                 render={
-                  <Button variant="outline" size="icon-sm" className="border-zinc-200/80 bg-white/50 lg:hidden" aria-label="Open menu" />
+                  <Button variant="outline" size="icon-sm" className="border-border bg-background/60 lg:hidden" aria-label="Open menu" />
                 }
               >
                 <Menu className="size-4" />
@@ -401,7 +408,7 @@ export function LandingPage() {
                       key={l.href}
                       href={l.href}
                       onClick={() => setMobileOpen(false)}
-                      className="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-700 hover:bg-muted"
+                      className="rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
                     >
                       {l.label}
                     </a>
@@ -428,13 +435,13 @@ export function LandingPage() {
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#4f7fd4]">
                 Church management
               </p>
-              <h1 className="mt-4 text-5xl font-semibold tracking-tight text-zinc-950 sm:text-6xl sm:leading-[1.05]">
+              <h1 className="mt-4 text-5xl font-semibold tracking-tight text-foreground sm:text-6xl sm:leading-[1.05]">
                 Evolve
               </h1>
-              <p className="mt-4 text-xl font-medium tracking-tight text-zinc-700 sm:text-2xl">
+              <p className="mt-4 text-xl font-medium tracking-tight text-foreground/80 sm:text-2xl">
                 Your whole church, in one calm workspace.
               </p>
-              <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-zinc-600 sm:text-lg">
+              <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
                 People, visitors, giving, calendar, and campaigns—without five logins or the Sunday
                 scramble.
               </p>
@@ -446,7 +453,7 @@ export function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-zinc-200/90 bg-white/70"
+                  className="border-border bg-background/70"
                   nativeButton={false}
                   render={<Link href="/demo" />}
                 >
@@ -458,28 +465,28 @@ export function LandingPage() {
         </section>
 
         {/* Sliding product screenshots */}
-        <section id="tour" className="relative scroll-mt-24 border-t border-zinc-200/50 bg-white py-20 dark:border-zinc-800 dark:bg-zinc-950">
+        <section id="tour" className="relative scroll-mt-24 border-t border-border bg-background py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <LandingScreenshots />
           </div>
           {/* Soft fade into the white canvas below */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent via-white/80 to-[#fbfcfb] dark:via-zinc-950/80 dark:to-zinc-950"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent via-background/80 to-background"
           />
         </section>
 
         {/* Modules */}
-        <section id="modules" className="scroll-mt-24 bg-[#fbfcfb] py-20 dark:bg-zinc-950">
+        <section id="modules" className="scroll-mt-24 bg-background py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="max-w-2xl">
               <Badge variant="secondary" className="rounded-md font-normal">
                 Modules
               </Badge>
-              <h2 className="mt-3 text-3xl font-medium tracking-tight text-zinc-950">
+              <h2 className="mt-3 text-3xl font-medium tracking-tight text-foreground">
                 One Sunday workflow. Every module included.
               </h2>
-              <p className="mt-3 text-base text-zinc-600">
+              <p className="mt-3 text-base text-muted-foreground">
                 Premium ChMS for people, money, calendar, and communications—scoped by location.
               </p>
             </div>
@@ -487,22 +494,22 @@ export function LandingPage() {
               {MODULES.map((mod) => (
                 <div
                   key={mod.title}
-                  className="rounded-2xl border border-zinc-200/70 bg-white/80 p-5 shadow-[0_1px_0_rgba(15,23,42,0.04)]"
+                  className="rounded-2xl border border-border bg-card p-5 shadow-xs"
                 >
-                  <span className="inline-flex size-9 items-center justify-center rounded-lg bg-[#eef3fc] text-[#4f7fd4]">
+                  <span className="inline-flex size-9 items-center justify-center rounded-lg bg-brand-soft text-brand">
                     <mod.icon className="size-4" strokeWidth={1.75} />
                   </span>
-                  <h3 className="mt-4 text-base font-medium text-zinc-950">{mod.title}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">{mod.body}</p>
+                  <h3 className="mt-4 text-base font-medium text-foreground">{mod.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{mod.body}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-10 flex items-start gap-3 rounded-2xl border border-zinc-200/70 bg-[#f0f5ff]/60 p-5">
-              <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#6495ed]" strokeWidth={1.75} />
+            <div className="mt-10 flex items-start gap-3 rounded-2xl border border-border bg-brand-soft/50 p-5">
+              <ShieldCheck className="mt-0.5 size-5 shrink-0 text-brand" strokeWidth={1.75} />
               <div>
-                <p className="text-sm font-medium text-zinc-950">Dynamic roles, not cookie clutter</p>
-                <p className="mt-1 text-sm text-zinc-600">
+                <p className="text-sm font-medium text-foreground">Dynamic roles, not cookie clutter</p>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Permissions load from your church matrix. Admins see everything; custom roles stay
                   scoped to what each leader needs.
                 </p>
@@ -512,16 +519,16 @@ export function LandingPage() {
         </section>
 
         {/* Onboarding */}
-        <section className="border-y border-zinc-200/60 bg-white/60 py-20">
+        <section className="border-y border-border bg-muted/30 py-20">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:items-center">
             <div>
               <Badge variant="secondary" className="rounded-md font-normal">
                 Onboarding
               </Badge>
-              <h2 className="mt-3 text-3xl font-medium tracking-tight text-zinc-950">
+              <h2 className="mt-3 text-3xl font-medium tracking-tight text-foreground">
                 Set up the space. Then open the workspace.
               </h2>
-              <p className="mt-3 text-base text-zinc-600">
+              <p className="mt-3 text-base text-muted-foreground">
                 Sign up → church details → first location → terminology → team invites → workspace.
               </p>
             </div>
@@ -534,12 +541,12 @@ export function LandingPage() {
               ].map((item) => (
                 <li
                   key={item.step}
-                  className="flex gap-4 rounded-xl border border-zinc-200/80 bg-white p-4"
+                  className="flex gap-4 rounded-xl border border-border bg-card p-4"
                 >
-                  <span className="text-sm font-medium tabular-nums text-[#6495ed]">{item.step}</span>
+                  <span className="text-sm font-medium tabular-nums text-brand">{item.step}</span>
                   <div>
-                    <p className="text-sm font-medium text-zinc-950">{item.title}</p>
-                    <p className="mt-0.5 text-sm text-zinc-600">{item.body}</p>
+                    <p className="text-sm font-medium text-foreground">{item.title}</p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">{item.body}</p>
                   </div>
                 </li>
               ))}
@@ -554,10 +561,10 @@ export function LandingPage() {
               <Badge variant="secondary" className="rounded-md font-normal">
                 Pricing
               </Badge>
-              <h2 className="mt-3 text-3xl font-medium tracking-tight text-zinc-950">
+              <h2 className="mt-3 text-3xl font-medium tracking-tight text-foreground">
                 Clear pricing by size
               </h2>
-              <p className="mt-3 text-base text-zinc-600">
+              <p className="mt-3 text-base text-muted-foreground">
                 Same modules on every plan. You pay for locations and staff seats.
               </p>
             </div>
@@ -566,7 +573,7 @@ export function LandingPage() {
                 <Card
                   key={plan.name}
                   className={cn(
-                    "relative flex h-full flex-col overflow-hidden border-zinc-200/80 bg-white shadow-[0_18px_50px_-36px_rgba(15,23,42,0.45)] dark:border-zinc-800 dark:bg-zinc-900",
+                    "relative flex h-full flex-col overflow-hidden border-border bg-card shadow-xs",
                     plan.highlighted &&
                       "border-[#6495ed] shadow-[0_24px_60px_-28px_rgba(100,149,237,0.55)] ring-1 ring-[#6495ed]/35 lg:-mt-2 lg:mb-[-8px]"
                   )}
@@ -581,36 +588,36 @@ export function LandingPage() {
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-lg">{plan.name}</CardTitle>
                       {plan.highlighted ? (
-                        <Badge className="rounded-md bg-[#eef3fc] text-[#2b4c8c] hover:bg-[#eef3fc]">
+                        <Badge className="rounded-md bg-brand-soft text-brand-ink hover:bg-brand-soft">
                           Most popular
                         </Badge>
                       ) : null}
                     </div>
-                    <p className="text-4xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+                    <p className="text-4xl font-semibold tracking-tight text-foreground">
                       {plan.price}
                       {plan.price !== "Free" ? (
                         <span className="text-sm font-normal text-muted-foreground"> /mo</span>
                       ) : null}
                     </p>
                     <CardDescription className="text-sm">{plan.detail}</CardDescription>
-                    <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                    <p className="text-sm leading-relaxed text-muted-foreground">
                       {plan.blurb}
                     </p>
                   </CardHeader>
                   <CardContent className="flex-1">
-                    <p className="mb-3 text-xs font-medium uppercase tracking-wide text-zinc-400">
+                    <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       Included
                     </p>
                     <ul className="space-y-2.5">
                       {plan.features.map((f) => (
-                        <li key={f} className="flex gap-2.5 text-sm text-zinc-700 dark:text-zinc-300">
+                        <li key={f} className="flex gap-2.5 text-sm text-foreground/85">
                           <Check className="mt-0.5 size-3.5 shrink-0 text-[#16a34a]" strokeWidth={2.25} />
                           {f}
                         </li>
                       ))}
                     </ul>
                   </CardContent>
-                  <CardFooter className="mt-auto flex flex-col gap-2 border-t border-zinc-100 pt-5 dark:border-zinc-800">
+                  <CardFooter className="mt-auto flex flex-col gap-2 border-t border-border pt-5">
                     <Button
                       className="w-full"
                       variant={plan.highlighted ? "default" : "outline"}
@@ -636,17 +643,17 @@ export function LandingPage() {
         </section>
 
         {/* FAQ */}
-        <section id="faq" className="relative scroll-mt-24 bg-white py-20 dark:bg-zinc-950">
+        <section id="faq" className="relative scroll-mt-24 bg-background py-20">
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
             <div className="text-center">
               <Badge variant="secondary" className="rounded-md font-normal">
                 FAQ
               </Badge>
-              <h2 className="mt-3 text-3xl font-medium tracking-tight text-zinc-950 dark:text-zinc-50">
+              <h2 className="mt-3 text-3xl font-medium tracking-tight text-foreground">
                 Questions before you start
               </h2>
             </div>
-            <Accordion className="mt-10 rounded-2xl border border-zinc-200/80 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+            <Accordion className="mt-10 rounded-2xl border border-border bg-card shadow-xs">
               {FAQS.map((item, i) => (
                 <AccordionItem key={item.q} value={`faq-${i}`}>
                   <AccordionTrigger className="px-4 py-3 text-sm sm:px-5">{item.q}</AccordionTrigger>
@@ -659,7 +666,7 @@ export function LandingPage() {
           </div>
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-[#fbfcfb] dark:to-zinc-950"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background"
           />
         </section>
 
@@ -667,15 +674,15 @@ export function LandingPage() {
         <section className="relative overflow-hidden px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-10">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#fbfcfb] to-transparent dark:from-zinc-950"
+            className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background to-transparent"
           />
-          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-zinc-200/80 bg-gradient-to-br from-white via-[#f7f9fc] to-[#eef3fc] px-6 py-12 shadow-[0_30px_80px_-48px_rgba(15,23,42,0.35)] dark:border-zinc-800 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-950 sm:px-10">
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-brand-soft px-6 py-12 shadow-xs sm:px-10">
             <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
               <div>
-                <h2 className="text-2xl font-medium tracking-tight text-zinc-950 dark:text-zinc-50 sm:text-3xl">
+                <h2 className="text-2xl font-medium tracking-tight text-foreground sm:text-3xl">
                   Ready for a quieter Sunday ops stack?
                 </h2>
-                <p className="mt-2 max-w-lg text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="mt-2 max-w-lg text-sm text-muted-foreground">
                   Start free, or book a demo—we&apos;ll meet you where you are.
                 </p>
               </div>
@@ -687,7 +694,7 @@ export function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="bg-white/80 dark:bg-transparent"
+                  className="bg-background/80"
                   nativeButton={false}
                   render={<Link href="/demo" />}
                 >
@@ -699,73 +706,73 @@ export function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-zinc-200/70 bg-[#f7f8f7]">
+      <footer className="border-t border-border bg-muted/25">
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
           <div className="grid gap-10 md:grid-cols-[1.2fr_repeat(4,minmax(0,1fr))]">
             <div className="space-y-3 md:pr-6">
               <EvolveMark />
-              <p className="max-w-xs text-sm leading-relaxed text-zinc-600">
+              <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
                 Premium church management for multi-location teams—people, giving, calendar, and
                 campaigns in one workspace.
               </p>
             </div>
 
             <div className="space-y-3 text-sm">
-              <p className="font-medium text-zinc-900">Product</p>
-              <a href="#tour" className="block text-zinc-600 hover:text-zinc-950">
+              <p className="font-medium text-foreground">Product</p>
+              <a href="#tour" className="block text-muted-foreground hover:text-foreground">
                 Product tour
               </a>
-              <a href="#modules" className="block text-zinc-600 hover:text-zinc-950">
+              <a href="#modules" className="block text-muted-foreground hover:text-foreground">
                 Modules
               </a>
-              <a href="#pricing" className="block text-zinc-600 hover:text-zinc-950">
+              <a href="#pricing" className="block text-muted-foreground hover:text-foreground">
                 Pricing
               </a>
-              <a href="#faq" className="block text-zinc-600 hover:text-zinc-950">
+              <a href="#faq" className="block text-muted-foreground hover:text-foreground">
                 FAQ
               </a>
             </div>
 
             <div className="space-y-3 text-sm">
-              <p className="font-medium text-zinc-900">Get started</p>
-              <Link href="/signup" className="block text-zinc-600 hover:text-zinc-950">
+              <p className="font-medium text-foreground">Get started</p>
+              <Link href="/signup" className="block text-muted-foreground hover:text-foreground">
                 Start free
               </Link>
-              <Link href="/login" className="block text-zinc-600 hover:text-zinc-950">
+              <Link href="/login" className="block text-muted-foreground hover:text-foreground">
                 Sign in
               </Link>
-              <Link href="/demo" className="block text-zinc-600 hover:text-zinc-950">
+              <Link href="/demo" className="block text-muted-foreground hover:text-foreground">
                 Book a demo
               </Link>
             </div>
 
             <div className="space-y-3 text-sm">
-              <p className="font-medium text-zinc-900">Workspace</p>
-              <Link href="/dashboard" className="block text-zinc-600 hover:text-zinc-950">
+              <p className="font-medium text-foreground">Workspace</p>
+              <Link href="/dashboard" className="block text-muted-foreground hover:text-foreground">
                 Open dashboard
               </Link>
-              <Link href="/dashboard/settings" className="block text-zinc-600 hover:text-zinc-950">
+              <Link href="/dashboard/settings" className="block text-muted-foreground hover:text-foreground">
                 Settings
               </Link>
               <Link
                 href="/dashboard/settings?tab=billing"
-                className="block text-zinc-600 hover:text-zinc-950"
+                className="block text-muted-foreground hover:text-foreground"
               >
                 Billing
               </Link>
             </div>
 
             <div className="space-y-3 text-sm">
-              <p className="font-medium text-zinc-900">Trust</p>
-              <p className="text-zinc-600">Dynamic RBAC</p>
-              <p className="text-zinc-600">Audited fund ledger</p>
-              <p className="text-zinc-600">Resend + Twilio split</p>
+              <p className="font-medium text-foreground">Trust</p>
+              <p className="text-muted-foreground">Dynamic RBAC</p>
+              <p className="text-muted-foreground">Audited fund ledger</p>
+              <p className="text-muted-foreground">Resend + Twilio split</p>
             </div>
           </div>
 
-          <Separator className="my-8 bg-zinc-200/80" />
+          <Separator className="my-8 bg-border" />
 
-          <div className="flex flex-col gap-3 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <p>© 2026 Evolve Church. All rights reserved.</p>
             <p>Built for multi-location ops · evolvechms.org</p>
           </div>

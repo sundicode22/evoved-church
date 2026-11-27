@@ -117,14 +117,16 @@ const jsonLd = {
           name: "Growth",
           price: "49",
           priceCurrency: "USD",
-          description: "3 locations · 15 seats",
+          description:
+            "3 locations · 15 seats · chart of accounts, journal entries, fund transfers, giving batches",
         },
         {
           "@type": "Offer",
           name: "Campus",
           price: "129",
           priceCurrency: "USD",
-          description: "50 locations · 50 seats",
+          description:
+            "50 locations · 50 seats · full fund accounting, multi-line journals, encumbrances, audited ledger",
         },
       ],
     },
