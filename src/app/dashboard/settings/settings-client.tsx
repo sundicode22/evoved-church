@@ -24,7 +24,7 @@ import { LocationsTab } from "@/features/settings/components/locations-tab"
 import { NomenclatureTab } from "@/features/settings/components/nomenclature-tab"
 import { BillingTab } from "@/features/settings/components/billing-tab"
 import type { PermissionKey } from "@/features/auth/permissions-catalog"
-import { cn } from "cn"
+import { cn } from "@/lib/utils"
 
 type SectionId =
   | "church_details"

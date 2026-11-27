@@ -5,3 +5,8 @@ export function setOnboardingCompletedCookie() {
   if (typeof document === "undefined") return
   document.cookie = `${ONBOARDING_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
 }
+
+export function clearOnboardingCompletedCookie() {
+  if (typeof document === "undefined") return
+  document.cookie = `${ONBOARDING_COOKIE}=; path=/; max-age=0; SameSite=Lax`
+}

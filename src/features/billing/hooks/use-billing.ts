@@ -26,8 +26,12 @@ export function useTenantSubscription() {
     queryKey: BILLING_KEYS.subscription(),
     queryFn: async () => {
       const res = await apiClient.get<ApiResponse<TenantSubscription>>("/billing/subscription")
-      return res.data.data!
+      if (!res.data?.data) {
+        throw new Error("Subscription not found")
+      }
+      return res.data.data
     },
+    retry: 1,
   })
 }
 

@@ -47,9 +47,18 @@ export function BillingTab({ canEdit }: { canEdit: boolean }) {
         </AlertDescription>
       </Alert>
 
-      {loading || !sub ? (
+      {loading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Spinner className="size-4" /> Loading billing…
+        </div>
+      ) : !sub ? (
+        <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-xs">
+          Could not load your subscription. Finish onboarding or refresh, then try again.
+          <div className="mt-3">
+            <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
         </div>
       ) : (
         <>
