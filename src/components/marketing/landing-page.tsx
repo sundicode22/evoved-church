@@ -59,7 +59,7 @@ function EvolveMark({ className, light }: { className?: string; light?: boolean 
       <EvolveLogo />
       <span
         className={cn(
-          "text-lg font-semibold tracking-tight",
+          "font-display text-lg font-semibold tracking-normal",
           light ? "text-white" : "text-foreground"
         )}
       >
@@ -195,6 +195,7 @@ const PLANS = [
     features: [
       "Everything in Starter",
       "Chart of accounts (location-scoped)",
+      "Location ledger + account balances",
       "Journal entries (draft → post)",
       "Fund balances & transfers",
       "Giving batches & pledges",
@@ -216,6 +217,8 @@ const PLANS = [
     features: [
       "Everything in Growth",
       "Full fund accounting (audited ledger)",
+      "General ledger across all locations",
+      "Location ledgers + consolidated trial balance",
       "Multi-line journal entries & period close",
       "Expense requisitions & encumbrances",
       "Budget lines by fund",
@@ -435,7 +438,7 @@ export function LandingPage() {
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#4f7fd4]">
                 Church management
               </p>
-              <h1 className="mt-4 text-5xl font-semibold tracking-tight text-foreground sm:text-6xl sm:leading-[1.05]">
+              <h1 className="mt-4 font-display text-5xl font-semibold tracking-normal text-foreground sm:text-6xl sm:leading-[1.05]">
                 Evolve
               </h1>
               <p className="mt-4 text-xl font-medium tracking-tight text-foreground/80 sm:text-2xl">

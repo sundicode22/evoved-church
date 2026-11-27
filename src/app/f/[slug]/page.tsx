@@ -262,7 +262,9 @@ function PublicFormBody({
             <span>Reach out through this form and we&apos;ll respond soon.</span>
           )}
         </p>
-        <p>Powered by Evolve</p>
+        <p>
+          Powered by <span className="font-display font-semibold">Evolve</span>
+        </p>
       </footer>
     </div>
   )
