@@ -1,8 +1,7 @@
 "use client"
 
+import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Moon02Icon, Sun01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -27,19 +26,13 @@ export function ModeToggle() {
           />
         }
       >
-        <HugeiconsIcon
-          icon={Sun01Icon}
-          size={16}
-          color="currentColor"
+        <Sun
+          className="size-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"
           strokeWidth={1.75}
-          className="scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"
         />
-        <HugeiconsIcon
-          icon={Moon02Icon}
-          size={16}
-          color="currentColor"
+        <Moon
+          className="absolute size-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
           strokeWidth={1.75}
-          className="absolute scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-36">

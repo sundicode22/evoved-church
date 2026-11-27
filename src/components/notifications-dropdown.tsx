@@ -3,8 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Notification01Icon } from "@hugeicons/core-free-icons"
+import { Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -56,12 +55,7 @@ export function NotificationsDropdown() {
           />
         }
       >
-        <HugeiconsIcon
-          icon={Notification01Icon}
-          size={16}
-          color="currentColor"
-          strokeWidth={1.75}
-        />
+        <Bell className="size-4" strokeWidth={1.75} />
         {unread > 0 ? (
           <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-brand text-[9px] font-medium text-white">
             {unread > 9 ? "9+" : unread}

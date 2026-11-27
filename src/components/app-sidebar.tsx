@@ -3,18 +3,18 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import {
-  AnalyticsUpIcon,
-  ArrowRight01Icon,
-  Calendar03Icon,
-  Coins01Icon,
-  File01Icon,
-  Home01Icon,
-  Megaphone01Icon,
-  Settings01Icon,
-  UserGroupIcon,
-} from "@hugeicons/core-free-icons"
+  Calendar,
+  ChevronRight,
+  Coins,
+  FileText,
+  Home,
+  Megaphone,
+  Settings,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react"
 import { CampusSwitcher } from "@/components/campus-switcher"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -57,20 +57,12 @@ type SubItem = { title: string; url: string }
 
 type NavGroup = {
   title: string
-  icon: IconSvgElement
+  icon: LucideIcon
   items: SubItem[]
 }
 
-function NavIcon({ icon }: { icon: IconSvgElement }) {
-  return (
-    <HugeiconsIcon
-      icon={icon}
-      size={18}
-      color="currentColor"
-      strokeWidth={1.75}
-      className="shrink-0"
-    />
-  )
+function NavIcon({ icon: Icon }: { icon: LucideIcon }) {
+  return <Icon className="size-4 shrink-0" strokeWidth={1.75} />
 }
 
 export function AppSidebar({
@@ -85,12 +77,12 @@ export function AppSidebar({
   const groups: NavGroup[] = [
     {
       title: "Workspace",
-      icon: Home01Icon,
+      icon: Home,
       items: [{ title: "Workspace", url: "/dashboard" }],
     },
     {
       title: "People",
-      icon: UserGroupIcon,
+      icon: Users,
       items: [
         { title: "People", url: "/dashboard/members" },
         { title: "Families", url: "/dashboard/families" },
@@ -104,7 +96,7 @@ export function AppSidebar({
     },
     {
       title: "Finances",
-      icon: Coins01Icon,
+      icon: Coins,
       items: [
         { title: "Giving", url: "/dashboard/giving" },
         { title: "Funds", url: "/dashboard/funds" },
@@ -116,7 +108,7 @@ export function AppSidebar({
     },
     {
       title: "Calendar",
-      icon: Calendar03Icon,
+      icon: Calendar,
       items: [
         { title: "Calendar", url: "/dashboard/calendar" },
         { title: "Services", url: "/dashboard/services" },
@@ -130,7 +122,7 @@ export function AppSidebar({
     },
     {
       title: "Communications",
-      icon: Megaphone01Icon,
+      icon: Megaphone,
       items: [
         { title: "Campaigns", url: "/dashboard/campaigns" },
         { title: "Drips", url: "/dashboard/communications" },
@@ -142,7 +134,7 @@ export function AppSidebar({
     },
     {
       title: "Reports and Metrics",
-      icon: AnalyticsUpIcon,
+      icon: TrendingUp,
       items: [
         { title: "Reports", url: "/dashboard/metrics?tab=reports" },
         { title: "Metrics", url: "/dashboard/metrics?tab=metrics" },
@@ -195,7 +187,7 @@ export function AppSidebar({
                     tooltip={group.items[0].title}
                     isActive={isActive(group.items[0].url)}
                   >
-                    <NavIcon icon={Home01Icon} />
+                    <NavIcon icon={Home} />
                     <span>{group.items[0].title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -210,7 +202,7 @@ export function AppSidebar({
                   tooltip="Forms"
                   isActive={isActive("/dashboard/forms")}
                 >
-                  <NavIcon icon={File01Icon} />
+                  <NavIcon icon={FileText} />
                   <span>Forms</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -222,7 +214,7 @@ export function AppSidebar({
                   tooltip="Church Settings"
                   isActive={isActive("/dashboard/settings")}
                 >
-                  <NavIcon icon={Settings01Icon} />
+                  <NavIcon icon={Settings} />
                   <span>Church Settings</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -233,7 +225,7 @@ export function AppSidebar({
                   render={<Link href="/dashboard/settings?tab=roles" />}
                   tooltip="Users and Roles"
                 >
-                  <NavIcon icon={UserGroupIcon} />
+                  <NavIcon icon={Users} />
                   <span>Users and Roles</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -315,12 +307,9 @@ function NavCollapsible({
         >
           <NavIcon icon={group.icon} />
           <span>{group.title}</span>
-          <HugeiconsIcon
-            icon={ArrowRight01Icon}
-            size={16}
-            color="currentColor"
+          <ChevronRight
+            className={`ml-auto size-4 transition-transform duration-200 ${open ? "rotate-90" : ""}`}
             strokeWidth={1.75}
-            className={`ml-auto transition-transform duration-200 ${open ? "rotate-90" : ""}`}
           />
         </CollapsibleTrigger>
         <CollapsibleContent>
