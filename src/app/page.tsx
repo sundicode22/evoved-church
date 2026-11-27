@@ -81,7 +81,7 @@ const jsonLd = {
       contactPoint: {
         "@type": "ContactPoint",
         contactType: "sales",
-        url: `${siteUrl}/#demo`,
+        url: `${siteUrl}/demo`,
       },
     },
     {
@@ -152,7 +152,7 @@ const jsonLd = {
           name: "How do demos and interest requests work?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Use the Book a demo form. We send your note to Evolve owners over Resend and confirm to your inbox.",
+            text: "Open Book a demo. We send your note to Evolve owners over Resend and confirm to your inbox.",
           },
         },
       ],

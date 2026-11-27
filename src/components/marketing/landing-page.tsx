@@ -14,7 +14,6 @@ import {
   Menu,
   MessageSquare,
   ShieldCheck,
-  Sparkles,
   Users,
 } from "lucide-react"
 import {
@@ -49,8 +48,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { LandingDemoForm } from "@/components/marketing/landing-demo-form"
 import { LandingScreenshots } from "@/components/marketing/landing-screenshots"
+import { ModeToggle } from "@/components/mode-toggle"
 import { cn } from "@/lib/utils"
 
 function EvolveMark({ className, light }: { className?: string; light?: boolean }) {
@@ -62,7 +61,7 @@ function EvolveMark({ className, light }: { className?: string; light?: boolean 
       <span
         className={cn(
           "text-lg font-semibold tracking-tight",
-          light ? "text-white" : "text-zinc-950"
+          light ? "text-white" : "text-zinc-950 dark:text-zinc-50"
         )}
       >
         Evolve
@@ -124,7 +123,7 @@ const SOLUTIONS_MEGA = [
     icon: HeartHandshake,
   },
   {
-    href: "#demo",
+    href: "/demo",
     title: "Migrating from spreadsheets",
     description: "CSV import for members and giving with dry-run first.",
     icon: FileSpreadsheet,
@@ -175,7 +174,16 @@ const PLANS = [
     name: "Starter",
     price: "Free",
     detail: "1 location · 3 seats",
-    features: ["Members & families", "Visitor CRM", "Forms + QR check-in", "Calendar"],
+    blurb: "Get your church online without a card.",
+    features: [
+      "Members & household roles",
+      "Visitor CRM (list + board)",
+      "Forms + QR check-in",
+      "Calendar (month + agenda)",
+      "Services & programs",
+      "Basic reports",
+      "Email support",
+    ],
     cta: "Start free",
     highlighted: false,
   },
@@ -183,7 +191,17 @@ const PLANS = [
     name: "Growth",
     price: "$49",
     detail: "3 locations · 15 seats",
-    features: ["Everything in Starter", "Campaigns email + SMS", "Reports & exports", "Priority support"],
+    blurb: "For multi-site teams that need campaigns and depth.",
+    features: [
+      "Everything in Starter",
+      "Campaigns — email (Resend)",
+      "Campaigns — SMS (Twilio)",
+      "Projects kanban",
+      "Groups & appointments",
+      "Advanced reports & CSV export",
+      "Follow-ups & drips",
+      "Priority support",
+    ],
     cta: "Choose Growth",
     highlighted: true,
   },
@@ -191,7 +209,17 @@ const PLANS = [
     name: "Campus",
     price: "$129",
     detail: "50 locations · 50 seats",
-    features: ["Everything in Growth", "Fund accounting", "CSV migration", "Dedicated onboarding"],
+    blurb: "Full ops stack for larger multi-location churches.",
+    features: [
+      "Everything in Growth",
+      "Fund accounting (audited ledger)",
+      "Giving batches & pledges",
+      "CSV migration (dry-run + apply)",
+      "Custom roles & RBAC matrix",
+      "Policies & documents",
+      "Dedicated onboarding",
+      "Named owner channel",
+    ],
     cta: "Choose Campus",
     highlighted: false,
   },
@@ -208,7 +236,7 @@ const FAQS = [
   },
   {
     q: "How do demos and interest requests work?",
-    a: "Use the Book a demo form. We send your note to Evolve owners over Resend and confirm to your inbox.",
+    a: "Open Book a demo from the nav. We send your note to Evolve owners over Resend and confirm to your inbox.",
   },
   {
     q: "How is email different from SMS?",
@@ -254,30 +282,18 @@ export function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
-  // Portaled mega-menus inherit <html> theme — keep marketing chrome light.
-  React.useEffect(() => {
-    const root = document.documentElement
-    const hadDark = root.classList.contains("dark")
-    root.classList.remove("dark")
-    root.classList.add("light")
-    return () => {
-      root.classList.remove("light")
-      if (hadDark) root.classList.add("dark")
-    }
-  }, [])
-
   return (
-    <div className="light relative min-h-screen overflow-x-hidden bg-[#fbfcfb] text-zinc-900 antialiased">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#fbfcfb] text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-50">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[720px] bg-[radial-gradient(ellipse_at_20%_0%,rgba(100,149,237,0.22),transparent_50%),radial-gradient(ellipse_at_90%_10%,rgba(22,163,74,0.12),transparent_45%),linear-gradient(180deg,#fbfcfb_0%,#f4f7f5_55%,#fbfcfb_100%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[720px] bg-[radial-gradient(ellipse_at_20%_0%,rgba(100,149,237,0.22),transparent_50%),radial-gradient(ellipse_at_90%_10%,rgba(22,163,74,0.12),transparent_45%),linear-gradient(180deg,#fbfcfb_0%,#f4f7f5_55%,#fbfcfb_100%)] dark:bg-[radial-gradient(ellipse_at_20%_0%,rgba(100,149,237,0.18),transparent_50%),linear-gradient(180deg,#09090b_0%,#18181b_100%)]"
       />
 
       <header
         className={cn(
           "sticky top-0 z-50 transition-colors duration-300",
           scrolled
-            ? "border-b border-zinc-200/50 bg-transparent backdrop-blur-md"
+            ? "border-b border-zinc-200/40 bg-white/55 backdrop-blur-md dark:border-zinc-800/60 dark:bg-zinc-950/55"
             : "border-b border-transparent bg-transparent"
         )}
       >
@@ -334,7 +350,7 @@ export function LandingPage() {
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuLink
-                  href="#demo"
+                  href="/demo"
                   className="rounded-lg bg-transparent px-3 py-2 text-sm font-medium hover:bg-white/60"
                 >
                   Book demo
@@ -343,7 +359,8 @@ export function LandingPage() {
             </NavigationMenuList>
           </NavigationMenu>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <ModeToggle />
             <Button
               variant="ghost"
               size="sm"
@@ -377,7 +394,7 @@ export function LandingPage() {
                     { href: "#tour", label: "Product tour" },
                     { href: "#modules", label: "Modules" },
                     { href: "#pricing", label: "Pricing" },
-                    { href: "#demo", label: "Book a demo" },
+                    { href: "/demo", label: "Book a demo" },
                     { href: "#faq", label: "FAQ" },
                   ].map((l) => (
                     <a
@@ -431,7 +448,7 @@ export function LandingPage() {
                   variant="outline"
                   className="border-zinc-200/90 bg-white/70"
                   nativeButton={false}
-                  render={<a href="#demo" />}
+                  render={<Link href="/demo" />}
                 >
                   Book a demo
                 </Button>
@@ -441,14 +458,19 @@ export function LandingPage() {
         </section>
 
         {/* Sliding product screenshots */}
-        <section id="tour" className="scroll-mt-24 border-y border-zinc-200/60 bg-white/70 py-20 backdrop-blur-sm">
+        <section id="tour" className="relative scroll-mt-24 border-t border-zinc-200/50 bg-white py-20 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <LandingScreenshots />
           </div>
+          {/* Soft fade into the white canvas below */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent via-white/80 to-[#fbfcfb] dark:via-zinc-950/80 dark:to-zinc-950"
+          />
         </section>
 
         {/* Modules */}
-        <section id="modules" className="scroll-mt-24 py-20">
+        <section id="modules" className="scroll-mt-24 bg-[#fbfcfb] py-20 dark:bg-zinc-950">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="max-w-2xl">
               <Badge variant="secondary" className="rounded-md font-normal">
@@ -539,43 +561,56 @@ export function LandingPage() {
                 Same modules on every plan. You pay for locations and staff seats.
               </p>
             </div>
-            <div className="mt-12 grid gap-4 lg:grid-cols-3">
+            <div className="mt-12 grid items-stretch gap-5 lg:grid-cols-3">
               {PLANS.map((plan) => (
                 <Card
                   key={plan.name}
                   className={cn(
-                    "border-zinc-200/80 bg-white/90 shadow-xs",
-                    plan.highlighted && "border-[#6495ed] ring-1 ring-[#6495ed]/30"
+                    "relative flex h-full flex-col overflow-hidden border-zinc-200/80 bg-white shadow-[0_18px_50px_-36px_rgba(15,23,42,0.45)] dark:border-zinc-800 dark:bg-zinc-900",
+                    plan.highlighted &&
+                      "border-[#6495ed] shadow-[0_24px_60px_-28px_rgba(100,149,237,0.55)] ring-1 ring-[#6495ed]/35 lg:-mt-2 lg:mb-[-8px]"
                   )}
                 >
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">{plan.name}</CardTitle>
+                  {plan.highlighted ? (
+                    <div
+                      aria-hidden
+                      className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#6495ed] via-[#7aa6f0] to-[#16a34a]"
+                    />
+                  ) : null}
+                  <CardHeader className="gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-lg">{plan.name}</CardTitle>
                       {plan.highlighted ? (
                         <Badge className="rounded-md bg-[#eef3fc] text-[#2b4c8c] hover:bg-[#eef3fc]">
-                          Popular
+                          Most popular
                         </Badge>
                       ) : null}
                     </div>
-                    <p className="text-3xl font-medium tracking-tight text-zinc-950">
+                    <p className="text-4xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
                       {plan.price}
                       {plan.price !== "Free" ? (
                         <span className="text-sm font-normal text-muted-foreground"> /mo</span>
                       ) : null}
                     </p>
-                    <CardDescription>{plan.detail}</CardDescription>
+                    <CardDescription className="text-sm">{plan.detail}</CardDescription>
+                    <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                      {plan.blurb}
+                    </p>
                   </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
+                  <CardContent className="flex-1">
+                    <p className="mb-3 text-xs font-medium uppercase tracking-wide text-zinc-400">
+                      Included
+                    </p>
+                    <ul className="space-y-2.5">
                       {plan.features.map((f) => (
-                        <li key={f} className="flex gap-2 text-sm text-zinc-700">
-                          <Check className="mt-0.5 size-3.5 shrink-0 text-[#16a34a]" strokeWidth={2} />
+                        <li key={f} className="flex gap-2.5 text-sm text-zinc-700 dark:text-zinc-300">
+                          <Check className="mt-0.5 size-3.5 shrink-0 text-[#16a34a]" strokeWidth={2.25} />
                           {f}
                         </li>
                       ))}
                     </ul>
                   </CardContent>
-                  <CardFooter className="flex flex-col gap-2">
+                  <CardFooter className="mt-auto flex flex-col gap-2 border-t border-zinc-100 pt-5 dark:border-zinc-800">
                     <Button
                       className="w-full"
                       variant={plan.highlighted ? "default" : "outline"}
@@ -589,7 +624,7 @@ export function LandingPage() {
                       variant="ghost"
                       size="sm"
                       nativeButton={false}
-                      render={<a href="#demo" />}
+                      render={<Link href="/demo" />}
                     >
                       Or talk to us
                     </Button>
@@ -600,54 +635,18 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* Demo / interest */}
-        <section id="demo" className="scroll-mt-24 border-y border-zinc-200/60 bg-white/70 py-20">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-            <div>
-              <Badge className="rounded-md border-transparent bg-[#eef3fc] text-[#2b4c8c] hover:bg-[#eef3fc]">
-                <Sparkles className="size-3" />
-                Talk to Evolve
-              </Badge>
-              <h2 className="mt-3 text-3xl font-medium tracking-tight text-zinc-950">
-                Book a demo or show interest
-              </h2>
-              <p className="mt-3 text-base text-zinc-600">
-                Tell us about your church. We route the message to system owners with Resend—no
-                third-party form tool.
-              </p>
-              <ul className="mt-6 space-y-2 text-sm text-zinc-600">
-                <li className="flex gap-2">
-                  <Check className="mt-0.5 size-3.5 shrink-0 text-[#16a34a]" />
-                  Live walkthrough of dashboard, people, giving, and calendar
-                </li>
-                <li className="flex gap-2">
-                  <Check className="mt-0.5 size-3.5 shrink-0 text-[#16a34a]" />
-                  Migration advice from CSV or another ChMS
-                </li>
-                <li className="flex gap-2">
-                  <Check className="mt-0.5 size-3.5 shrink-0 text-[#16a34a]" />
-                  Pricing fit for your locations and seats
-                </li>
-              </ul>
-            </div>
-            <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] sm:p-6">
-              <LandingDemoForm />
-            </div>
-          </div>
-        </section>
-
         {/* FAQ */}
-        <section id="faq" className="scroll-mt-24 py-20">
+        <section id="faq" className="relative scroll-mt-24 bg-white py-20 dark:bg-zinc-950">
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
             <div className="text-center">
               <Badge variant="secondary" className="rounded-md font-normal">
                 FAQ
               </Badge>
-              <h2 className="mt-3 text-3xl font-medium tracking-tight text-zinc-950">
+              <h2 className="mt-3 text-3xl font-medium tracking-tight text-zinc-950 dark:text-zinc-50">
                 Questions before you start
               </h2>
             </div>
-            <Accordion className="mt-10 rounded-2xl border border-zinc-200/80 bg-white shadow-xs">
+            <Accordion className="mt-10 rounded-2xl border border-zinc-200/80 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
               {FAQS.map((item, i) => (
                 <AccordionItem key={item.q} value={`faq-${i}`}>
                   <AccordionTrigger className="px-4 py-3 text-sm sm:px-5">{item.q}</AccordionTrigger>
@@ -658,43 +657,43 @@ export function LandingPage() {
               ))}
             </Accordion>
           </div>
-        </section>
-
-        {/* Final CTA */}
-        <section className="relative overflow-hidden px-4 py-16 sm:px-6">
-          <div className="absolute inset-0 bg-zinc-950" />
           <div
             aria-hidden
-            className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(100,149,237,0.35),transparent_55%)]"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-[#fbfcfb] dark:to-zinc-950"
           />
-          <div className="relative mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-            <div>
-              <h2 className="text-2xl font-medium tracking-tight text-white sm:text-3xl">
-                Ready for a quieter Sunday ops stack?
-              </h2>
-              <p className="mt-2 max-w-lg text-sm text-zinc-400">
-                Start free, or book a demo—we&apos;ll meet you where you are.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                size="lg"
-                className="bg-white text-zinc-950 hover:bg-zinc-100"
-                nativeButton={false}
-                render={<Link href="/signup" />}
-              >
-                Create account
-                <ArrowRight className="size-4" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
-                nativeButton={false}
-                render={<a href="#demo" />}
-              >
-                Book a demo
-              </Button>
+        </section>
+
+        {/* Final CTA — soft fade from white canvas */}
+        <section className="relative overflow-hidden px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-10">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#fbfcfb] to-transparent dark:from-zinc-950"
+          />
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-zinc-200/80 bg-gradient-to-br from-white via-[#f7f9fc] to-[#eef3fc] px-6 py-12 shadow-[0_30px_80px_-48px_rgba(15,23,42,0.35)] dark:border-zinc-800 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-950 sm:px-10">
+            <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+              <div>
+                <h2 className="text-2xl font-medium tracking-tight text-zinc-950 dark:text-zinc-50 sm:text-3xl">
+                  Ready for a quieter Sunday ops stack?
+                </h2>
+                <p className="mt-2 max-w-lg text-sm text-zinc-600 dark:text-zinc-400">
+                  Start free, or book a demo—we&apos;ll meet you where you are.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button size="lg" nativeButton={false} render={<Link href="/signup" />}>
+                  Create account
+                  <ArrowRight className="size-4" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-white/80 dark:bg-transparent"
+                  nativeButton={false}
+                  render={<Link href="/demo" />}
+                >
+                  Book a demo
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -735,12 +734,9 @@ export function LandingPage() {
               <Link href="/login" className="block text-zinc-600 hover:text-zinc-950">
                 Sign in
               </Link>
-              <a href="#demo" className="block text-zinc-600 hover:text-zinc-950">
+              <Link href="/demo" className="block text-zinc-600 hover:text-zinc-950">
                 Book a demo
-              </a>
-              <a href="#demo" className="block text-zinc-600 hover:text-zinc-950">
-                Show interest
-              </a>
+              </Link>
             </div>
 
             <div className="space-y-3 text-sm">
